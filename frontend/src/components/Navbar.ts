@@ -1,0 +1,74 @@
+// frontend/src/components/Navbar.ts
+
+export const Navbar = {
+	render: () => {
+	  // 1. Token kontrolü
+	  const token = localStorage.getItem('token');
+	  const isLoggedIn = !!token;
+  
+	  // 2. Kullanıcı verisini GÜVENLİ şekilde çekme (Hata Sebebi Burasıydı)
+	  let user = { username: 'Misafir' };
+	  
+	  try {
+		  const storedUser = localStorage.getItem('user');
+		  // Eğer veri varsa ve "undefined" yazısı değilse parse et
+		  if (storedUser && storedUser !== 'undefined') {
+			  user = JSON.parse(storedUser);
+		  }
+	  } catch (e) {
+		  // Veri bozuksa (örn: "undefined" stringi) sessizce temizle
+		  console.error("User verisi bozuk, temizleniyor...", e);
+		  localStorage.removeItem('user');
+	  }
+  
+	  // 3. HTML Çıktısı
+	  return `
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		  <div class="flex items-center justify-between h-16">
+			
+		  <a href="/" data-link class="flex-shrink-0 cursor-pointer group">
+		  <h1 class="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 group-hover:scale-105 transition-transform duration-300">
+			FT_TRANSCENDENCE
+		  </h1>
+		  </a>
+  
+			<div class="hidden md:block">
+			  <div class="ml-10 flex items-baseline space-x-4">
+				
+				${isLoggedIn ? `
+				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>Oyun Alanı 🎮</a>
+				  <a href="/profile" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>
+					Profil (${user.username || 'Oyuncu'}) 👤
+				  </a>
+				  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-md text-sm font-bold transition-all ml-4">
+					Çıkış Yap
+				  </button>
+				` : `
+				  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>Giriş Yap</a>
+				  <a href="/register" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5" data-link>
+					Kayıt Ol 🚀
+				  </a>
+				`}
+				
+			  </div>
+			</div>
+		  </div>
+		</div>
+	  `;
+	},
+  
+	// Navbar yüklendikten sonra çalışacak olaylar
+	afterRender: () => {
+	  const logoutBtn = document.getElementById('nav-logout');
+	  if (logoutBtn) {
+		logoutBtn.addEventListener('click', () => {
+		  // Çıkış işlemleri
+		  localStorage.removeItem('token');
+		  localStorage.removeItem('user');
+		  
+		  // Login sayfasına yönlendir ve sayfayı yenile (Navbar güncellensin diye)
+		  window.location.href = '/login';
+		});
+	  }
+	}
+  };

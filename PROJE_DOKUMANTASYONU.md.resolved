@@ -1,0 +1,1102 @@
+# FT_TRANSCENDENCE - Kapsamlı Proje Dokümantasyonu
+
+> **Son Güncelleme:** 28 Ocak 2026  
+> **Proje Türü:** Full-Stack Pong Oyunu Web Uygulaması  
+> **Durum:** Geliştirme Aşamasında
+
+---
+
+## 📋 İçindekiler
+
+1. [Proje Genel Bakış](#proje-genel-bakış)
+2. [Teknoloji Yığını](#teknoloji-yığını)
+3. [Proje Mimarisi](#proje-mimarisi)
+4. [Docker Yapılandırması](#docker-yapılandırması)
+5. [Backend Detayları](#backend-detayları)
+6. [Frontend Detayları](#frontend-detayları)
+7. [Veritabanı Şeması](#veritabanı-şeması)
+8. [Özellikler ve Fonksiyonlar](#özellikler-ve-fonksiyonlar)
+9. [Nasıl Çalıştırılır](#nasıl-çalıştırılır)
+
+---
+
+## 🎯 Proje Genel Bakış
+
+**FT_TRANSCENDENCE**, klasik Pong oyununun modern bir web uygulaması versiyonudur. Kullanıcılar kayıt olabilir, profil oluşturabilir, yapay zekaya karşı veya yerel olarak arkadaşlarıyla oynayabilir, oyun geçmişlerini takip edebilir ve 2FA (Two-Factor Authentication) ile hesaplarını güvenli hale getirebilirler.
+
+### Temel Özellikler:
+- ✅ Kullanıcı Kayıt/Giriş Sistemi (JWT tabanlı)
+- ✅ 42 OAuth Entegrasyonu
+- ✅ 2FA (Two-Factor Authentication) Desteği
+- ✅ Avatar Yükleme
+- ✅ Yerel (Local) Pong Oyunu
+- ✅ Yapay Zeka (AI) Karşı Oyun
+- ✅ Oyun Geçmişi Kaydetme
+- ✅ Kullanıcı İstatistikleri (Wins, Losses, Level)
+- ✅ Responsive Dashboard
+
+### Proje Dizin Yapısı:
+```
+ft_trans/
+├── backend/              # Node.js + Fastify API
+├── frontend/             # Vanilla TS + Vite SPA
+├── uploads/              # Kullanıcı avatarları
+├── docker-compose.yml    # Container orkestrasyon
+├── Makefile             # Hızlı komutlar
+└── .env                 # Çevre değişkenleri
+```
+
+---
+
+## 🛠️ Teknoloji Yığını
+
+### Backend Teknolojileri:
+| Teknoloji | Versiyon | Kullanım Amacı |
+|-----------|----------|----------------|
+| **Node.js** | 20.x | Runtime ortamı |
+| **TypeScript** | 5.3.3 | Tip güvenli geliştirme |
+| **Fastify** | 4.26.1 | Web framework (Express'ten hızlı) |
+| **Prisma** | 5.10.2 | ORM (Object-Relational Mapping) |
+| **SQLite** | - | Veritabanı (development için) |
+| **JWT** | @fastify/jwt 8.0.0 | Token tabanlı auth |
+| **Bcrypt** | 2.4.3 | Şifre hashleme |
+| **Swagger** | @fastify/swagger | API dokümantasyonu |
+
+#### Backend Bağımlılıklar:
+```json
+{
+  "@fastify/cors": "^9.0.1",
+  "@fastify/jwt": "^8.0.0",
+  "@fastify/multipart": "^8.3.0",
+  "@fastify/static": "^7.0.4",
+  "@prisma/client": "5.10.2",
+  "bcryptjs": "^2.4.3",
+  "otplib": "^13.1.1",
+  "qrcode": "^1.5.4"
+}
+```
+
+### Frontend Teknolojileri:
+| Teknoloji | Versiyon | Kullanım Amacı |
+|-----------|----------|----------------|
+| **Vite** | 7.2.4 | Build tool ve dev server |
+| **TypeScript** | 5.9.3 | Tip güvenli geliştirme |
+| **Tailwind CSS** | 3.4.17 | Utility-first CSS framework |
+| **Vanilla TS** | - | Framework kullanmadan SPA |
+
+### DevOps:
+- **Docker** + **Docker Compose**: Containerization
+- **Makefile**: Otomasyon komutları
+
+---
+
+## 🏗️ Proje Mimarisi
+
+### Mimari Tasarım:
+
+```mermaid
+graph TB
+    subgraph Client["🖥️ Client Layer"]
+        Browser["Web Browser"]
+    end
+    
+    subgraph Frontend["⚛️ Frontend Container"]
+        Vite["Vite Dev Server :5173"]
+        Router["Custom Router"]
+        Pages["Pages (TS)"]
+        Services["API Services"]
+    end
+    
+    subgraph Backend["🔧 Backend Container"]
+        Fastify["Fastify Server :3000"]
+        Controllers["Controllers"]
+        Routes["Routes"]
+        Middleware["JWT Middleware"]
+        Prisma["Prisma ORM"]
+        Studio["Prisma Studio :5555"]
+    end
+    
+    subgraph Database["💾 Database"]
+        SQLite["SQLite (dev.db)"]
+    end
+    
+    subgraph External["🌐 External Services"]
+        OAuth["42 OAuth API"]
+    end
+    
+    Browser --> Vite
+    Vite --> Router
+    Router --> Pages
+    Pages --> Services
+    Services -->|HTTP/REST| Fastify
+    Fastify --> Routes
+    Routes --> Controllers
+    Controllers --> Prisma
+    Prisma --> SQLite
+    Studio --> SQLite
+    Controllers -->|OAuth Flow| OAuth
+```
+
+### Request Flow Örneği (Login):
+
+```mermaid
+sequenceDiagram
+    participant U as Kullanıcı
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+    
+    U->>F: Email/Password girer
+    F->>B: POST /auth/login
+    B->>DB: User bilgilerini sorgula
+    DB-->>B: User verisi
+    B->>B: Şifre doğrulama (bcrypt)
+    alt 2FA Aktif
+        B-->>F: {requires2FA: true}
+        F->>U: 2FA kodu iste
+        U->>F: 6 haneli kod girer
+        F->>B: POST /auth/verify-2fa
+        B->>B: TOTP doğrulama
+    end
+    B->>B: JWT token oluştur
+    B-->>F: {token, user}
+    F->>F: localStorage'a kaydet
+    F-->>U: Dashboard'a yönlendir
+```
+
+---
+
+## 🐳 Docker Yapılandırması
+
+### Docker Compose Ayarları
+
+Projede **2 servis** çalışmaktadır:
+
+#### 1. Backend Servisi
+```yaml
+backend:
+  container_name: ft_backend_dev
+  build: ./backend
+  ports:
+    - "3000:3000"    # API
+    - "5555:5555"    # Prisma Studio
+  volumes:
+    - ./backend:/usr/src/app
+    - /usr/src/app/node_modules
+    - ./uploads:/usr/src/app/uploads
+  env_file: .env
+  command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
+```
+
+**Özellikler:**
+- Port 3000: REST API endpoint'leri
+- Port 5555: Prisma Studio (veritabanı görselleştirme)
+- Hot-reload: Kod değişikliklerinde otomatik yeniden başlat
+- Volumes: Host ile container arasında dosya paylaşımı
+
+#### 2. Frontend Servisi
+```yaml
+frontend:
+  container_name: ft_frontend_dev
+  build: ./frontend
+  ports:
+    - "5173:5173"    # Vite Dev Server
+  volumes:
+    - ./frontend:/app
+    - /app/node_modules
+```
+
+**Özellikler:**
+- Vite development server
+- Hot Module Replacement (HMR)
+- Tailwind CSS compilation
+
+### Makefile Komutları
+
+| Komut | Açıklama |
+|-------|----------|
+| `make up` | Container'ları build et ve başlat |
+| `make down` | Container'ları durdur ve kaldır |
+| `make logs` | Tüm logları canlı izle |
+| `make studio` | Prisma Studio'yu aç |
+| `make clean` | Container'ları temizle |
+| `make fclean` | **Tam reset:** DB dahil her şeyi sil |
+| `make re` | Sıfırdan başlat (fclean + up) |
+
+---
+
+## 🔧 Backend Detayları
+
+### Dosya Yapısı:
+```
+backend/
+├── src/
+│   ├── app.ts                    # Ana Fastify uygulaması
+│   ├── db.ts                     # Prisma client instance
+│   ├── controllers/
+│   │   ├── auth.controller.ts    # Authentication işlemleri
+│   │   └── game.controller.ts    # Oyun kaydetme
+│   ├── routes/
+│   │   ├── auth.route.ts         # Auth endpoint'leri
+│   │   └── game.route.ts         # Game endpoint'leri
+│   ├── services/
+│   │   └── auth.service.ts       # Business logic
+│   ├── types/
+│   │   └── fastify.d.ts          # Type tanımları
+│   └── config/                   # Konfigürasyonlar
+├── prisma/
+│   ├── schema.prisma             # Veritabanı şeması
+│   ├── dev.db                    # SQLite dosyası
+│   └── migrations/               # DB migration'ları
+├── uploads/                      # Avatar dosyaları
+├── Dockerfile
+├── package.json
+└── tsconfig.json
+```
+
+### Ana Application (app.ts):
+
+```typescript
+// Fastify instance
+const server = fastify({ logger: true });
+
+// Plugins
+server.register(cors);
+server.register(fjwt, { secret: process.env.JWT_SECRET });
+server.register(multipart);
+server.register(fastifyStatic);
+server.register(fastifySwagger);
+
+// Authentication Decorator
+server.decorate("authenticate", async (request, reply) => {
+  await request.jwtVerify();
+});
+
+// Routes
+server.register(authRoutes, { prefix: '/auth' });
+server.register(gameRoutes, { prefix: '/game' });
+
+// Start
+server.listen({ port: 3000, host: '0.0.0.0' });
+```
+
+### API Endpoint'leri:
+
+#### Authentication Routes (`/auth`)
+| Method | Endpoint | Açıklama | Auth |
+|--------|----------|----------|------|
+| POST | `/auth/register` | Yeni kullanıcı kaydı | ❌ |
+| POST | `/auth/login` | Email/password ile giriş | ❌ |
+| POST | `/auth/verify-2fa` | 2FA kod doğrulama | ❌ |
+| GET | `/auth/me` | Mevcut kullanıcı bilgisi | ✅ |
+| POST | `/auth/avatar` | Avatar yükleme | ✅ |
+| GET | `/auth/42` | 42 OAuth başlat | ❌ |
+| GET | `/auth/42/callback` | 42 OAuth callback | ❌ |
+| GET | `/auth/2fa/generate` | 2FA QR kodu oluştur | ✅ |
+| POST | `/auth/2fa/turn-on` | 2FA'yı aktifleştir | ✅ |
+
+#### Game Routes (`/game`)
+| Method | Endpoint | Açıklama | Auth |
+|--------|----------|----------|------|
+| POST | `/game/save` | Oyun sonucunu kaydet | ✅ |
+
+### Authentication Controller Özellikleri:
+
+#### 1. Register (`/auth/register`)
+```typescript
+// Özellikleri:
+- Email ve username uniqueness kontrolü
+- Bcrypt ile şifre hashleme (10 rounds)
+- Varsayılan avatar atama
+- Otomatik JWT token üretimi
+```
+
+#### 2. Login (`/auth/login`)
+```typescript
+// Özellikleri:
+- Email doğrulama
+- Şifre karşılaştırma (bcrypt.compare)
+- 2FA kontrolü
+  - Aktifse → requires2FA: true döner
+  - Değilse → Direkt token döner
+```
+
+#### 3. 2FA İşlemleri
+- **Algoritma:** TOTP (Time-based One-Time Password)
+- **Library:** Manuel crypto implementasyonu
+- **Secret:** Base32 encoded
+- **Kod Uzunluğu:** 6 haneli
+- **Geçerlilik:** 30 saniye
+
+```typescript
+// 2FA Generate
+- Yeni secret üret (base32)
+- QR kod oluştur (otpauth://totp URL)
+- User'a QR kod döner (henüz aktif değil)
+
+// 2FA Turn On
+- Kullanıcı QR'ı tarayıp ilk kodu girer
+- Kod doğrulanırsa isTwoFactorEnabled = true
+- Secret DB'ye kaydedilir
+```
+
+#### 4. 42 OAuth Flow
+```typescript
+// Step 1: /auth/42
+- 42 API'ye yönlendir
+- client_id ve redirect_uri gönder
+
+// Step 2: /auth/42/callback
+- Authorization code al
+- Access token'a çevir
+- 42 API'den user bilgisi çek
+- Eğer yoksa DB'ye kaydet, varsa güncelle
+- JWT token üret ve döner
+```
+
+#### 5. Avatar Upload
+```typescript
+// Özellikler:
+- Multipart/form-data
+- Max 5MB
+- Eski avatar'ı sil (default.png değilse)
+- Yeni dosya adı: {userId}-{timestamp}.{ext}
+- /uploads klasörüne kaydet
+```
+
+### Game Controller ([saveGame](file:///home/fbetul/Desktop/ft_trans/backend/src/controllers/game.controller.ts#5-48))
+
+```typescript
+// İşlem Akışı:
+1. Request'ten: score1, score2, opponentName, type al
+2. Token'dan userId'yi çıkar
+3. Kazananı belirle (score1 > score2 ise userId)
+4. Game tablosuna kaydet:
+   - player1Id: userId (sen)
+   - player2Id: null (AI/Guest için)
+   - guestName: "Yapay Zeka" veya "Misafir"
+   - winnerId: kazananın ID'si
+5. User istatistiklerini güncelle:
+   - Kazandıysa: wins++, level++
+   - Kaybettiyse: losses++
+```
+
+---
+
+## ⚛️ Frontend Detayları
+
+### Dosya Yapısı:
+```
+frontend/
+├── src/
+│   ├── main.ts                   # Entry point
+│   ├── style.css                 # Tailwind imports
+│   ├── router/
+│   │   └── index.ts              # Client-side routing
+│   ├── pages/
+│   │   ├── Home.ts               # Landing page
+│   │   ├── Login.ts              # Login form
+│   │   ├── Register.ts           # Register form
+│   │   ├── Dashboard.ts          # Kullanıcı dashboard'u
+│   │   ├── Profile.ts            # Profil sayfası
+│   │   ├── Game.ts               # Local Pong oyunu
+│   │   └── GameAI.ts             # AI Pong oyunu
+│   ├── components/
+│   │   └── Navbar.ts             # Navigation bar
+│   ├── services/
+│   │   ├── auth.service.ts       # Auth API çağrıları
+│   │   └── game.service.ts       # Game API çağrıları
+│   └── utils/
+│       └── auth.ts               # Token yönetimi
+├── index.html
+├── Dockerfile
+├── package.json
+├── tailwind.config.js
+└── tsconfig.json
+```
+
+### Router Sistemi (SPA)
+
+**Özellikler:**
+- History API kullanımı
+- Client-side navigation
+- Sayfa yenilemesiz geçişler
+
+```typescript
+// Route Tanımı
+const routes: Record<string, any> = {
+  '/': Home,
+  '/login': Login,
+  '/register': Register,
+  '/dashboard': Dashboard,
+  '/profile': Profile,
+  '/game/local': Game,
+  '/game/ai': GameAI,
+  '/404': NotFound
+};
+
+// Navigation
+export const navigate = (path: string) => {
+  window.history.pushState({}, "", path);
+  render();
+};
+
+// Render Function
+const render = () => {
+  const path = window.location.pathname;
+  const component = routes[path] || routes['/404'];
+  
+  // Navbar güncelle
+  navContainer.innerHTML = Navbar.render();
+  Navbar.afterRender();
+  
+  // Page güncelle
+  app.innerHTML = component.render();
+  if (component.init) component.init();
+};
+```
+
+### Sayfa Yapısı (Component Pattern)
+
+Her sayfa aşağıdaki yapıya sahiptir:
+
+```typescript
+export const PageName = {
+  render(): string {
+    // HTML string döner (Tailwind CSS ile)
+    return `<div class="container">...</div>`;
+  },
+  
+  init(): void {
+    // Event listener'lar eklenir
+    // API çağrıları yapılır
+    // DOM manipülasyonları
+  }
+};
+```
+
+### Sayfa Detayları:
+
+#### 1. Home (Landing Page)
+- Hero section
+- Özellik kartları
+- Login/Register butonları
+
+#### 2. Login
+- Email/Password form
+- 2FA code input (gerekirse)
+- 42 OAuth butonu
+- Token'ı localStorage'a kaydet
+
+#### 3. Register
+- Email, Username, Password form
+- Validation
+- Başarılı kayıt → Otomatik login
+
+#### 4. Dashboard
+```typescript
+// Özellikler:
+- Kullanıcı profil bilgileri
+- Avatar gösterimi
+- İstatistikler (Wins, Losses, Level, Win Rate)
+- Oyun geçmişi tablosu
+- Oyun modu butonları (Local / AI)
+```
+
+#### 5. Profile
+```typescript
+// Özellikler:
+- Avatar değiştirme (file upload)
+- Kullanıcı bilgileri
+- 2FA QR kod generate
+- 2FA aktifleştirme
+- Arkadaş listesi (placeholder)
+```
+
+#### 6. Game (Local Pong)
+```typescript
+// Oyun Mekanikleri:
+- Canvas HTML5 (800x600)
+- 60 FPS game loop
+- 2 oyuncu (W/S ve ↑/↓ tuşları)
+- Skor takibi
+- İlk 5 skora ulaşan kazanır
+- Oyun bitince API'ye kaydet
+```
+
+**Oyun Elementleri:**
+- Paddle 1 (Sol): 10x100px, W/S kontrol
+- Paddle 2 (Sağ): 10x100px, ↑/↓ kontrol
+- Ball: 10x10px, random açıda başlar
+- Orta çizgi (görsel)
+
+#### 7. GameAI (AI Pong)
+```typescript
+// AI Özellikleri:
+- Tek oyunculu mod
+- AI paddle otomatik hareket eder
+- AI topu takip eder (paddle.y → ball.y)
+- Zorluk: AI'ya hafif delay eklenerek ayarlanmış
+```
+
+### API Service Katmanı:
+
+```typescript
+// auth.service.ts
+export const loginReq = async (email, password) => {
+  const res = await fetch('http://localhost:3000/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  return res.json();
+};
+
+// game.service.ts
+export const saveGameReq = async (gameData) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch('http://localhost:3000/game/save', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(gameData)
+  });
+  return res.json();
+};
+```
+
+---
+
+## 💾 Veritabanı Şeması
+
+### Prisma Schema (schema.prisma)
+
+```prisma
+// User Model
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  avatar    String?  @default("default.png")
+  createdAt DateTime @default(now())
+
+  // 2FA
+  isTwoFactorEnabled Boolean @default(false)
+  twoFactorSecret    String?
+
+  // Stats
+  wins   Int @default(0)
+  losses Int @default(0)
+  level  Int @default(1)
+
+  // Relations
+  gamesAsPlayer1 Game[] @relation("Player1")
+  gamesAsPlayer2 Game[] @relation("Player2")
+  winnerOf       Game[] @relation("Winner")
+  
+  sentRequests     Friendship[] @relation("Sender")
+  receivedRequests Friendship[] @relation("Receiver")
+  
+  wonTournaments   Tournament[] @relation("TournamentWinner")
+}
+
+// Friendship Model
+model Friendship {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  sender     User     @relation("Sender", fields: [senderId], references: [id])
+  receiverId Int
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id])
+  status     String   @default("PENDING") // PENDING, ACCEPTED, BLOCKED
+  createdAt  DateTime @default(now())
+
+  @@unique([senderId, receiverId])
+}
+
+// Tournament Model
+model Tournament {
+  id        Int      @id @default(autoincrement())
+  name      String
+  status    String   @default("PENDING") // PENDING, STARTED, FINISHED
+  createdAt DateTime @default(now())
+  winnerId  Int?
+  winner    User?    @relation("TournamentWinner", fields: [winnerId], references: [id])
+  games     Game[]
+}
+
+// Game Model
+model Game {
+  id           Int         @id @default(autoincrement())
+  createdAt    DateTime    @default(now())
+  tournamentId Int?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  
+  player1Id Int
+  player1   User @relation("Player1", fields: [player1Id], references: [id])
+  score1    Int
+  
+  player2Id Int?     // Nullable (AI için)
+  player2   User?    @relation("Player2", fields: [player2Id], references: [id])
+  score2    Int
+  guestName String?  // "Yapay Zeka" veya "Misafir"
+  
+  winnerId  Int?
+  winner    User? @relation("Winner", fields: [winnerId], references: [id])
+}
+```
+
+### İlişki Diyagramı:
+
+```mermaid
+erDiagram
+    User ||--o{ Game : "plays as P1"
+    User ||--o{ Game : "plays as P2"
+    User ||--o{ Game : "wins"
+    User ||--o{ Friendship : "sends"
+    User ||--o{ Friendship : "receives"
+    User ||--o{ Tournament : "wins"
+    Tournament ||--o{ Game : "contains"
+    
+    User {
+        int id PK
+        string email UK
+        string username UK
+        string password
+        string avatar
+        boolean isTwoFactorEnabled
+        string twoFactorSecret
+        int wins
+        int losses
+        int level
+    }
+    
+    Game {
+        int id PK
+        int player1Id FK
+        int player2Id FK "nullable"
+        int score1
+        int score2
+        string guestName "nullable"
+        int winnerId FK "nullable"
+        int tournamentId FK "nullable"
+    }
+    
+    Friendship {
+        int id PK
+        int senderId FK
+        int receiverId FK
+        string status
+    }
+    
+    Tournament {
+        int id PK
+        string name
+        string status
+        int winnerId FK "nullable"
+    }
+```
+
+---
+
+## ✨ Özellikler ve Fonksiyonlar
+
+### 1. Kullanıcı Yönetimi
+
+#### Kayıt İşlemi:
+1. Kullanıcı form doldurur
+2. Frontend validation
+3. Backend'e POST request
+4. Email/username uniqueness kontrolü
+5. Şifre hash'lenir (bcrypt)
+6. User DB'ye kaydedilir
+7. JWT token üretilir
+8. Token client'a döner
+9. localStorage'a kaydedilir
+10. Dashboard'a yönlendirilir
+
+#### Giriş İşlemi:
+```
+[Normal Login]
+Email + Password → Validation → JWT → Dashboard
+
+[2FA Aktif Login]
+Email + Password → Validation → 2FA Required
+→ Kullanıcı kodu girer → TOTP Verify → JWT → Dashboard
+
+[42 OAuth Login]
+42 Button Click → 42 API Redirect → User Approve
+→ Callback → User Data Fetch → DB Save/Update → JWT → Dashboard
+```
+
+### 2. Güvenlik Özellikleri
+
+#### JWT (JSON Web Token):
+```typescript
+// Token Yapısı:
+{
+  "id": 1,
+  "email": "user@example.com",
+  "username": "johndoe",
+  "iat": 1706460000,  // Issued At
+  "exp": 1706546400   // Expiry (24 saat)
+}
+
+// Token Kullanımı:
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+#### 2FA (TOTP):
+- **Algoritma:** Time-based One-Time Password
+- **Hash:** SHA-1
+- **Digits:** 6
+- **Period:** 30 saniye
+- **QR Code:** otpauth://totp/FT_TRANS:username?secret=XXX
+
+```typescript
+// TOTP Formula:
+TOTP = HOTP(K, T)
+where:
+  K = Secret Key (Base32)
+  T = floor(Current Unix Time / 30)
+```
+
+#### Şifre Güvenliği:
+- **Hashing:** bcrypt
+- **Rounds:** 10
+- **Örnek Hash:** $2b$10$abcdef...
+
+### 3. Oyun Sistemi
+
+#### Pong Game State:
+```typescript
+interface GameState {
+  ball: {
+    x: number;
+    y: number;
+    dx: number;  // velocity X
+    dy: number;  // velocity Y
+    radius: number;
+  };
+  paddle1: { x: number; y: number; width: number; height: number; };
+  paddle2: { x: number; y: number; width: number; height: number; };
+  score1: number;
+  score2: number;
+  gameOver: boolean;
+  winner: string | null;
+}
+```
+
+#### Oyun Döngüsü (Game Loop):
+```typescript
+function gameLoop() {
+  // 1. Kullanıcı inputlarını işle
+  if (keys['KeyW'] && paddle1.y > 0) paddle1.y -= 8;
+  if (keys['KeyS'] && paddle1.y < canvas.height - paddle1.height) paddle1.y += 8;
+  
+  // 2. Fizik hesaplamaları
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+  
+  // 3. Çarpışma kontrolü
+  // Paddle collision
+  if (ballHitsPaddle1() || ballHitsPaddle2()) ball.dx *= -1;
+  // Wall collision
+  if (ball.y <= 0 || ball.y >= canvas.height) ball.dy *= -1;
+  
+  // 4. Skor kontrolü
+  if (ball.x < 0) { score2++; resetBall(); }
+  if (ball.x > canvas.width) { score1++; resetBall(); }
+  
+  // 5. Kazanan kontrolü
+  if (score1 === 5 || score2 === 5) endGame();
+  
+  // 6. Ekranı güncelle
+  render();
+  
+  // 7. Sonraki frame
+  requestAnimationFrame(gameLoop);
+}
+```
+
+#### AI Algoritması:
+```typescript
+function updateAI() {
+  const paddleCenter = aiPaddle.y + aiPaddle.height / 2;
+  const ballY = ball.y;
+  
+  if (paddleCenter < ballY - 10) {
+    aiPaddle.y += 6; // Aşağı git
+  } else if (paddleCenter > ballY + 10) {
+    aiPaddle.y -= 6; // Yukarı git
+  }
+  
+  // Sınır kontrolü
+  aiPaddle.y = Math.max(0, Math.min(aiPaddle.y, canvas.height - aiPaddle.height));
+}
+```
+
+### 4. Profil ve İstatistikler
+
+#### Dashboard Metrikleri:
+```typescript
+// Hesaplanan Değerler:
+const winRate = wins > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
+const totalGames = wins + losses;
+
+// Görselleştirme:
+- Avatar (circular)
+- Username ve Email
+- Level Badge
+- Stats Cards (Wins, Losses, Level, Win Rate)
+- Recent Games Table
+```
+
+#### Oyun Geçmişi Tablosu:
+| Tarih | Rakip | Skor | Sonuç |
+|-------|-------|------|-------|
+| 28 Jan 2026 | Yapay Zeka | 5-3 | ✅ Kazandın |
+| 27 Jan 2026 | Misafir | 2-5 | ❌ Kaybettin |
+
+---
+
+## 🚀 Nasıl Çalıştırılır
+
+### Ön Gereksinimler:
+- Docker ve Docker Compose kurulu olmalı
+- Port 3000, 5173, 5555 boş olmalı
+
+### Kurulum Adımları:
+
+```bash
+# 1. Proje klasörüne git
+cd /home/fbetul/Desktop/ft_trans
+
+# 2. Environment dosyasını kontrol et
+cat .env
+# DATABASE_URL, JWT_SECRET, 42 OAuth bilgileri mevcut olmalı
+
+# 3. Container'ları başlat
+make up
+
+# 4. Logları izle (opsiyonel)
+make logs
+
+# 5. Prisma Studio'yu aç (opsiyonel)
+make studio
+```
+
+### Erişim URL'leri:
+
+| Servis | URL | Açıklama |
+|--------|-----|----------|
+| Frontend | http://localhost:5173 | Ana uygulama |
+| Backend API | http://localhost:3000 | REST API |
+| Swagger Docs | http://localhost:3000/docs | API Dokümantasyonu |
+| Prisma Studio | http://localhost:5555 | DB Görselleştirme |
+
+### İlk Kullanım:
+
+```bash
+# 1. Tarayıcıda frontend'i aç
+http://localhost:5173
+
+# 2. Yeni hesap oluştur
+- Register sayfasına git
+- Email, username, password gir
+- Kayıt ol
+
+# 3. Dashboard'a eriş
+- Otomatik login olacak
+- Avatar yükle
+- Profil bilgilerini kontrol et
+
+# 4. Oyun oyna
+- "Play vs AI" veya "Play Local" seç
+- Oyunu oyna
+- Skorlar otomatik kaydedilir
+
+# 5. 2FA aktifleştir (opsiyonel)
+- Profile sayfasına git
+- "Generate 2FA QR Code" butonuna tıkla
+- Google Authenticator ile tara
+- Kodu gir ve aktifleştir
+```
+
+### Debugging:
+
+```bash
+# Container durumunu kontrol et
+docker ps
+
+# Backend loglarını izle
+docker logs -f ft_backend_dev
+
+# Frontend loglarını izle
+docker logs -f ft_frontend_dev
+
+# Container içine gir
+docker exec -it ft_backend_dev sh
+
+# Veritabanını kontrol et
+make studio
+# veya
+docker exec -it ft_backend_dev npx prisma studio
+```
+
+### Yaygın Sorunlar ve Çözümleri:
+
+#### Problem: Port zaten kullanımda
+```bash
+# Çözüm: Port'u kullanan process'i bul ve öldür
+sudo lsof -i :3000
+sudo kill -9 <PID>
+```
+
+#### Problem: Database migration hatası
+```bash
+# Çözüm: Migration'ı manuel çalıştır
+docker exec -it ft_backend_dev npx prisma migrate deploy
+```
+
+#### Problem: Frontend build hatası
+```bash
+# Çözüm: Node modules'u yeniden yükle
+docker exec -it ft_frontend_dev npm install
+```
+
+#### Problem: Sıfırdan başlatmak istiyorum
+```bash
+# Çözüm: Tam reset
+make fclean  # DB dahil her şeyi siler
+make up      # Yeniden başlatır
+```
+
+---
+
+## 📊 Proje İstatistikleri
+
+### Dosya Sayıları:
+- **Backend:** ~15 TypeScript dosyası
+- **Frontend:** ~13 TypeScript dosyası
+- **Toplam Satır:** ~3000+ satır kod
+
+### API Endpoint Sayısı:
+- **Auth Routes:** 9 endpoint
+- **Game Routes:** 1 endpoint
+- **Toplam:** 10 endpoint
+
+### Veritabanı Tabloları:
+- User
+- Game
+- Friendship
+- Tournament
+- **Toplam:** 4 tablo
+
+---
+
+## 🎨 Tasarım Kararları
+
+### 1. Neden Vanilla TypeScript?
+- **Öğrenme Amacı:** Framework bağımlılığından kaçınma
+- **Performans:** Daha hafif bundle size
+- **Kontrol:** Full control over routing ve state management
+
+### 2. Neden Fastify?
+- **Hız:** Express'ten ~2x daha hızlı
+- **TypeScript Desteği:** First-class TypeScript support
+- **Plugin Ekosistemi:** Güçlü plugin sistemi
+- **Schema Validation:** Built-in Swagger desteği
+
+### 3. Neden SQLite?
+- **Development Kolaylığı:** Kurulum gerektirmez
+- **Taşınabilirlik:** Tek dosya
+- **Production'da değiştirilebilir:** Prisma ile PostgreSQL'e kolay geçiş
+
+### 4. Neden Prisma?
+- **Type Safety:** Auto-generated types
+- **Migration Yönetimi:** Kolay DB versiyonlama
+- **Studio:** Görsel DB yönetimi
+- **Multi-DB Desteği:** SQLite → PostgreSQL geçişi kolay
+
+### 5. Neden Docker?
+- **Tutarlılık:** "Benim makinemde çalışıyor" problemi yok
+- **İzolasyon:** Host sistemden bağımsız
+- **Kolay Setup:** 1 komutla tüm stack ayağa kalkar
+
+---
+
+## 🔮 Gelecek Geliştirmeler
+
+### Planlanmış Özellikler:
+- [ ] Multiplayer (WebSocket ile gerçek zamanlı)
+- [ ] Arkadaşlık sistemi (friend request/accept)
+- [ ] Turnuva modu
+- [ ] Chat sistemi
+- [ ] Kullanıcı sıralaması (leaderboard)
+- [ ] Daha gelişmiş AI zorluk seviyeleri
+- [ ] Oyun içi power-up'lar
+- [ ] Kullanıcı profil özelleştirme
+- [ ] Email doğrulama
+- [ ] Şifre sıfırlama
+
+### Teknik İyileştirmeler:
+- [ ] PostgreSQL'e geçiş (production için)
+- [ ] Redis cache layer
+- [ ] Rate limiting
+- [ ] E2E testler
+- [ ] CI/CD pipeline
+- [ ] Kubernetes deployment
+- [ ] CDN entegrasyonu (avatar'lar için)
+- [ ] WebSocket GameRoom sistemi
+
+---
+
+## 📝 Notlar
+
+### Önemli Bilgiler:
+1. **JWT Secret:** Production'da mutlaka değiştirilmeli ve güvenli tutulmalı
+2. **42 OAuth:** Kendi client_id/secret'ınızı kullanmalısınız
+3. **SQLite:** Development için yeterli, production için PostgreSQL önerilir
+4. **CORS:** Şu an `*` olarak ayarlı, production'da domain spesifik olmalı
+5. **File Upload:** Şu an local'de, production'da S3/Cloud Storage kullanılmalı
+
+### Geliştirme İpuçları:
+- `make logs` ile tüm hataları takip edin
+- `make studio` ile DB'yi görselleştirin
+- Swagger docs'u (`/docs`) API test için kullanın
+- Hot-reload aktif, kod değişikliklerinde sayfa yenilenir
+
+### Git Workflow (Önerilen):
+```bash
+git checkout -b feature/yeni-ozellik
+# Değişiklikleri yap
+git add .
+git commit -m "feat: yeni özellik eklendi"
+git push origin feature/yeni-ozellik
+# PR oluştur
+```
+
+---
+
+## 🤝 Katkıda Bulunma
+
+Proje şu anda aktif geliştirme aşamasındadır. Katkıda bulunmak için:
+1. Fork yapın
+2. Feature branch oluşturun
+3. Değişikliklerinizi commit edin
+4. Pull request açın
+
+---
+
+## 📄 Lisans
+
+Bu proje 42 Okulu projesi olup, eğitim amaçlıdır.
+
+---
+
+**Son Güncelleme:** 28 Ocak 2026  
+**Doküman Hazırlayan:** AI Assistant  
+**Proje Sahibi:** fbetul

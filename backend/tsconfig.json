@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+	  "target": "es2020",           /* Modern JS sürümü */
+	  "module": "commonjs",         /* Node.js modül sistemi */
+	  "rootDir": "./src",           /* Kodlarımızın duracağı yer */
+	  "outDir": "./dist",           /* Derlenen kodların çıkacağı yer */
+	  "strict": true,               /* Tip güvenliğini zorunlu kıl (any yasaklamaya zorlar) */
+	  "esModuleInterop": true,      /* Modül uyumluluğu */
+	  "skipLibCheck": true,         /* Kütüphane tip hatalarını görmezden gel */
+	  "forceConsistentCasingInFileNames": true
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
+  }
