@@ -364,7 +364,7 @@ server.listen({ port: 3000, host: '0.0.0.0' });
 - /uploads klasörüne kaydet
 ```
 
-### Game Controller ([saveGame](file:///home/fbetul/Desktop/ft_trans/backend/src/controllers/game.controller.ts#5-48))
+### Game Controller (`saveGame`)
 
 ```typescript
 // İşlem Akışı:
