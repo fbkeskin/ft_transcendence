@@ -52,6 +52,14 @@ export const Login = {
   `,
   
   init: async () => {
+    // 0. GÜVENLİK TEMİZLİĞİ
+    // Eğer URL'de auth parametresi yoksa, eski oturum temizlenmeli.
+    const urlCheck = new URLSearchParams(window.location.search);
+    if (!urlCheck.get('token') && !urlCheck.get('2fa_required')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+    }
+
     // Elementleri Seç
     const loginForm = document.getElementById('login-form');
     const twoFaForm = document.getElementById('2fa-form');

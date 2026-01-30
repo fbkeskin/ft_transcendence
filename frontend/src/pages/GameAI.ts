@@ -5,19 +5,23 @@ import { getProfileReq } from '../services/auth.service';
 
 export const GameAI = {
   render: () => `
-    <div class="flex flex-col items-center justify-center h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+    <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
       
-      <div class="absolute top-5 text-indigo-500 font-bold tracking-widest text-xl opacity-80 z-20">
-        MAN vs MATH
+      <!-- BAŞLIK -->
+      <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
+        OYUNCU vs YAPAY ZEKA
       </div>
 
-      <div class="absolute top-16 flex gap-24 text-6xl font-mono font-bold select-none opacity-20 z-10 pointer-events-none">
+      <!-- SKOR -->
+      <div class="flex gap-24 text-6xl font-mono font-bold select-none opacity-20 mb-4">
         <div id="score-left">0</div>
         <div id="score-right">0</div>
       </div>
 
-      <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-indigo-900 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[80vh]"></canvas>
+      <!-- OYUN ALANI -->
+      <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-indigo-900 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
 
+      <!-- BİLGİLER -->
       <div class="mt-4 w-full max-w-[960px] flex justify-between px-10 text-slate-500 text-sm font-mono select-none">
         
         <div class="text-left">
@@ -56,6 +60,12 @@ export const GameAI = {
         const user = await getProfileReq();
         currentUsername = user.username;
         document.getElementById('player-name')!.innerText = `🔵 ${currentUsername}`;
+        
+        // Başlığı güncelle: "AI vs Kullanıcı"
+        const titleEl = document.getElementById('game-title');
+        if (titleEl) {
+            titleEl.innerText = `AI VS ${currentUsername}`;
+        }
     } catch(e) { navigate('/login'); return; }
 
     const WIN_SCORE = 3; 
@@ -67,6 +77,7 @@ export const GameAI = {
 
     let aiKeys = { w: false, s: false };
     let aiInterval: any = null;
+    let animationFrameId: number; // STABILITY FIX
 
     const player1 = { x: 10, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#ef4444' }; // AI
     const player2 = { x: canvas.width - 10 - PADDLE_WIDTH, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#3b82f6' }; // SEN
@@ -75,7 +86,9 @@ export const GameAI = {
 
     function gameLoop() {
         if (!gameRunning) return;
-        update(); draw(); requestAnimationFrame(gameLoop);
+        update(); 
+        draw(); 
+        animationFrameId = requestAnimationFrame(gameLoop); // STABILITY FIX
     }
 
     function startAILogic() {
@@ -130,17 +143,17 @@ export const GameAI = {
         }
     }
 
-    // --- AI İÇİN DÜZELTİLEN ENDGAME ---
+    // --- AI İÇİN DÜZELTİLEN ENDGAME (STABILITY FIX) ---
     async function endGame(winnerName: string) {
         gameRunning = false;
         clearInterval(aiInterval);
+        cancelAnimationFrame(animationFrameId); // STABILITY FIX
+        
         document.getElementById('winner-text')!.innerText = `${winnerName} KAZANDI!`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {
             // DİKKAT: score2 = SEN, score1 = AI
-            // Backend her zaman İLK parametreyi SENİN SKORUN kabul eder.
-            // O yüzden score2'yi başa yazıyoruz.
             await saveGameReq(score2, score1, "Yapay Zeka");
             console.log("AI Maçı Kaydedildi ✅");
         } catch (err) { console.error(err); }
@@ -150,6 +163,7 @@ export const GameAI = {
     function checkCollision(b: any, p: any) { return (b.x < p.x + PADDLE_WIDTH && b.x + b.width > p.x && b.y < p.y + PADDLE_HEIGHT && b.y + b.height > p.y); }
     function increaseSpeed() { if (Math.abs(ball.speedX) < 16) { ball.speedX *= 1.05; ball.speedY *= 1.05; } }
     function draw() {
+        if(!canvas.getContext) return; // STABILITY FIX
         ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
@@ -167,19 +181,62 @@ export const GameAI = {
         document.getElementById('score-right')!.innerText = score2.toString();
     }
     
-    window.addEventListener('keydown', (e) => { 
-        if(["ArrowUp", "ArrowDown", " "].indexOf(e.code) > -1) e.preventDefault();
+    // --- STABILITY FIX: EVENT HANDLERS ---
+    const handleKeyDown = (e: KeyboardEvent) => { 
+        if(["ArrowUp", "ArrowDown", " ", "Escape"].indexOf(e.key) > -1) e.preventDefault();
+        
+        if(e.key === 'Escape') { 
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            clearInterval(aiInterval);
+            navigate('/dashboard'); 
+            return;
+        }
+        
         keys[e.key] = true; 
-        if(e.key === 'Escape') { clearInterval(aiInterval); navigate('/dashboard'); }
-    });
-    window.addEventListener('keyup', (e) => keys[e.key] = false);
-    document.getElementById('restart-btn')?.addEventListener('click', () => {
+    };
+    const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // --- STABILITY FIX: RESTART & EXIT ---
+    const restartBtn = document.getElementById('restart-btn');
+    const exitBtn = document.getElementById('exit-btn');
+
+    const handleRestart = () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        clearInterval(aiInterval);
+        
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
+        
         gameRunning = true; resetBall(); startAILogic(); gameLoop();
-    });
-    document.getElementById('exit-btn')?.addEventListener('click', () => { clearInterval(aiInterval); navigate('/dashboard'); });
+    };
 
-    startAILogic(); gameLoop();
+    const handleExit = () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        clearInterval(aiInterval);
+        navigate('/dashboard');
+    };
+
+    restartBtn?.addEventListener('click', handleRestart);
+    exitBtn?.addEventListener('click', handleExit);
+
+    startAILogic(); 
+    gameLoop();
+
+    // --- STABILITY FIX: CLEANUP ---
+    return () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        clearInterval(aiInterval);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        restartBtn?.removeEventListener('click', handleRestart);
+        exitBtn?.removeEventListener('click', handleExit);
+    };
   }
 };

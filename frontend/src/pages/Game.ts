@@ -5,15 +5,23 @@ import { getProfileReq } from '../services/auth.service';
 
 export const Game = {
   render: () => `
-    <div class="flex flex-col items-center justify-center h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+    <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
       
-      <div class="absolute top-4 flex gap-20 text-6xl font-mono font-bold select-none opacity-20 z-10 pointer-events-none">
+      <!-- BAŞLIK (Artık akış içinde) -->
+      <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
+        OYUNCU vs OYUNCU
+      </div>
+
+      <!-- SKOR TABLOSU (Artık akış içinde) -->
+      <div class="flex gap-20 text-6xl font-mono font-bold select-none opacity-20 mb-4">
         <div id="score-left">0</div>
         <div id="score-right">0</div>
       </div>
 
-      <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-slate-700 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[80vh]"></canvas>
+      <!-- OYUN ALANI -->
+      <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-slate-700 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
 
+      <!-- KONTROLLER & İSİMLER -->
       <div class="mt-4 w-full max-w-[960px] flex justify-between px-10 text-slate-500 text-sm font-mono select-none">
         
         <div class="text-left">
@@ -67,6 +75,12 @@ export const Game = {
     document.getElementById('p1-name')!.innerText = `🔴 ${guestName}`;
     document.getElementById('p2-name')!.innerText = `🔵 ${currentUsername}`;
 
+    // Başlığı güncelle: "Misafir vs Kullanıcı"
+    const titleEl = document.getElementById('game-title');
+    if (titleEl) {
+        titleEl.innerText = `${guestName} vs ${currentUsername}`;
+    }
+
     const WIN_SCORE = 3; 
     const PADDLE_WIDTH = 15; const PADDLE_HEIGHT = 100; const BALL_SIZE = 14; 
     
@@ -79,10 +93,13 @@ export const Game = {
     
     const ball = { x: canvas.width/2, y: canvas.height/2, width: BALL_SIZE, height: BALL_SIZE, speedX: 7, speedY: 7, color: '#ffffff' };
     const keys: { [key: string]: boolean } = {};
+    let animationFrameId: number;
 
     function gameLoop() {
         if (!gameRunning) return;
-        update(); draw(); requestAnimationFrame(gameLoop);
+        update(); 
+        draw(); 
+        animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function update() {
@@ -114,6 +131,7 @@ export const Game = {
 
     async function endGame(winnerName: string) {
         gameRunning = false;
+        cancelAnimationFrame(animationFrameId); // Döngüyü durdur
         document.getElementById('winner-text')!.innerText = `${winnerName} KAZANDI!`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
@@ -129,6 +147,7 @@ export const Game = {
     function checkCollision(b: any, p: any) { return (b.x < p.x + PADDLE_WIDTH && b.x + b.width > p.x && b.y < p.y + PADDLE_HEIGHT && b.y + b.height > p.y); }
     function increaseSpeed() { if (Math.abs(ball.speedX) < 16) { ball.speedX *= 1.1; ball.speedY *= 1.1; } }
     function draw() {
+        if(!canvas.getContext) return; // Canvas yoksa çizme
         ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
@@ -141,24 +160,61 @@ export const Game = {
         ball.speedX = 7 * (Math.random() > 0.5 ? 1 : -1); ball.speedY = 7 * (Math.random() > 0.5 ? 1 : -1);
     }
     function updateScore() {
-        document.getElementById('score-left')!.innerText = score1.toString();
-        document.getElementById('score-right')!.innerText = score2.toString();
+        const sLeft = document.getElementById('score-left');
+        const sRight = document.getElementById('score-right');
+        if(sLeft) sLeft.innerText = score1.toString();
+        if(sRight) sRight.innerText = score2.toString();
     }
 
-    window.addEventListener('keydown', (e) => { 
-        if(["ArrowUp", "ArrowDown", " "].indexOf(e.code) > -1) e.preventDefault();
-        keys[e.key] = true; 
-        if(e.key==='Escape') navigate('/dashboard');
-    });
-    window.addEventListener('keyup', (e) => keys[e.key] = false);
+    const handleKeyDown = (e: KeyboardEvent) => { 
+        if(["ArrowUp", "ArrowDown", " ", "Escape"].indexOf(e.key) > -1) e.preventDefault();
+        
+        if(e.key === 'Escape') {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            navigate('/dashboard');
+            return;
+        }
 
-    document.getElementById('restart-btn')?.addEventListener('click', () => {
+        keys[e.key] = true; 
+    };
+    const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    const restartBtn = document.getElementById('restart-btn');
+    const exitBtn = document.getElementById('exit-btn');
+
+    const handleRestart = () => {
+        // GÜVENLİK: Önceki döngüyü kesinlikle öldür
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+
+        // State sıfırla
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
-        gameRunning = true; resetBall(); gameLoop();
-    });
-    document.getElementById('exit-btn')?.addEventListener('click', () => navigate('/dashboard'));
+        
+        // Yeniden başlat
+        gameRunning = true; 
+        resetBall(); 
+        gameLoop();
+    };
+    const handleExit = () => navigate('/dashboard');
+
+    restartBtn?.addEventListener('click', handleRestart);
+    exitBtn?.addEventListener('click', handleExit);
 
     gameLoop();
+
+    // CLEANUP FONKSİYONU
+    return () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        restartBtn?.removeEventListener('click', handleRestart);
+        exitBtn?.removeEventListener('click', handleExit);
+    };
   }
 };

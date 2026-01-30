@@ -24,12 +24,20 @@ const routes: Record<string, any> = {
   }
 };
 
+let currentCleanup: (() => void) | null = null;
+
 export const navigate = (path: string) => {
   window.history.pushState({}, "", path);
   render();
 };
 
-const render = () => {
+const render = async () => {
+    // 0. ÖNCEKİ SAYFAYI TEMİZLE
+    if (currentCleanup) {
+        currentCleanup();
+        currentCleanup = null;
+    }
+
 	const path = window.location.pathname;
 	
 	// 1. NAVBAR'I GÜNCELLE
@@ -45,7 +53,13 @@ const render = () => {
   
 	if (app) {
 	  app.innerHTML = component.render();
-	  if (component.init) component.init();
+	  if (component.init) {
+          // Init fonksiyonu async olabilir, sonucunu bekle
+          const cleanup = await component.init();
+          if (typeof cleanup === 'function') {
+              currentCleanup = cleanup;
+          }
+      }
 	}
   }
   

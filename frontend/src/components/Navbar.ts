@@ -4,7 +4,15 @@ export const Navbar = {
 	render: () => {
 	  // 1. Token kontrolü
 	  const token = localStorage.getItem('token');
-	  const isLoggedIn = !!token;
+      const path = window.location.pathname;
+      
+      // EĞER LOGIN SAYFASINDAYSAK TOKEN OLSA BİLE GÖSTERME
+      // (42 dönüşü hariç, ama görsel olarak Navbar'da buton görmek sorun değil)
+      let isLoggedIn = !!token;
+      
+      if (path === '/login' || path === '/register') {
+          isLoggedIn = false;
+      }
   
 	  // 2. Kullanıcı verisini GÜVENLİ şekilde çekme (Hata Sebebi Burasıydı)
 	  let user = { username: 'Misafir' };
