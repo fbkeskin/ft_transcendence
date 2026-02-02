@@ -51,7 +51,7 @@ fclean: down
 	@docker-compose down --rmi all --volumes --remove-orphans
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
-	@echo "$(RED)Full clean complete (Database deleted).$(RESET)"
+	@echo "$(GREEN)Full clean complete (Database deleted).$(RESET)"
 
 # 8. Yeniden Başlat (Sıfırdan kurar)
 re: fclean up

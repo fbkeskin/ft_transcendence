@@ -12,92 +12,7 @@ import qrcode from 'qrcode';
 // Artık PrismaClient'ı buradan çağırmıyoruz.
 // Merkezi db.ts dosyasından hazır 'prisma' nesnesini alıyoruz.
 import { prisma } from '../db'; 
-// -----------------------
-
-// 1. NODE.JS CRYPTO MODÜLÜ
-const crypto = require('crypto');
-
-// 2. Base32 Decode Fonksiyonu
-function base32ToBuffer(str: string): Buffer {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let bits = 0;
-    let value = 0;
-    let output = Buffer.alloc(Math.ceil(str.length * 5 / 8));
-    let index = 0;
-
-    for (let i = 0; i < str.length; i++) {
-        const char = str[i].toUpperCase();
-        const val = alphabet.indexOf(char);
-        if (val === -1) continue;
-
-        value = (value << 5) | val;
-        bits += 5;
-
-        if (bits >= 8) {
-            output[index++] = (value >>> (bits - 8)) & 0xFF;
-            bits -= 8;
-        }
-    }
-    return output;
-}
-
-// 3. MANUEL TOTP DOĞRULAMA FONKSİYONU
-function verifyTOTP(token: string, secret: string): boolean {
-    try {
-        const decodedSecret = base32ToBuffer(secret);
-        const epoch = Math.floor(Date.now() / 1000.0);
-        const timeStep = 30; 
-        
-        const counters = [
-            Math.floor(epoch / timeStep),       
-            Math.floor(epoch / timeStep) - 1,   
-            Math.floor(epoch / timeStep) + 1    
-        ];
-
-        for (const counter of counters) {
-            const buffer = Buffer.alloc(8);
-            let temp = counter;
-            for (let i = 7; i >= 0; i--) {
-                buffer[i] = temp & 0xff;
-                temp = Math.floor(temp / 256); 
-            }
-
-            const hmac = crypto.createHmac('sha1', decodedSecret);
-            hmac.update(buffer);
-            const digest = hmac.digest();
-
-            const offset = digest[digest.length - 1] & 0xf;
-            const code = (
-                ((digest[offset] & 0x7f) << 24) |
-                ((digest[offset + 1] & 0xff) << 16) |
-                ((digest[offset + 2] & 0xff) << 8) |
-                (digest[offset + 3] & 0xff)
-            ) % 1000000;
-
-            const currentToken = code.toString().padStart(6, '0');
-            
-            if (currentToken === token) {
-                return true; 
-            }
-        }
-        return false;
-    } catch (e) {
-        console.error("Manuel TOTP Hatası:", e);
-        return false;
-    }
-}
-
-// 4. Secret Üretici
-function generateBase32Secret(length = 20): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    const randomBytes = crypto.randomBytes(length);
-    let secret = '';
-    for (let i = 0; i < length; i++) {
-        const index = randomBytes[i] % 32;
-        secret += chars[index];
-    }
-    return secret;
-}
+const otplib = require('otplib');
 
 const pump = util.promisify(pipeline);
 
@@ -163,7 +78,8 @@ export const verify2FALogin = async (req: FastifyRequest<Verify2FABody>, reply: 
         return reply.status(400).send({ message: 'Geçersiz istek' });
     }
 
-    const isValid = verifyTOTP(code, user.twoFactorSecret);
+    // otplib.verify({ token, secret }) formatı kullanılır
+    const isValid = otplib.verify({ token: code, secret: user.twoFactorSecret });
     
     if (!isValid) {
         return reply.status(401).send({ message: 'Hatalı 2FA kodu' });
@@ -296,7 +212,7 @@ export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
       const user = await prisma.user.findUnique({ where: { id: userJwt.id } });
       if (!user) return reply.code(404).send({message: 'User not found'});
 
-      const secret = generateBase32Secret();
+      const secret = otplib.generateSecret();
       console.log('📝 Yeni Secret:', secret);
 
       await prisma.user.update({
@@ -331,7 +247,7 @@ export const turnOn2FA = async (req: FastifyRequest<{ Body: { code: string } }>,
           return reply.status(400).send({ message: 'Lütfen önce Setup yapın.' });
       }
 
-      const isValid = verifyTOTP(code, user.twoFactorSecret);
+      const isValid = otplib.verify({ token: code, secret: user.twoFactorSecret });
 
       if (!isValid) {
           return reply.status(401).send({ message: 'Girdiğiniz kod yanlış veya süresi dolmuş.' });
