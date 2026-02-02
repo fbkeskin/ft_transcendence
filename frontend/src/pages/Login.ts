@@ -6,15 +6,15 @@ export const Login = {
     <div class="flex items-center justify-center min-h-screen bg-gray-900 text-white">
       <div class="bg-slate-800 p-8 rounded-xl shadow-2xl w-[400px] border border-slate-700 relative overflow-hidden">
         
-        <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400 tracking-widest">GIRIS YAP</h2>
+        <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400 tracking-widest">GİRİŞ YAP</h2>
 
         <div id="login-form" class="space-y-4 transition-all duration-500">
             <div>
-                <label class="block text-xs uppercase text-slate-400 mb-1">Email</label>
+                <label class="block text-xs uppercase text-slate-400 mb-1">E-posta</label>
                 <input type="email" id="email" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="mail@ornek.com">
             </div>
             <div>
-                <label class="block text-xs uppercase text-slate-400 mb-1">Şifre</label>
+                <label class="block text-xs uppercase text-slate-400 mb-1">ŞİFRE</label>
                 <input type="password" id="password" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="******">
             </div>
             <button id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded transition shadow-lg shadow-indigo-500/30">

@@ -7,7 +7,7 @@ export const Profile = {
     <div class="flex items-center justify-center min-h-screen py-10">
         <div class="bg-slate-800 p-8 rounded-xl shadow-xl w-[600px] border border-slate-700">
             
-            <h2 class="text-2xl font-bold mb-6 text-indigo-400 italic uppercase tracking-widest">User Profile</h2>
+            <h2 class="text-2xl font-bold mb-6 text-indigo-400 italic uppercase tracking-widest">KULLANICI PROFİLİ</h2>
             
             <div class="flex flex-col md:flex-row gap-8 items-start mb-8 font-sans border-b border-slate-700 pb-8">
                 <div class="flex flex-col items-center gap-4">
@@ -20,24 +20,24 @@ export const Profile = {
                     </div>
                     <input type="file" id="avatar-input" accept="image/*" class="hidden">
                     <label for="avatar-input" class="text-xs bg-slate-700 px-3 py-1 rounded cursor-pointer hover:bg-slate-600 transition text-white border border-slate-600">
-                        Change Avatar
+                        AVATARINI DEĞİŞTİR
                     </label>
                 </div>
 
                 <div class="flex-1 w-full space-y-4">
                     <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Display Name</label>
+                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">GÖRÜNEN İSİM</label>
                         <input type="text" id="display-name" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
                     </div> 
                     <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Email</label>
+                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">E-posta</label>
                         <input type="text" id="email-display" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
                     </div>
                 </div>
             </div>
 
             <div class="mt-6">
-                <h3 class="text-xl font-bold text-white mb-2">Two-Factor Authentication (2FA)</h3>
+                <h3 class="text-xl font-bold text-white mb-2">İki Faktörlü Doğrulama (2FA)</h3>
                 <p class="text-slate-400 text-sm mb-4">Hesabını Google Authenticator ile koru.</p>
 
                 <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex items-center gap-3">
@@ -72,7 +72,7 @@ export const Profile = {
             </div>
 
             <button id="profile-to-menu" class="mt-8 w-full text-slate-500 hover:text-white text-xs uppercase tracking-widest transition font-sans underline">
-                ← Back to Dashboard
+                ← Oyun Alanına Dön
             </button>
         </div>
     </div>

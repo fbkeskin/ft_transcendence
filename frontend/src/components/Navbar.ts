@@ -44,12 +44,12 @@ export const Navbar = {
 			  <div class="ml-10 flex items-baseline space-x-4">
 				
 				${isLoggedIn ? `
-				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>Oyun Alanı 🎮</a>
+				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>OYUN ALANI 🎮</a>
 				  <a href="/profile" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>
-					Profil (${user.username || 'Oyuncu'}) 👤
+					PROFİL (${user.username || 'Oyuncu'}) 👤
 				  </a>
 				  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-md text-sm font-bold transition-all ml-4">
-					Çıkış Yap
+					ÇIKIŞ YAP
 				  </button>
 				` : `
 				  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>Giriş Yap</a>

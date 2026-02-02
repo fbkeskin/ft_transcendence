@@ -8,15 +8,15 @@ export const Home = {
 		<div class="container mx-auto px-4 py-20 flex flex-col items-center text-center relative z-10">
 		  
 		  <span class="inline-block py-1 px-3 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in-up">
-			New Generation Pong
+			YENİ NESİL PONG
 		  </span>
   
 		  <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight animate-fade-in-up delay-100">
-			Welcome PING PONG <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">42-Style</span> Game!
+			42 Tarzı <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Ping Pong</span> Oyununa Hoş Geldiniz!
 		  </h1>
   
 		  <p class="text-lg text-slate-400 max-w-2xl mb-10 animate-fade-in-up delay-200">
-			Sıradan oyunlardan sıkıldın mı? Gerçek zamanlı multiplayer, yapay zeka rakipler ve turnuva sistemiyle Pong deneyimini zirveye taşı.
+			Sıradan oyunlardan sıkıldın mı? Gerçek zamanlı çok oyunculu, yapay zeka rakipler ve turnuva sistemiyle Pong deneyimini zirveye taşı.
 		  </p>
   
 		  <div class="flex gap-4 animate-fade-in-up delay-300">
@@ -33,7 +33,7 @@ export const Home = {
 			  <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition">
 				🎮
 			  </div>
-			  <h3 class="text-xl font-bold text-white mb-2">Multiplayer Arena</h3>
+			  <h3 class="text-xl font-bold text-white mb-2">Çok Oyunculu Arena</h3>
 			  <p class="text-slate-400 text-sm">Arkadaşlarına meydan oku veya rastgele rakiplerle eşleş.</p>
 			</div>
   

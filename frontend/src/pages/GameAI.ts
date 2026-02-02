@@ -29,7 +29,7 @@ export const GameAI = {
              <p class="text-xs">Durum: <span class="text-slate-300">HESAPLIYOR...</span></p>
         </div>
 
-        <div class="text-center pt-2 opacity-50">ESC: Çıkış</div>
+        <div class="text-center pt-2 opacity-50">ESC:Çıkış</div>
 
         <div class="text-right">
              <p class="text-xl text-blue-400 font-bold mb-1" id="player-name">YÜKLENİYOR...</p>
@@ -42,7 +42,7 @@ export const GameAI = {
         <div class="bg-slate-800 p-8 rounded-xl text-center border border-indigo-500 shadow-2xl min-w-[300px]">
             <h2 class="text-4xl font-bold mb-4 text-white" id="winner-text">...</h2>
             <div class="flex gap-4 justify-center mt-6">
-                <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition">Tekrar Dene</button>
+                <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition">Tekrar Oyna</button>
                 <button id="exit-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded font-bold transition">Çıkış</button>
             </div>
         </div>
@@ -149,7 +149,8 @@ export const GameAI = {
         clearInterval(aiInterval);
         cancelAnimationFrame(animationFrameId); // STABILITY FIX
         
-        document.getElementById('winner-text')!.innerText = `${winnerName} KAZANDI!`;
+        const winnerText = document.getElementById('winner-text')!;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> KAZANDI! 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {

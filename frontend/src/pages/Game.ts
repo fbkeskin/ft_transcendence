@@ -29,7 +29,7 @@ export const Game = {
              <p class="text-xs">Kontrol: <span class="text-slate-300">W / S</span></p>
         </div>
 
-        <div class="text-center pt-2 opacity-50">ESC: Çıkış</div>
+        <div class="text-center pt-2 opacity-50">ESC:Çıkış</div>
 
         <div class="text-right">
              <p class="text-xl text-indigo-400 font-bold mb-1" id="p2-name">YÜKLENİYOR...</p>
@@ -62,7 +62,7 @@ export const Game = {
         const user = await getProfileReq();
         currentUsername = user.username;
         
-        const input = prompt("Rakibin (Misafir) adı nedir?", "Misafir");
+        const input = prompt("RAKİBİN ADINI GİRİN", "Misafir");
         if (input && input.trim() !== "") guestName = input.trim();
 
     } catch (e) {
@@ -132,7 +132,9 @@ export const Game = {
     async function endGame(winnerName: string) {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId); // Döngüyü durdur
-        document.getElementById('winner-text')!.innerText = `${winnerName} KAZANDI!`;
+        
+        const winnerText = document.getElementById('winner-text')!;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> KAZANDI! 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {

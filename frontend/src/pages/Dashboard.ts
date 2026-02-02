@@ -22,22 +22,22 @@ export const Dashboard = {
                 <div class="relative group cursor-pointer mb-4">
                     <img id="user-avatar" src="" alt="Avatar" class="w-32 h-32 rounded-full border-4 border-indigo-500 object-cover shadow-lg bg-gray-700">
                     <label for="avatar-input" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                        <span class="text-xs font-bold">Değiştir</span>
+                        <span class="text-xs font-bold">Avatarını Değiştir</span>
                     </label>
                     <input type="file" id="avatar-input" class="hidden" accept="image/*">
                 </div>
                 
                 <h2 id="user-name" class="text-2xl font-bold mb-1">...</h2>
-                <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">Lvl 1</span>
+                <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">Seviye 1</span>
 
                 <div class="grid grid-cols-2 gap-4 w-full text-center">
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
                         <span class="block text-xl font-bold text-green-400" id="user-wins">0</span>
-                        <span class="text-xs text-gray-400 uppercase">Wins</span>
+                        <span class="text-xs text-gray-400 uppercase">GALİBİYET</span>
                     </div>
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
                         <span class="block text-xl font-bold text-red-400" id="user-losses">0</span>
-                        <span class="text-xs text-gray-400 uppercase">Losses</span>
+                        <span class="text-xs text-gray-400 uppercase">MAĞLUBİYET</span>
                     </div>
                 </div>
             </div>
@@ -49,40 +49,40 @@ export const Dashboard = {
                 <button class="game-btn h-32 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🏓</span>
-                    <span class="font-bold text-xl">1 vs 1 (Local)</span>
+                    <span class="font-bold text-xl">1 vs 1 </span>
                 </button>
 
                 <button class="game-btn h-32 bg-gradient-to-br from-purple-600 to-pink-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🤖</span>
-                    <span class="font-bold text-xl">AI Karşı</span>
+                    <span class="font-bold text-xl">AI ile OYNA</span>
                 </button>
                 
                 <button class="game-btn h-32 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🌍</span>
-                    <span class="font-bold text-xl">Online Oyna</span>
+                    <span class="font-bold text-xl">ONLINE OYNA</span>
                 </button>
 
                 <button class="game-btn h-32 bg-gradient-to-br from-orange-600 to-red-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🏆</span>
-                    <span class="font-bold text-xl">Turnuva</span>
+                    <span class="font-bold text-xl">TURNUVA</span>
                 </button>
             </div>
 
             <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
                 <h3 class="text-lg font-bold mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
-                    <span>📜</span> Son Maç Geçmişi
+                    <span>📊</span>MAÇ GEÇMİŞİ
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-400">
                         <thead class="text-xs text-gray-300 uppercase bg-slate-900">
                             <tr>
-                                <th class="px-4 py-3 rounded-l-lg">Rakip</th>
+                                <th class="px-4 py-3 rounded-l-lg">RAKİP</th>
                                 <th class="px-4 py-3">Skor</th>
                                 <th class="px-4 py-3">Sonuç</th>
-                                <th class="px-4 py-3 rounded-r-lg">Tarih</th>
+                                <th class="px-4 py-3 rounded-r-lg">TARİH</th>
                             </tr>
                         </thead>
                         <tbody id="match-history-body">
@@ -114,7 +114,7 @@ export const Dashboard = {
         document.getElementById('user-name')!.innerText = user.username;
         document.getElementById('user-wins')!.innerText = user.wins.toString();
         document.getElementById('user-losses')!.innerText = user.losses.toString();
-        document.getElementById('user-level')!.innerText = `Lvl ${user.level}`;
+        document.getElementById('user-level')!.innerText = `Seviye ${user.level}`;
 
         // --- 2. MAÇ GEÇMİŞİ TABLOSU ---
         const tbody = document.getElementById('match-history-body')!;
@@ -150,9 +150,9 @@ export const Dashboard = {
                 // Sonuç (Win/Loss)
                 let resultBadges = '';
                 if (myScore > enemyScore) {
-                    resultBadges = `<span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-bold">VICTORY</span>`;
+                    resultBadges = `<span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-bold">ZAFER</span>`;
                 } else {
-                    resultBadges = `<span class="bg-red-900 text-red-300 px-2 py-1 rounded text-xs font-bold">DEFEAT</span>`;
+                    resultBadges = `<span class="bg-red-900 text-red-300 px-2 py-1 rounded text-xs font-bold">YENİLGİ</span>`;
                 }
 
                 // Tarih Formatı
@@ -184,7 +184,7 @@ export const Dashboard = {
     buttons[0].addEventListener('click', () => navigate('/game/local'));
     buttons[1].addEventListener('click', () => navigate('/game/ai'));
     buttons[2].addEventListener('click', () => alert('Online Modu Yapım Aşamasında 🚧'));
-    buttons[3].addEventListener('click', () => alert('Turnuva Modu Yapım Aşamasında 🏆'));
+    buttons[3].addEventListener('click', () => alert('Turnuva Modu Yapım Aşamasında 🚧'));
 
     document.getElementById('logout-btn')?.addEventListener('click', () => {
         localStorage.removeItem('token');

@@ -13,7 +13,7 @@ export const Register = {
                 </div>
                 
                 <div>
-                    <input type="email" id="email" placeholder="Email" class="w-full bg-slate-700 p-3 rounded border border-slate-600 outline-none text-white focus:border-indigo-500 transition" required>
+                    <input type="email" id="email" placeholder="E-posta" class="w-full bg-slate-700 p-3 rounded border border-slate-600 outline-none text-white focus:border-indigo-500 transition" required>
                 </div>
                 
                 <div>
