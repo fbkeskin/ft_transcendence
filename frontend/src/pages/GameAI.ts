@@ -2,6 +2,7 @@
 import { navigate } from '../router';
 import { saveGameReq } from '../services/game.service';
 import { getProfileReq } from '../services/auth.service';
+import { lang } from '../services/language.service';
 
 export const GameAI = {
   render: () => `
@@ -9,7 +10,7 @@ export const GameAI = {
       
       <!-- BAŞLIK -->
       <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
-        OYUNCU vs YAPAY ZEKA
+        ${lang.t('game_ai_title')}
       </div>
 
       <!-- SKOR -->
@@ -22,18 +23,18 @@ export const GameAI = {
       <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-indigo-900 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
 
       <!-- BİLGİLER -->
-      <div class="mt-4 w-full max-w-[960px] flex justify-between px-10 text-slate-500 text-sm font-mono select-none">
+      <div class="mt-4 w-full max-w-[960px] grid grid-cols-3 px-10 text-slate-500 text-sm font-mono select-none items-start">
         
         <div class="text-left">
-             <p class="text-xl text-red-400 font-bold mb-1">🤖 YAPAY ZEKA</p>
-             <p class="text-xs">Durum: <span class="text-slate-300">HESAPLIYOR...</span></p>
+             <p class="text-xl text-red-400 font-bold mb-1">🤖 ${lang.t('game_ai_name')}</p>
+             <p class="text-xs">${lang.t('game_ai_status')}: <span class="text-slate-300">${lang.t('game_ai_thinking')}</span></p>
         </div>
 
-        <div class="text-center pt-2 opacity-50">ESC:Çıkış</div>
+        <div class="text-center pt-2 opacity-50">${lang.t('game_exit_esc')}</div>
 
         <div class="text-right">
-             <p class="text-xl text-blue-400 font-bold mb-1" id="player-name">YÜKLENİYOR...</p>
-             <p class="text-xs">Kontrol: <span class="text-slate-300">OK TUŞLARI</span></p>
+             <p class="text-xl text-blue-400 font-bold mb-1" id="player-name">${lang.t('game_loading')}</p>
+             <p class="text-xs">${lang.t('game_control')}: <span class="text-slate-300">${lang.t('game_keys_arrow')}</span></p>
         </div>
 
       </div>
@@ -42,8 +43,8 @@ export const GameAI = {
         <div class="bg-slate-800 p-8 rounded-xl text-center border border-indigo-500 shadow-2xl min-w-[300px]">
             <h2 class="text-4xl font-bold mb-4 text-white" id="winner-text">...</h2>
             <div class="flex gap-4 justify-center mt-6">
-                <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition">Tekrar Oyna</button>
-                <button id="exit-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded font-bold transition">Çıkış</button>
+                <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition">${lang.t('game_restart_btn')}</button>
+                <button id="exit-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded font-bold transition">${lang.t('game_exit_btn')}</button>
             </div>
         </div>
       </div>
@@ -139,7 +140,7 @@ export const GameAI = {
         else if (ball.x + BALL_SIZE < 0) { score2++; updateScore(); resetBall(); } // SEN Attın
 
         if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
-            endGame(score1 >= WIN_SCORE ? "YAPAY ZEKA" : currentUsername);
+            endGame(score1 >= WIN_SCORE ? lang.t('game_ai_name') : currentUsername);
         }
     }
 
@@ -150,13 +151,13 @@ export const GameAI = {
         cancelAnimationFrame(animationFrameId); // STABILITY FIX
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> KAZANDI! 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {
             // DİKKAT: score2 = SEN, score1 = AI
-            await saveGameReq(score2, score1, "Yapay Zeka");
-            console.log("AI Maçı Kaydedildi ✅");
+            await saveGameReq(score2, score1, lang.t('game_ai_name'));
+            console.log(lang.t('game_ai_saved'));
         } catch (err) { console.error(err); }
     }
 

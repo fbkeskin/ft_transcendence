@@ -1,35 +1,37 @@
 import { loginReq, verify2FALoginReq, getProfileReq } from '../services/auth.service';
 import { navigate } from '../router';
+import { lang } from '../services/language.service';
+import { Modal } from '../utils/Modal';
 
 export const Login = {
   render: () => `
     <div class="flex items-center justify-center min-h-screen bg-gray-900 text-white">
       <div class="bg-slate-800 p-8 rounded-xl shadow-2xl w-[400px] border border-slate-700 relative overflow-hidden">
         
-        <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400 tracking-widest">GİRİŞ YAP</h2>
+        <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400 tracking-widest">${lang.t('login_title')}</h2>
 
         <div id="login-form" class="space-y-4 transition-all duration-500">
             <div>
-                <label class="block text-xs uppercase text-slate-400 mb-1">E-posta</label>
-                <input type="email" id="email" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="mail@ornek.com">
+                <label class="block text-xs uppercase text-slate-400 mb-1">${lang.t('email_label')}</label>
+                <input type="email" id="email" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="${lang.t('email_placeholder')}">
             </div>
             <div>
-                <label class="block text-xs uppercase text-slate-400 mb-1">ŞİFRE</label>
-                <input type="password" id="password" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="******">
+                <label class="block text-xs uppercase text-slate-400 mb-1">${lang.t('password_label')}</label>
+                <input type="password" id="password" class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" placeholder="${lang.t('password_placeholder')}">
             </div>
             <button id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded transition shadow-lg shadow-indigo-500/30">
-                GİRİŞ YAP
+                ${lang.t('login_btn')}
             </button>
             
             <div class="text-center mt-4">
-				<a href="http://localhost:3000/auth/42" class="text-sm text-slate-400 hover:text-white underline"> 42 ile Giriş Yap </a>            </div>
+				<a href="http://localhost:3000/auth/42" class="text-sm text-slate-400 hover:text-white underline"> ${lang.t('login_42_btn')} </a>            </div>
         </div>
 
         <div id="2fa-form" class="hidden space-y-4 animate-fade-in">
             <div class="text-center mb-4">
                 <div class="text-5xl mb-2">🛡️</div>
-                <h3 class="text-xl font-bold text-white">2FA Doğrulama</h3>
-                <p class="text-xs text-slate-400">Google Authenticator kodunu giriniz.</p>
+                <h3 class="text-xl font-bold text-white">${lang.t('twofa_title')}</h3>
+                <p class="text-xs text-slate-400">${lang.t('twofa_desc')}</p>
             </div>
 
             <div>
@@ -39,11 +41,11 @@ export const Login = {
             </div>
 
             <button id="verify-2fa-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg shadow-emerald-500/30">
-                DOĞRULA
+                ${lang.t('twofa_verify_btn')}
             </button>
             
             <button id="back-to-login" class="w-full text-xs text-slate-500 hover:text-white underline mt-2">
-                ← Geri Dön
+                ${lang.t('twofa_back_btn')}
             </button>
         </div>
 
@@ -122,7 +124,7 @@ export const Login = {
     // 3. Durum: Hata mesajı var mı?
     const errorParam = urlParams.get('error');
     if (errorParam) {
-        alert("Giriş Başarısız: " + errorParam);
+        Modal.alert(lang.t('login_error'), errorParam);
         window.history.replaceState({}, document.title, "/login");
     }
     // ============================================================
@@ -150,38 +152,24 @@ export const Login = {
             navigate('/dashboard');
         }
       } catch (err: any) {
-        alert('Giriş Hatası: ' + err.message);
+        // Backend'den gelen KODU çevirerek göster
+        Modal.alert(lang.t('login_error'), lang.t(err.message));
       }
     });
 
-	// --- 2. 2FA DOĞRULA BUTONU ---
-    verifyBtn?.addEventListener('click', async () => {
-        const code = codeInput.value;
-        if (!code || !tempUserId) return alert("Kod eksik!");
-
-        try {
-            // 1. Token'ı al
-            const res = await verify2FALoginReq(tempUserId, code);
-            localStorage.setItem('token', res.token);
-
-            // --- EKSİK OLAN KISIM BURASIYDI ---
-            // Token var ama user bilgisi yok. Hemen çekip kaydedelim:
-            try {
-                const user = await getProfileReq();
-                localStorage.setItem('user', JSON.stringify(user));
-            } catch (err) {
-                console.warn("Profil bilgisi çekilemedi:", err);
-            }
-            // ----------------------------------
-
-            navigate('/dashboard'); // Şimdi yönlendir
-
-        } catch (err: any) {
-            alert("Hatalı Kod! Lütfen tekrar dene.");
-            codeInput.value = ''; // Kutuyu temizle
-        }
-    });
-
+		// --- 2. 2FA DOĞRULA BUTONU ---
+	    verifyBtn?.addEventListener('click', async () => {
+	        const code = codeInput.value;
+	        if (!code || !tempUserId) return Modal.alert(lang.t('common_error'), lang.t('twofa_missing'));
+	
+	        try {
+	            // ...
+	        } catch (err: any) {
+	            // Backend'den gelen kodu çevir
+	            await Modal.alert(lang.t('common_error'), lang.t(err.message));
+	            codeInput.value = ''; 
+	        }
+	    });
     // --- Geri Dön Butonu ---
     backBtn?.addEventListener('click', () => {
         twoFaForm?.classList.add('hidden');

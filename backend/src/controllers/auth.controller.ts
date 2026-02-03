@@ -39,9 +39,9 @@ export const register = async (request: FastifyRequest<RegisterBody>, reply: Fas
   try {
     const { email, username, password } = request.body;
     const newUser = await registerUser(email, username, password);
-    return reply.code(201).send({ message: 'Kullanici olusturuldu', user: newUser });
+    return reply.code(201).send({ message: 'USER_CREATED', user: newUser });
   } catch (error: any) {
-    return reply.code(409).send({ message: 'Email veya kullanici adi kullanimda' });
+    return reply.code(409).send({ message: 'EMAIL_OR_USERNAME_TAKEN' });
   }
 };
 
@@ -52,43 +52,49 @@ export const login = async (request: FastifyRequest<LoginBody>, reply: FastifyRe
   const { email, password } = request.body;
   const result = await loginUser(email, password, request.server.jwt);
 
-  if (!result) return reply.code(401).send({ message: 'Hatali giris' });
+  if (!result) return reply.code(401).send({ message: 'INVALID_CREDENTIALS' });
 
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user && user.isTwoFactorEnabled) {
     return reply.send({ 
-      message: '2FA Kodu Gerekli', 
+      message: '2FA_REQUIRED', 
       require2FA: true, 
       userId: user.id 
     });
   }
 
-  return reply.send({ message: 'Giris basarili', token: result.token });
+  return reply.send({ message: 'LOGIN_SUCCESS', token: result.token });
 };
 
 // ----------------------------------------------------------------
 // 3. 2FA VERIFY LOGIN
 // ----------------------------------------------------------------
 export const verify2FALogin = async (req: FastifyRequest<Verify2FABody>, reply: FastifyReply) => {
-    const { userId, code } = req.body;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    try {
+        const { userId, code } = req.body;
+        const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
-        return reply.status(400).send({ message: 'Geçersiz istek' });
+        if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
+            return reply.status(400).send({ message: 'INVALID_REQUEST' });
+        }
+
+        // otplib.authenticator.verify kullanımı daha güvenlidir
+        // Eğer token formatı yanlışsa (harf vs.) hata fırlatabilir, try-catch ile yakalıyoruz.
+        const isValid = otplib.authenticator.verify({ token: code, secret: user.twoFactorSecret });
+        
+        if (!isValid) {
+            return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
+        }
+
+        const token = req.server.jwt.sign({
+            id: user.id, email: user.email, username: user.username,
+        });
+        return reply.send({ message: 'LOGIN_SUCCESS', token });
+    } catch (err) {
+        console.error("2FA Verify Hatası:", err);
+        return reply.status(401).send({ message: 'INVALID_CODE_FORMAT' });
     }
-
-    // otplib.verify({ token, secret }) formatı kullanılır
-    const isValid = otplib.verify({ token: code, secret: user.twoFactorSecret });
-    
-    if (!isValid) {
-        return reply.status(401).send({ message: 'Hatalı 2FA kodu' });
-    }
-
-    const token = req.server.jwt.sign({
-        id: user.id, email: user.email, username: user.username,
-    });
-    return reply.send({ message: 'Giriş Başarılı', token });
 };
 
 // ----------------------------------------------------------------
@@ -141,7 +147,7 @@ export const me = async (request: FastifyRequest, reply: FastifyReply) => {
       
       return reply.send({ user: safeUser });
     } catch (error) {
-      return reply.code(500).send({ message: 'Sunucu hatası' });
+      return reply.code(500).send({ message: 'SERVER_ERROR' });
     }
 };
 
@@ -226,7 +232,7 @@ export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
       return reply.send({ qrCodeUrl: imageUrl });
     } catch (error) {
       console.error('🔥 2FA Generate Hatası:', error);
-      return reply.status(500).send({ message: 'QR Kod hatası' });
+      return reply.status(500).send({ message: 'QR_GENERATE_ERROR' });
     }
 };
   
@@ -244,20 +250,20 @@ export const turnOn2FA = async (req: FastifyRequest<{ Body: { code: string } }>,
       });
 
       if (!user || !user.twoFactorSecret) {
-          return reply.status(400).send({ message: 'Lütfen önce Setup yapın.' });
+          return reply.status(400).send({ message: 'SETUP_REQUIRED' });
       }
 
-      const isValid = otplib.verify({ token: code, secret: user.twoFactorSecret });
+      const isValid = otplib.authenticator.verify({ token: code, secret: user.twoFactorSecret });
 
       if (!isValid) {
-          return reply.status(401).send({ message: 'Girdiğiniz kod yanlış veya süresi dolmuş.' });
+          return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
       }
   
       await prisma.user.update({ where: { id: user.id }, data: { isTwoFactorEnabled: true } });
-      return reply.send({ message: '2FA Başarıyla Aktif Edildi! 🛡️' });
+      return reply.send({ message: '2FA_ENABLED_SUCCESS' });
 
     } catch (error) {
       console.error('🔥 2FA TurnOn Hatası:', error);
-      return reply.status(500).send({ message: 'Sunucu hatası.' });
+      return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); // 500 yerine 400 Bad Request
     }
 };

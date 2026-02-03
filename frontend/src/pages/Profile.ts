@@ -1,13 +1,16 @@
+// frontend/src/pages/Profile.ts
 import { getProfileReq, uploadAvatarReq, generate2FAReq, turnOn2FAReq } from '../services/auth.service';
 import { navigate } from '../router';
 import { getAvatarUrl } from '../utils/imageUrl';
+import { lang } from '../services/language.service';
+import { Modal } from '../utils/Modal';
 
 export const Profile = {
   render: () => `
     <div class="flex items-center justify-center min-h-screen py-10">
         <div class="bg-slate-800 p-8 rounded-xl shadow-xl w-[600px] border border-slate-700">
             
-            <h2 class="text-2xl font-bold mb-6 text-indigo-400 italic uppercase tracking-widest">KULLANICI PROFİLİ</h2>
+            <h2 class="text-2xl font-bold mb-6 text-indigo-400 italic uppercase tracking-widest">${lang.t('prof_title')}</h2>
             
             <div class="flex flex-col md:flex-row gap-8 items-start mb-8 font-sans border-b border-slate-700 pb-8">
                 <div class="flex flex-col items-center gap-4">
@@ -20,51 +23,51 @@ export const Profile = {
                     </div>
                     <input type="file" id="avatar-input" accept="image/*" class="hidden">
                     <label for="avatar-input" class="text-xs bg-slate-700 px-3 py-1 rounded cursor-pointer hover:bg-slate-600 transition text-white border border-slate-600">
-                        AVATARINI DEĞİŞTİR
+                        ${lang.t('prof_change_avatar_btn')}
                     </label>
                 </div>
 
                 <div class="flex-1 w-full space-y-4">
                     <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">GÖRÜNEN İSİM</label>
+                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">${lang.t('prof_display_name')}</label>
                         <input type="text" id="display-name" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
                     </div> 
                     <div>
-                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">E-posta</label>
+                        <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">${lang.t('prof_email')}</label>
                         <input type="text" id="email-display" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
                     </div>
                 </div>
             </div>
 
             <div class="mt-6">
-                <h3 class="text-xl font-bold text-white mb-2">İki Faktörlü Doğrulama (2FA)</h3>
-                <p class="text-slate-400 text-sm mb-4">Hesabını Google Authenticator ile koru.</p>
+                <h3 class="text-xl font-bold text-white mb-2">${lang.t('prof_2fa_title')}</h3>
+                <p class="text-slate-400 text-sm mb-4">${lang.t('prof_2fa_desc')}</p>
 
                 <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex items-center gap-3">
                     <span class="text-2xl">🛡️</span>
                     <div>
-                        <p class="font-bold">2FA Aktif</p>
-                        <p class="text-xs opacity-80">Hesabın maksimum güvenlik altında.</p>
+                        <p class="font-bold">${lang.t('prof_2fa_active')}</p>
+                        <p class="text-xs opacity-80">${lang.t('prof_2fa_active_desc')}</p>
                     </div>
                 </div>
 
                 <div id="2fa-setup-area">
                     <button id="btn-enable-2fa" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded font-bold text-sm transition shadow-lg shadow-indigo-500/20">
-                        2FA Kurulumunu Başlat
+                        ${lang.t('prof_2fa_enable_btn')}
                     </button>
 
                     <div id="qr-container" class="hidden mt-4 p-4 bg-slate-900 rounded-lg border border-slate-600 animate-fade-in">
-                        <p class="text-xs text-slate-400 mb-2">1. Aşağıdaki QR Kodu telefonuna okut:</p>
+                        <p class="text-xs text-slate-400 mb-2">${lang.t('prof_2fa_step1')}</p>
                         <div class="bg-white p-2 w-fit rounded mx-auto mb-4">
                             <img id="qr-image" class="w-40 h-40" />
                         </div>
 
-                        <p class="text-xs text-slate-400 mb-2">2. Üretilen 6 haneli kodu gir:</p>
+                        <p class="text-xs text-slate-400 mb-2">${lang.t('prof_2fa_step2')}</p>
                         <div class="flex gap-2">
                             <input type="text" id="2fa-input" placeholder="123456" maxlength="6" 
                                    class="bg-slate-800 border border-slate-600 text-white text-center tracking-widest text-lg p-2 rounded w-full focus:border-indigo-500 outline-none">
                             <button id="btn-verify-2fa" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold transition">
-                                Onayla
+                                ${lang.t('prof_2fa_verify_btn')}
                             </button>
                         </div>
                     </div>
@@ -72,7 +75,7 @@ export const Profile = {
             </div>
 
             <button id="profile-to-menu" class="mt-8 w-full text-slate-500 hover:text-white text-xs uppercase tracking-widest transition font-sans underline">
-                ← Oyun Alanına Dön
+                ${lang.t('prof_back_dashboard')}
             </button>
         </div>
     </div>
@@ -130,8 +133,8 @@ export const Profile = {
             try {
                 const result = await uploadAvatarReq(fileInput.files[0]);
                 avatarImg.src = `http://localhost:3000${result.url}?t=${new Date().getTime()}`;
-                alert("Avatar güncellendi! 😎");
-            } catch (err: any) { alert(err.message); }
+                await Modal.alert(lang.t('common_success'), lang.t('prof_avatar_updated'));
+            } catch (err: any) { await Modal.alert(lang.t('common_error'), lang.t(err.message)); }
         }
     });
 
@@ -144,28 +147,28 @@ export const Profile = {
             qrImage.src = res.qrCodeUrl;
             qrContainer?.classList.remove('hidden');
             btnEnable.classList.add('hidden'); // Butonu gizle
-        } catch (err) {
-            alert("QR Kod oluşturulamadı.");
+        } catch (err: any) {
+            await Modal.alert(lang.t('common_error'), lang.t(err.message || 'prof_qr_error'));
         }
     });
 
     // C) "Onayla" Butonu (Kodu girince)
     btnVerify?.addEventListener('click', async () => {
         const code = input2fa.value;
-        if (!code) return alert("Lütfen kodu girin.");
+        if (!code) return Modal.alert(lang.t('common_warning'), lang.t('prof_code_missing'));
 
         try {
             // Kodu doğrula
             await turnOn2FAReq(code);
             
-            alert("Tebrikler! 2FA Başarıyla Açıldı! 🛡️");
+            await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_success'));
             
-            // Ekranı güncelle (Sayfayı yenilemeye gerek yok, UI değiştir)
+            // Ekranı güncelle
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
             
         } catch (err: any) {
-            alert("Hata: " + err.message); // "Hatalı kod" vb.
+            await Modal.alert(lang.t('common_error'), lang.t(err.message)); 
         }
     });
 

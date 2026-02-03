@@ -1,6 +1,8 @@
 // frontend/src/pages/Dashboard.ts
-import { getProfileReq } from '../services/auth.service';
+import { getProfileReq, uploadAvatarReq } from '../services/auth.service';
 import { navigate } from '../router';
+import { lang } from '../services/language.service';
+import { Modal } from '../utils/Modal';
 
 export const Dashboard = {
   render: () => `
@@ -11,7 +13,7 @@ export const Dashboard = {
           FT_TRANSCENDENCE
         </h1>
         <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-bold transition">
-          ÇIKIŞ YAP
+          ${lang.t('dash_logout')}
         </button>
       </div>
 
@@ -22,22 +24,22 @@ export const Dashboard = {
                 <div class="relative group cursor-pointer mb-4">
                     <img id="user-avatar" src="" alt="Avatar" class="w-32 h-32 rounded-full border-4 border-indigo-500 object-cover shadow-lg bg-gray-700">
                     <label for="avatar-input" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                        <span class="text-xs font-bold">Avatarını Değiştir</span>
+                        <span class="text-xs font-bold text-center px-2">${lang.t('dash_change_avatar')}</span>
                     </label>
                     <input type="file" id="avatar-input" class="hidden" accept="image/*">
                 </div>
                 
                 <h2 id="user-name" class="text-2xl font-bold mb-1">...</h2>
-                <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">Seviye 1</span>
+                <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">${lang.t('dash_level')} 1</span>
 
                 <div class="grid grid-cols-2 gap-4 w-full text-center">
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
                         <span class="block text-xl font-bold text-green-400" id="user-wins">0</span>
-                        <span class="text-xs text-gray-400 uppercase">GALİBİYET</span>
+                        <span class="text-xs text-gray-400 uppercase">${lang.t('dash_wins')}</span>
                     </div>
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
                         <span class="block text-xl font-bold text-red-400" id="user-losses">0</span>
-                        <span class="text-xs text-gray-400 uppercase">MAĞLUBİYET</span>
+                        <span class="text-xs text-gray-400 uppercase">${lang.t('dash_losses')}</span>
                     </div>
                 </div>
             </div>
@@ -49,44 +51,44 @@ export const Dashboard = {
                 <button class="game-btn h-32 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🏓</span>
-                    <span class="font-bold text-xl">1 vs 1 </span>
+                    <span class="font-bold text-xl">${lang.t('dash_game_1v1')}</span>
                 </button>
 
                 <button class="game-btn h-32 bg-gradient-to-br from-purple-600 to-pink-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🤖</span>
-                    <span class="font-bold text-xl">AI ile OYNA</span>
+                    <span class="font-bold text-xl">${lang.t('dash_game_ai')}</span>
                 </button>
                 
                 <button class="game-btn h-32 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🌍</span>
-                    <span class="font-bold text-xl">ONLINE OYNA</span>
+                    <span class="font-bold text-xl">${lang.t('dash_game_online')}</span>
                 </button>
 
                 <button class="game-btn h-32 bg-gradient-to-br from-orange-600 to-red-700 rounded-xl flex flex-col items-center justify-center hover:scale-105 transition shadow-lg group relative overflow-hidden">
                     <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition"></div>
                     <span class="text-4xl mb-2 group-hover:rotate-12 transition">🏆</span>
-                    <span class="font-bold text-xl">TURNUVA</span>
+                    <span class="font-bold text-xl">${lang.t('dash_game_tour')}</span>
                 </button>
             </div>
 
             <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
                 <h3 class="text-lg font-bold mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
-                    <span>📊</span>MAÇ GEÇMİŞİ
+                    <span>📊</span>${lang.t('dash_history_title')}
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-400">
                         <thead class="text-xs text-gray-300 uppercase bg-slate-900">
                             <tr>
-                                <th class="px-4 py-3 rounded-l-lg">RAKİP</th>
-                                <th class="px-4 py-3">Skor</th>
-                                <th class="px-4 py-3">Sonuç</th>
-                                <th class="px-4 py-3 rounded-r-lg">TARİH</th>
+                                <th class="px-4 py-3 rounded-l-lg">${lang.t('dash_table_opponent')}</th>
+                                <th class="px-4 py-3">${lang.t('dash_table_score')}</th>
+                                <th class="px-4 py-3">${lang.t('dash_table_result')}</th>
+                                <th class="px-4 py-3 rounded-r-lg">${lang.t('dash_table_date')}</th>
                             </tr>
                         </thead>
                         <tbody id="match-history-body">
-                            <tr><td colspan="4" class="text-center py-4">Yükleniyor...</td></tr>
+                            <tr><td colspan="4" class="text-center py-4">${lang.t('dash_loading')}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -114,7 +116,21 @@ export const Dashboard = {
         document.getElementById('user-name')!.innerText = user.username;
         document.getElementById('user-wins')!.innerText = user.wins.toString();
         document.getElementById('user-losses')!.innerText = user.losses.toString();
-        document.getElementById('user-level')!.innerText = `Seviye ${user.level}`;
+        document.getElementById('user-level')!.innerText = `${lang.t('dash_level')} ${user.level}`;
+
+        // --- 1.1 AVATAR DEĞİŞTİRME ---
+        const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
+        fileInput?.addEventListener('change', async () => {
+            if (fileInput.files && fileInput.files[0]) {
+                try {
+                    const result = await uploadAvatarReq(fileInput.files[0]);
+                    avatarEl.src = `http://localhost:3000${result.url}?t=${new Date().getTime()}`;
+                    await Modal.alert(lang.t('common_success'), lang.t('prof_avatar_updated'));
+                } catch (err: any) { 
+                    await Modal.alert(lang.t('common_error'), lang.t(err.message)); 
+                }
+            }
+        });
 
         // --- 2. MAÇ GEÇMİŞİ TABLOSU ---
         const tbody = document.getElementById('match-history-body')!;
@@ -128,7 +144,7 @@ export const Dashboard = {
         allGames.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         if (allGames.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Henüz maç yapmadınız.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">${lang.t('dash_no_match')}</td></tr>`;
         } else {
             allGames.forEach((game: any) => {
                 // Sen Player 1 misin Player 2 mi?
@@ -136,11 +152,11 @@ export const Dashboard = {
                 
                 // Rakip Kim?
                 // Eğer player2 varsa (Online User) onun adını al, yoksa guestName'i al.
-                let opponentName = "Bilinmiyor";
+                let opponentName = lang.t('dash_unknown');
                 if (isPlayer1) {
-                    opponentName = game.player2 ? game.player2.username : (game.guestName || "Misafir");
+                    opponentName = game.player2 ? game.player2.username : (game.guestName || lang.t('dash_guest'));
                 } else {
-                    opponentName = game.player1 ? game.player1.username : "Rakip";
+                    opponentName = game.player1 ? game.player1.username : lang.t('dash_opponent');
                 }
 
                 // Skorlar (P1 - P2)
@@ -150,13 +166,13 @@ export const Dashboard = {
                 // Sonuç (Win/Loss)
                 let resultBadges = '';
                 if (myScore > enemyScore) {
-                    resultBadges = `<span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-bold">ZAFER</span>`;
+                    resultBadges = `<span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-bold">${lang.t('dash_win')}</span>`;
                 } else {
-                    resultBadges = `<span class="bg-red-900 text-red-300 px-2 py-1 rounded text-xs font-bold">YENİLGİ</span>`;
+                    resultBadges = `<span class="bg-red-900 text-red-300 px-2 py-1 rounded text-xs font-bold">${lang.t('dash_loss')}</span>`;
                 }
 
                 // Tarih Formatı
-                const date = new Date(game.createdAt).toLocaleDateString('tr-TR', { 
+                const date = new Date(game.createdAt).toLocaleDateString(lang.getCurrentLang(), { 
                     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
                 });
 
@@ -183,8 +199,8 @@ export const Dashboard = {
     const buttons = document.querySelectorAll('.game-btn');
     buttons[0].addEventListener('click', () => navigate('/game/local'));
     buttons[1].addEventListener('click', () => navigate('/game/ai'));
-    buttons[2].addEventListener('click', () => alert('Online Modu Yapım Aşamasında 🚧'));
-    buttons[3].addEventListener('click', () => alert('Turnuva Modu Yapım Aşamasında 🚧'));
+    buttons[2].addEventListener('click', () => Modal.alert(lang.t('dash_game_online'), lang.t('dash_online_wip')));
+    buttons[3].addEventListener('click', () => Modal.alert(lang.t('dash_game_tour'), lang.t('dash_tour_wip')));
 
     document.getElementById('logout-btn')?.addEventListener('click', () => {
         localStorage.removeItem('token');

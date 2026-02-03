@@ -1,4 +1,5 @@
 // frontend/src/components/Navbar.ts
+import { lang } from '../services/language.service';
 
 export const Navbar = {
 	render: () => {
@@ -44,20 +45,31 @@ export const Navbar = {
 			  <div class="ml-10 flex items-baseline space-x-4">
 				
 				${isLoggedIn ? `
-				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>OYUN ALANI 🎮</a>
+				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
 				  <a href="/profile" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>
-					PROFİL (${user.username || 'Oyuncu'}) 👤
+					${lang.t('nav_profile')} <span class="text-xs opacity-70">(${user.username || 'Oyuncu'})</span>
 				  </a>
 				  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-md text-sm font-bold transition-all ml-4">
-					ÇIKIŞ YAP
+					${lang.t('nav_logout')}
 				  </button>
 				` : `
-				  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>Giriş Yap</a>
+				  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_login')}</a>
 				  <a href="/register" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5" data-link>
-					Kayıt Ol 🚀
+					${lang.t('nav_register')}
 				  </a>
 				`}
 				
+                <div class="relative ml-4 group">
+                    <select id="lang-select" class="appearance-none bg-gray-900/80 hover:bg-gray-800 text-white border border-gray-700 hover:border-indigo-500 rounded-md py-1 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer">
+                        <option value="tr" ${lang.getCurrentLang() === 'tr' ? 'selected' : ''}>TR 🇹🇷</option>
+                        <option value="en" ${lang.getCurrentLang() === 'en' ? 'selected' : ''}>EN 🇺🇸</option>
+                        <option value="fr" ${lang.getCurrentLang() === 'fr' ? 'selected' : ''}>FR 🇫🇷</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+
 			  </div>
 			</div>
 		  </div>
@@ -78,5 +90,13 @@ export const Navbar = {
 		  window.location.href = '/login';
 		});
 	  }
+
+      const langSelect = document.getElementById('lang-select');
+      if (langSelect) {
+        langSelect.addEventListener('change', (e: Event) => {
+            const target = e.target as HTMLSelectElement;
+            lang.setLanguage(target.value);
+        });
+      }
 	}
   };

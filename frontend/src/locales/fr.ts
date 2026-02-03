@@ -1,0 +1,144 @@
+export const fr = {
+  nav_game: "ZONE DE JEU 🎮",
+  nav_profile: "PROFIL 👤",
+  nav_logout: "SE DÉCONNECTER",
+  nav_login: "Se connecter",
+  nav_register: "S'inscrire 🚀",
+  welcome: "Bienvenue",
+  
+  // Common Buttons
+  btn_ok: "D'ACCORD",
+  btn_cancel: "ANNULER",
+
+  // Common Titles
+  common_success: "SUCCÈS",
+  common_error: "ERREUR",
+  common_warning: "ATTENTION",
+
+  // Common Placeholders
+  email_placeholder: "mail@exemple.fr",
+  password_placeholder: "Mot de passe",
+
+  // Backend Errors & Messages
+  EMAIL_OR_USERNAME_TAKEN: "L'e-mail ou le nom d'utilisateur est déjà pris.",
+  INVALID_CREDENTIALS: "E-mail ou mot de passe incorrect.",
+  USER_CREATED: "Utilisateur créé avec succès.",
+  LOGIN_SUCCESS: "Connexion réussie!",
+  "2FA_REQUIRED": "Vérification 2FA requise",
+  INVALID_REQUEST: "Requête invalide.",
+  INVALID_2FA_CODE: "Code 2FA invalide ou expiré.",
+  SETUP_REQUIRED: "Veuillez d'abord démarrer la configuration 2FA.",
+  "2FA_ENABLED_SUCCESS": "2FA activé avec succès! 🛡️",
+  INVALID_CODE_FORMAT: "Code invalide.",
+  SERVER_ERROR: "Une erreur de serveur s'est produite. Veuillez réessayer plus tard.",
+  QR_GENERATE_ERROR: "Impossible de générer le code QR.",
+
+  // Login Page
+  login_title: "CONNEXION",
+  email_label: "E-MAIL",
+  password_label: "MOT DE PASSE",
+  login_btn: "SE CONNECTER",
+  login_42_btn: "Connexion avec 42",
+  login_success: "Connexion réussie !",
+  login_error: "Erreur de connexion :", 
+
+  // 2FA
+  twofa_title: "Vérification 2FA",
+  twofa_desc: "Entrez le code généré par Google Authenticator.",
+  twofa_verify_btn: "Vérifier",
+  twofa_back_btn: "← Retour",
+  twofa_error: "Code invalide. Veuillez réessayer.",
+  twofa_missing: "Code requis.",
+
+  // Register
+  register_title: "CRÉER UN COMPTE",
+  username_placeholder: "Nom d’utilisateur",
+  register_btn: "S'INSCRIRE",
+  back_to_home: "Retour à l'accueil",
+  register_success: "✅ Inscription réussie ! Redirection en cours.",
+
+  // Dashboard
+  dash_logout: "SE DÉCONNECTER",
+  dash_change_avatar: "Changer l’avatar",
+  dash_level: "Niveau",
+  dash_wins: "VICTOIRES",
+  dash_losses: "DÉFAITES",
+  dash_game_1v1: "1 contre 1",
+  dash_game_ai: "Jouer contre l’IA",
+  dash_game_online: "Jouer en ligne",
+  dash_game_tour: "Tournoi",
+  dash_online_wip: "Mode en ligne en cours de développement 🚧",
+  dash_tour_wip: "Mode tournoi en cours de développement 🚧",
+  dash_history_title: "HISTORIQUE DES MATCHS",
+  dash_table_opponent: "ADVERSAIRE",
+  dash_table_score: "SCORE",
+  dash_table_result: "RÉSULTAT",
+  dash_table_date: "DATE",
+  dash_loading: "Chargement...",
+  dash_no_match: "Aucun match joué pour le moment.",
+  dash_unknown: "Inconnu",
+  dash_guest: "Invité",
+  dash_opponent: "Adversaire",
+  dash_win: "VICTOIRE",
+  dash_loss: "DÉFAITE",
+
+  // Profile
+  prof_title: "PROFIL UTILISATEUR",
+  prof_change_avatar_btn: "CHANGER L’AVATAR",
+  prof_display_name: "NOM D’AFFICHAGE",
+  prof_email: "E-MAIL",
+  prof_2fa_title: "Authentification à deux facteurs (2FA)",
+  prof_2fa_desc: "Sécurisez votre compte avec Google Authenticator.",
+  prof_2fa_active: "2FA activé",
+  prof_2fa_active_desc: "Votre compte est entièrement sécurisé.",
+  prof_2fa_enable_btn: "Configurer le 2FA",
+  prof_2fa_step1: "1. Scannez le code QR avec votre téléphone :",
+  prof_2fa_step2: "2. Entrez le code à 6 chiffres généré :",
+  prof_2fa_verify_btn: "Confirmer",
+  prof_back_dashboard: "← Retour à la zone de jeu",
+  prof_avatar_updated: "😎 Avatar mis à jour avec succès !",
+  prof_qr_error: "Impossible de générer le code QR.",
+  prof_code_missing: "Veuillez entrer le code.",
+  prof_2fa_success: "2FA activé avec succès ! 🛡️",
+  prof_error_prefix: "Erreur :",
+
+  // Game
+  game_loading: "CHARGEMENT...",
+  game_control: "Commandes",
+  game_keys_arrow: "FLÈCHES",
+  game_exit_esc: "ESC : Quitter",
+  game_over: "PARTIE TERMINÉE",
+  game_restart_btn: "Rejouer",
+  game_exit_btn: "Quitter",
+  game_winner: "A GAGNÉ !",
+  game_saved: "Partie enregistrée ✅",
+  
+  // Local Game
+  game_local_title: "JOUEUR contre JOUEUR",
+  game_guest_name: "INVITÉ",
+  game_ask_guest: "ENTREZ LE NOM DE L’ADVERSAIRE",
+  
+  // AI Game
+  game_ai_title: "JOUEUR contre IA",
+  game_ai_name: "INTELLIGENCE ARTIFICIELLE",
+  game_ai_status: "Statut",
+  game_ai_thinking: "CALCUL EN COURS...",
+  game_ai_saved: "Match IA enregistré ✅",
+
+  // Home
+  home_badge: "PONG NOUVELLE GÉNÉRATION",
+  home_title_prefix: "Bienvenue dans le jeu de",
+  home_title_suffix: "Style 42!",
+  home_desc: "Marre des jeux classiques ? Découvrez une expérience Pong nouvelle génération avec multijoueur en temps réel, IA et tournois compétitifs.",
+  home_btn_start: "Commencer ⚡",
+  home_btn_login: "Se connecter",
+  
+  home_feat_multi_title: "Arène multijoueur",
+  home_feat_multi_desc: "Défiez vos amis ou affrontez des adversaires aléatoires.",
+  
+  home_feat_ai_title: "Mode IA",
+  home_feat_ai_desc: "Pas de connexion ? Entraînez-vous contre notre IA avancée.",
+  
+  home_feat_tour_title: "Tournois",
+  home_feat_tour_desc: "Créez des tournois à 4 joueurs et remportez le titre."
+};

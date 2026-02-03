@@ -66,6 +66,7 @@ const render = async () => {
 // Linklere tıklandığında sayfa yenilenmesini engelle
 export const initRouter = () => {
     window.addEventListener('popstate', render);
+    window.addEventListener('languageChanged', () => render()); // Dil değişince tekrar çiz
     render();
   
     document.addEventListener('click', e => {

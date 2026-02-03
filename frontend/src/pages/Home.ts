@@ -1,4 +1,5 @@
 // frontend/src/pages/Home.ts
+import { lang } from '../services/language.service';
 
 export const Home = {
 	render: () => `
@@ -8,23 +9,23 @@ export const Home = {
 		<div class="container mx-auto px-4 py-20 flex flex-col items-center text-center relative z-10">
 		  
 		  <span class="inline-block py-1 px-3 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in-up">
-			YENİ NESİL PONG
+			${lang.t('home_badge')}
 		  </span>
   
 		  <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight animate-fade-in-up delay-100">
-			42 Tarzı <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Ping Pong</span> Oyununa Hoş Geldiniz!
+			${lang.t('home_title_prefix')} <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Ping Pong</span> ${lang.t('home_title_suffix')}
 		  </h1>
   
 		  <p class="text-lg text-slate-400 max-w-2xl mb-10 animate-fade-in-up delay-200">
-			Sıradan oyunlardan sıkıldın mı? Gerçek zamanlı çok oyunculu, yapay zeka rakipler ve turnuva sistemiyle Pong deneyimini zirveye taşı.
+			${lang.t('home_desc')}
 		  </p>
   
 		  <div class="flex gap-4 animate-fade-in-up delay-300">
 			<a href="/register" class="bg-white text-slate-900 px-8 py-4 rounded-xl font-bold hover:bg-indigo-50 transition hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]" data-link>
-			  Hemen Başla ⚡
+			  ${lang.t('home_btn_start')}
 			</a>
 			<a href="/login" class="px-8 py-4 rounded-xl font-bold text-white border border-white/20 hover:bg-white/10 transition" data-link>
-			  Giriş Yap
+			  ${lang.t('home_btn_login')}
 			</a>
 		  </div>
   
@@ -33,24 +34,24 @@ export const Home = {
 			  <div class="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition">
 				🎮
 			  </div>
-			  <h3 class="text-xl font-bold text-white mb-2">Çok Oyunculu Arena</h3>
-			  <p class="text-slate-400 text-sm">Arkadaşlarına meydan oku veya rastgele rakiplerle eşleş.</p>
+			  <h3 class="text-xl font-bold text-white mb-2">${lang.t('home_feat_multi_title')}</h3>
+			  <p class="text-slate-400 text-sm">${lang.t('home_feat_multi_desc')}</p>
 			</div>
   
 			<div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 transition group">
 			  <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition">
 				🤖
 			  </div>
-			  <h3 class="text-xl font-bold text-white mb-2">Yapay Zeka Modu</h3>
-			  <p class="text-slate-400 text-sm">İnternet yok mu? Gelişmiş AI botumuza karşı antrenman yap.</p>
+			  <h3 class="text-xl font-bold text-white mb-2">${lang.t('home_feat_ai_title')}</h3>
+			  <p class="text-slate-400 text-sm">${lang.t('home_feat_ai_desc')}</p>
 			</div>
   
 			<div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition group">
 			  <div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition">
 				🏆
 			  </div>
-			  <h3 class="text-xl font-bold text-white mb-2">Turnuvalar</h3>
-			  <p class="text-slate-400 text-sm">4 kişilik turnuvalar oluştur ve şampiyonluğunu ilan et.</p>
+			  <h3 class="text-xl font-bold text-white mb-2">${lang.t('home_feat_tour_title')}</h3>
+			  <p class="text-slate-400 text-sm">${lang.t('home_feat_tour_desc')}</p>
 			</div>
 		  </div>
   
