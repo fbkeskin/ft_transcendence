@@ -27,10 +27,23 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
 
         // İstatistikleri Güncelle (Wins/Losses)
         if (score1 > score2) {
-            await prisma.user.update({
+            // 1. Galibiyet sayısını artır ve güncel veriyi al
+            const updatedUser = await prisma.user.update({
                 where: { id: userId },
-                data: { wins: { increment: 1 }, level: { increment: 1 } } // Kazanırsa level atlar
+                data: { wins: { increment: 1 } } 
             });
+
+            // 2. Yeni Level Hesapla: Her 5 galibiyette 1 level
+            const newLevel = Math.floor(updatedUser.wins / 5);
+
+            // 3. Eğer level atlaması gerekiyorsa güncelle
+            if (newLevel > updatedUser.level) {
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { level: newLevel }
+                });
+            }
+
         } else {
             await prisma.user.update({
                 where: { id: userId },

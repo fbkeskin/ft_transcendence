@@ -26,7 +26,7 @@ model User {
   // İstatistikler
   wins   Int @default(0)
   losses Int @default(0)
-  level  Int @default(1)
+  level  Int @default(0)
 
   // OYUN İLİŞKİLERİ
   gamesAsPlayer1 Game[] @relation("Player1")

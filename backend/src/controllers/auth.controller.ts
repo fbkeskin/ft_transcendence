@@ -140,12 +140,12 @@ export const me = async (request: FastifyRequest, reply: FastifyReply) => {
         include: {
           gamesAsPlayer1: {
             include: { player2: true, winner: true },
-            take: 5,
+            take: 15,
             orderBy: { createdAt: 'desc' }
           },
           gamesAsPlayer2: {
             include: { player1: true, winner: true },
-            take: 5,
+            take: 15,
             orderBy: { createdAt: 'desc' }
           }
         }

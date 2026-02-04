@@ -30,7 +30,14 @@ export const Dashboard = {
                 </div>
                 
                 <h2 id="user-name" class="text-2xl font-bold mb-1">...</h2>
-                <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">${lang.t('dash_level')} 1</span>
+                <div class="flex flex-col items-center gap-2 mb-6 w-full">
+                    <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full">
+                        ${lang.t('dash_level')} 0
+                    </span>
+                    <button id="level-info-btn" class="text-[10px] text-indigo-500 hover:text-indigo-300 transition border border-indigo-500/30 rounded-full w-4 h-4 flex items-center justify-center opacity-60 hover:opacity-100" title="${lang.t('dash_level_info')}">
+                        i
+                    </button>
+                </div>
 
                 <div class="grid grid-cols-2 gap-4 w-full text-center">
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
@@ -73,22 +80,29 @@ export const Dashboard = {
                 </button>
             </div>
 
-            <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-                <h3 class="text-lg font-bold mb-4 border-b border-gray-700 pb-2 flex items-center gap-2">
-                    <span>📊</span>${lang.t('dash_history_title')}
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-400">
-                        <thead class="text-xs text-gray-300 uppercase bg-slate-900">
+            <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg flex flex-col h-96 relative group">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span>📊</span>${lang.t('dash_history_title')}
+                    </h3>
+                    <button id="see-all-history" class="text-[10px] font-bold uppercase tracking-wider bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white px-3 py-1 rounded-full transition shadow-sm border border-slate-600">
+                        ${lang.t('dash_see_all') || 'TÜMÜNÜ GÖR'}
+                    </button>
+                </div>
+                
+                <div class="overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                    <table class="w-full text-sm text-left text-gray-400 relative">
+                        <thead class="text-xs text-gray-300 uppercase bg-slate-900 sticky top-0 z-10">
                             <tr>
-                                <th class="px-4 py-3 rounded-l-lg">${lang.t('dash_table_opponent')}</th>
-                                <th class="px-4 py-3">${lang.t('dash_table_score')}</th>
-                                <th class="px-4 py-3">${lang.t('dash_table_result')}</th>
-                                <th class="px-4 py-3 rounded-r-lg">${lang.t('dash_table_date')}</th>
+                                <th class="px-4 py-3 rounded-tl-lg shadow-sm text-center w-10">#</th>
+                                <th class="px-4 py-3 shadow-sm">${lang.t('dash_table_opponent')}</th>
+                                <th class="px-4 py-3 shadow-sm">${lang.t('dash_table_score')}</th>
+                                <th class="px-4 py-3 shadow-sm">${lang.t('dash_table_result')}</th>
+                                <th class="px-4 py-3 rounded-tr-lg shadow-sm">${lang.t('dash_table_date')}</th>
                             </tr>
                         </thead>
-                        <tbody id="match-history-body">
-                            <tr><td colspan="4" class="text-center py-4">${lang.t('dash_loading')}</td></tr>
+                        <tbody id="match-history-body" class="divide-y divide-slate-700">
+                            <tr><td colspan="5" class="text-center py-4">${lang.t('dash_loading')}</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -144,9 +158,9 @@ export const Dashboard = {
         allGames.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         if (allGames.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">${lang.t('dash_no_match')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">${lang.t('dash_no_match')}</td></tr>`;
         } else {
-            allGames.forEach((game: any) => {
+            allGames.forEach((game: any, index: number) => {
                 // Sen Player 1 misin Player 2 mi?
                 const isPlayer1 = game.player1Id === user.id;
                 
@@ -179,6 +193,7 @@ export const Dashboard = {
                 // Satırı Ekle
                 const row = `
                     <tr class="bg-slate-800 border-b border-slate-700 hover:bg-slate-700 transition">
+                        <td class="px-4 py-3 text-center text-gray-500 font-mono text-xs">${index + 1}</td>
                         <td class="px-4 py-3 font-medium text-white">${opponentName}</td>
                         <td class="px-4 py-3 font-mono text-indigo-300">${myScore} - ${enemyScore}</td>
                         <td class="px-4 py-3">${resultBadges}</td>
@@ -196,6 +211,14 @@ export const Dashboard = {
     }
 
     // BUTON EVENTLERİ
+    document.getElementById('level-info-btn')?.addEventListener('click', () => {
+        Modal.alert(lang.t('dash_level'), lang.t('dash_level_info'));
+    });
+    
+    document.getElementById('see-all-history')?.addEventListener('click', () => {
+        Modal.alert(lang.t('dash_history_title'), lang.t('dash_history_wip'));
+    });
+
     const buttons = document.querySelectorAll('.game-btn');
     buttons[0].addEventListener('click', () => navigate('/game/local'));
     buttons[1].addEventListener('click', () => navigate('/game/ai'));
