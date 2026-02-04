@@ -12,7 +12,7 @@ import qrcode from 'qrcode';
 // Artık PrismaClient'ı buradan çağırmıyoruz.
 // Merkezi db.ts dosyasından hazır 'prisma' nesnesini alıyoruz.
 import { prisma } from '../db'; 
-const otplib = require('otplib');
+const { authenticator } = require('otplib');
 
 const pump = util.promisify(pipeline);
 
@@ -79,9 +79,19 @@ export const verify2FALogin = async (req: FastifyRequest<Verify2FABody>, reply: 
             return reply.status(400).send({ message: 'INVALID_REQUEST' });
         }
 
-        // otplib.authenticator.verify kullanımı daha güvenlidir
+        // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
+        if (!code || String(code).length !== 6) {
+            return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
+        }
+
+        // authenticator.verify kullanımı daha güvenlidir
         // Eğer token formatı yanlışsa (harf vs.) hata fırlatabilir, try-catch ile yakalıyoruz.
-        const isValid = otplib.authenticator.verify({ token: code, secret: user.twoFactorSecret });
+        let isValid = false;
+        try {
+            isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
+        } catch (err) {
+             return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
+        }
         
         if (!isValid) {
             return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
@@ -218,7 +228,7 @@ export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
       const user = await prisma.user.findUnique({ where: { id: userJwt.id } });
       if (!user) return reply.code(404).send({message: 'User not found'});
 
-      const secret = otplib.generateSecret();
+      const secret = authenticator.generateSecret();
       console.log('📝 Yeni Secret:', secret);
 
       await prisma.user.update({
@@ -253,7 +263,18 @@ export const turnOn2FA = async (req: FastifyRequest<{ Body: { code: string } }>,
           return reply.status(400).send({ message: 'SETUP_REQUIRED' });
       }
 
-      const isValid = otplib.authenticator.verify({ token: code, secret: user.twoFactorSecret });
+      // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
+      if (!code || String(code).length !== 6) {
+          return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
+      }
+
+      let isValid = false;
+      try {
+          isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
+      } catch (err) {
+          console.error("2FA Verify Token Error:", err);
+          return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
+      }
 
       if (!isValid) {
           return reply.status(401).send({ message: 'INVALID_2FA_CODE' });

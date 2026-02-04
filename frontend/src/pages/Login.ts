@@ -163,7 +163,21 @@ export const Login = {
 	        if (!code || !tempUserId) return Modal.alert(lang.t('common_error'), lang.t('twofa_missing'));
 	
 	        try {
-	            // ...
+	            const res = await verify2FALoginReq(tempUserId, code);
+                
+                if (res.token) {
+                    localStorage.setItem('token', res.token);
+                    
+                    // Profil bilgisini çek ve kaydet
+                    try {
+                        const user = await getProfileReq();
+                        localStorage.setItem('user', JSON.stringify(user));
+                    } catch (pErr) {
+                        console.error('Profil alınamadı', pErr);
+                    }
+
+                    navigate('/dashboard');
+                }
 	        } catch (err: any) {
 	            // Backend'den gelen kodu çevir
 	            await Modal.alert(lang.t('common_error'), lang.t(err.message));
