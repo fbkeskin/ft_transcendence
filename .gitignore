@@ -1,0 +1,26 @@
+# =========================
+# Root .gitignore
+# =========================
+
+# Node.js
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Prisma (backend)
+backend/node_modules/.prisma/
+backend/node_modules/@prisma/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+

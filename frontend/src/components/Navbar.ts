@@ -62,7 +62,7 @@ export const Navbar = {
                 <div class="relative ml-4 group">
                     <select id="lang-select" class="appearance-none bg-gray-900/80 hover:bg-gray-800 text-white border border-gray-700 hover:border-indigo-500 rounded-md py-1 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer">
                         <option value="tr" ${lang.getCurrentLang() === 'tr' ? 'selected' : ''}>TR 🇹🇷</option>
-                        <option value="en" ${lang.getCurrentLang() === 'en' ? 'selected' : ''}>EN 🇺🇸</option>
+                        <option value="en" ${lang.getCurrentLang() === 'en' ? 'selected' : ''}>EN 🇬🇧</option>
                         <option value="fr" ${lang.getCurrentLang() === 'fr' ? 'selected' : ''}>FR 🇫🇷</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
