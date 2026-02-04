@@ -51,7 +51,9 @@ fclean: down
 	@docker-compose down --rmi all --volumes --remove-orphans
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
-	@echo "$(GREEN)Full clean complete (Database deleted).$(RESET)"
+	@echo "$(YELLOW)Cleaning uploads (preserving default.png)...$(RESET)"
+	@find uploads/ -type f ! -name 'default.png' -delete
+	@echo "$(GREEN)Full clean complete (Database and uploads cleaned).$(RESET)"
 
 # 8. Yeniden Başlat (Sıfırdan kurar)
 re: fclean up

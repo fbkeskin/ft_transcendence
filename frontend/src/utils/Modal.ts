@@ -38,7 +38,7 @@ export class Modal {
 
     // 3. Başlık
     const titleEl = document.createElement('h3');
-    titleEl.className = "text-xl font-bold text-white mb-2";
+    titleEl.className = "text-xl font-bold text-white mb-2 flex items-center gap-2";
     titleEl.innerText = title;
 
     // 4. İçerik (Mesaj veya Input)

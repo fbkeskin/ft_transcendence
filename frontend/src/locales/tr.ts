@@ -11,9 +11,9 @@ export const tr = {
   btn_cancel: "İPTAL",
   
   // Common Titles
-  common_success: "BAŞARILI",
-  common_error: "HATA",
-  common_warning: "UYARI",
+  common_success: "✅ Başarılı",
+  common_error: "❌ Hata",
+  common_warning: "⚠️ Dikkat",
   
   // Common Placeholders
   email_placeholder: "mail@ornek.com",
@@ -56,7 +56,7 @@ export const tr = {
   // email_placeholder ve password_placeholder yukarı taşındı
   register_btn: "KAYIT OL",
   back_to_home: "Ana Sayfaya Dön",
-  register_success: "✅ Kayıt Başarılı! Giriş ekranına yönlendiriliyorsunuz.",
+  register_success: "Kayıt Başarılı! Giriş ekranına yönlendiriliyorsunuz.",
 
   // Dashboard
   dash_logout: "ÇIKIŞ YAP",
@@ -65,9 +65,9 @@ export const tr = {
   dash_wins: "GALİBİYET",
   dash_losses: "MAĞLUBİYET",
   dash_game_1v1: "1 vs 1",
-  dash_game_ai: "AI ile OYNA",
-  dash_game_online: "ONLINE OYNA",
-  dash_game_tour: "TURNUVA",
+  dash_game_ai: "AI ile Oyna",
+  dash_game_online: "Online Oyna",
+  dash_game_tour: "Turnuva",
   dash_online_wip: "Online Modu Yapım Aşamasında 🚧",
   dash_tour_wip: "Turnuva Modu Yapım Aşamasında 🚧",
   dash_history_title: "MAÇ GEÇMİŞİ",

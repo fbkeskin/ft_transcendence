@@ -11,9 +11,9 @@ export const en = {
   btn_cancel: "CANCEL",
 
   // Common Titles
-  common_success: "SUCCESS",
-  common_error: "ERROR",
-  common_warning: "WARNING",
+  common_success: "✅ Success",
+  common_error: "❌ Error",
+  common_warning: "⚠️ Warning",
 
   // Common Placeholders
   email_placeholder: "mail@example.com",
@@ -55,7 +55,7 @@ export const en = {
   username_placeholder: "Username",
   register_btn: "REGISTER",
   back_to_home: "Back to Home",
-  register_success: "✅ Registration Successful! Redirecting to login.",
+  register_success: "Registration Successful! Redirecting to login.",
 
   // Dashboard
   dash_logout: "LOG OUT",

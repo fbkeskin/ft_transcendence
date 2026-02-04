@@ -11,9 +11,9 @@ export const fr = {
   btn_cancel: "ANNULER",
 
   // Common Titles
-  common_success: "SUCCÈS",
-  common_error: "ERREUR",
-  common_warning: "ATTENTION",
+  common_success: "✅ Succès",
+  common_error: "❌ Erreur",
+  common_warning: "⚠️ Attention",
 
   // Common Placeholders
   email_placeholder: "mail@exemple.fr",
@@ -55,7 +55,7 @@ export const fr = {
   username_placeholder: "Nom d’utilisateur",
   register_btn: "S'INSCRIRE",
   back_to_home: "Retour à l'accueil",
-  register_success: "✅ Inscription réussie ! Redirection en cours.",
+  register_success: "Inscription réussie ! Redirection en cours.",
 
   // Dashboard
   dash_logout: "SE DÉCONNECTER",
