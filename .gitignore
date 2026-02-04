@@ -1,26 +1,59 @@
-# =========================
-# Root .gitignore
-# =========================
-
-# Node.js
-node_modules/
-
-# Environment variables
-.env
-.env.*
-
-# Prisma (backend)
-backend/node_modules/.prisma/
-backend/node_modules/@prisma/
-backend/prisma/dev.db
-backend/prisma/dev.db-journal
-
-# Docker
-*.log
-docker-compose.override.yml
-
-# OS / Editor
+# ==========================================
+# SYSTEM & IDE
+# ==========================================
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
 
+# ==========================================
+# LOGS & DEPENDENCIES
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# ENVIRONMENT VARIABLES (SECURITY)
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# UPLOADS (User Content)
+# ==========================================
+# Uploads klasöründeki her şeyi yoksay
+uploads/*
+# Ama default.png dosyasını takip et (git'ten silme)
+!uploads/default.png
+!uploads/.gitkeep
+
+# ==========================================
+# BACKEND (NestJS/Fastify/Prisma)
+# ==========================================
+backend/dist/
+backend/build/
+backend/coverage/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/migrations/migration_lock.toml
+
+# ==========================================
+# FRONTEND (Vite/React)
+# ==========================================
+frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/.vite/
+frontend/*.local
+
+# ==========================================
+# DOCKER & MISC
+# ==========================================
+docker-compose.override.yml
+*.log
