@@ -38,9 +38,9 @@ export const tr = {
   email_label: "E-POSTA",
   password_label: "ŞİFRE",
   login_btn: "GİRİŞ YAP",
-  login_42_btn: "42 ile Giriş Yap",
+  login_42_btn: "42 İLE GİRİŞ YAP",
   login_success: "Giriş Başarılı!",
-  login_error: "Giriş Hatası:",
+  login_error: "❌ Giriş Hatası",
   
   // 2FA
   twofa_title: "2FA Doğrulama",

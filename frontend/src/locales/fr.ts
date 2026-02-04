@@ -38,7 +38,7 @@ export const fr = {
   email_label: "E-MAIL",
   password_label: "MOT DE PASSE",
   login_btn: "SE CONNECTER",
-  login_42_btn: "Connexion avec 42",
+  login_42_btn: "SE CONNECTER AVEC 42",
   login_success: "Connexion réussie !",
   login_error: "Erreur de connexion :", 
 

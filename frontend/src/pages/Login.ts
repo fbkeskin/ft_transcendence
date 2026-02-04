@@ -23,8 +23,14 @@ export const Login = {
                 ${lang.t('login_btn')}
             </button>
             
-            <div class="text-center mt-4">
-				<a href="http://localhost:3000/auth/42" class="text-sm text-slate-400 hover:text-white underline"> ${lang.t('login_42_btn')} </a>            </div>
+            <div class="text-center mt-8 flex flex-col gap-3">
+				<a href="http://localhost:3000/auth/42" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded transition border border-slate-600 flex items-center justify-center text-sm font-bold shadow-lg active:scale-95">
+                    ${lang.t('login_42_btn')} 
+                </a>
+                <button id="back-home-btn" class="text-xs text-slate-500 hover:text-indigo-400 transition underline mt-2">
+                    ${lang.t('back_to_home')}
+                </button>
+            </div>
         </div>
 
         <div id="2fa-form" class="hidden space-y-4 animate-fade-in">
@@ -73,6 +79,11 @@ export const Login = {
     const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
     const verifyBtn = document.getElementById('verify-2fa-btn');
     const backBtn = document.getElementById('back-to-login');
+
+    // Ana Sayfaya Dön Butonu
+    document.getElementById('back-home-btn')?.addEventListener('click', () => {
+        navigate('/');
+    });
 
     let tempUserId: number | null = null;
 

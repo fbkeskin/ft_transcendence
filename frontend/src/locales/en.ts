@@ -38,7 +38,7 @@ export const en = {
   email_label: "EMAIL",
   password_label: "PASSWORD",
   login_btn: "LOG IN",
-  login_42_btn: "Log in with 42",
+  login_42_btn: "LOG IN WITH 42",
   login_success: "Successfully logged in!",
   login_error: "Login error:",
 
