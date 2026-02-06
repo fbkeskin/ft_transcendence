@@ -1,30 +1,25 @@
-# 1. Base Image: Node.js'in 20. sürümünün en hafif (Alpine) versiyonu
-FROM node:20-alpine
+# backend/Dockerfile
 
-# 2. Container içindeki çalışma klasörümüz
+# Alpine yerine Debian tabanlı (Ubuntu ile uyumlu) tam sürüm kullanıyoruz
+FROM node:20
+
 WORKDIR /usr/src/app
 
-# YENİ EKLENEN KISIM: OpenSSL yüklemesi
-# Alpine Linux'ta prisma'nın çalışması için bu gereklidir.
-RUN apk add --no-cache openssl
+# Gerekli sistem kütüphanelerini kur (Debian/Ubuntu komutları)
+RUN apt-get update && apt-get install -y openssl python3 make g++
 
-# 3. Önce sadece paket dosyalarını kopyalıyoruz
-# Neden? Çünkü kodun değişse bile paketlerin değişmezse Docker bu adımı cache'den çeker, hız kazanırız.
+# Paket dosyalarını kopyala
 COPY package*.json ./
 
-# 4. Bağımlılıkları yüklüyoruz
+# Paketleri yükle
 RUN npm install
 
-# 5. Şimdi kaynak kodların geri kalanını kopyalıyoruz
+# Kaynak kodları kopyala
 COPY . .
 
-# 6. Prisma kullanacağımız için istemciyi (client) üretiyoruz
-# Bu, node_modules içine Prisma motorunu ekler.
+# Prisma istemcisini oluştur (Debian için)
 RUN npx prisma generate
 
-# 7. Portu belirtiyoruz (Bilgilendirme amaçlı)
 EXPOSE 3000
 
-# 8. Başlatma komutu
-# "dev" modunda başlatıyoruz ki nodemon çalışsın
 CMD [ "npm", "run", "dev" ]

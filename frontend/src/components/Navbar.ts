@@ -2,64 +2,52 @@
 import { lang } from '../services/language.service';
 
 export const Navbar = {
-	render: () => {
-	  // 1. Token kontrolü
-	  const token = localStorage.getItem('token');
+    render: () => {
+      const token = localStorage.getItem('token');
       const path = window.location.pathname;
       
-      // EĞER LOGIN SAYFASINDAYSAK TOKEN OLSA BİLE GÖSTERME
-      // (42 dönüşü hariç, ama görsel olarak Navbar'da buton görmek sorun değil)
       let isLoggedIn = !!token;
       
       if (path === '/login' || path === '/register') {
           isLoggedIn = false;
       }
   
-	  // 2. Kullanıcı verisini GÜVENLİ şekilde çekme (Hata Sebebi Burasıydı)
-	  let user = { username: 'Misafir' };
-	  
-	  try {
-		  const storedUser = localStorage.getItem('user');
-		  // Eğer veri varsa ve "undefined" yazısı değilse parse et
-		  if (storedUser && storedUser !== 'undefined') {
-			  user = JSON.parse(storedUser);
-		  }
-	  } catch (e) {
-		  // Veri bozuksa (örn: "undefined" stringi) sessizce temizle
-		  console.error("User verisi bozuk, temizleniyor...", e);
-		  localStorage.removeItem('user');
-	  }
+      let user = { username: 'Misafir' };
+      try {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser && storedUser !== 'undefined') {
+              user = JSON.parse(storedUser);
+          }
+      } catch (e) {
+          localStorage.removeItem('user');
+      }
   
-	  // 3. HTML Çıktısı
-	  return `
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		  <div class="flex items-center justify-between h-16">
-			
-		  <a href="/" data-link class="flex-shrink-0 cursor-pointer group">
-		  <h1 class="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 group-hover:scale-105 transition-transform duration-300">
-			FT_TRANSCENDENCE
-		  </h1>
-		  </a>
+      return `
+        <div class="w-full px-6 lg:px-12 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
+          
+          <div class="flex items-center justify-between h-20">
+            
+            <a href="/" data-link class="flex-shrink-0 cursor-pointer flex items-center gap-2 group">
+                <img src="/logo.png" alt="42 Istanbul" class="h-10 w-auto filter invert opacity-90 group-hover:opacity-100 transition-opacity duration-300">
+            </a>
   
-			<div class="hidden md:block">
-			  <div class="ml-10 flex items-baseline space-x-4">
-				
-				${isLoggedIn ? `
-				  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
-				  <a href="/profile" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>
-					${lang.t('nav_profile')} <span class="text-xs opacity-70">(${user.username || 'Oyuncu'})</span>
-				  </a>
-				  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-4 py-2 rounded-md text-sm font-bold transition-all ml-4">
-					${lang.t('nav_logout')}
-				  </button>
-				` : `
-				  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_login')}</a>
-				  <a href="/register" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5" data-link>
-					${lang.t('nav_register')}
-				  </a>
-				`}
-				
-                <div class="relative ml-4 group">
+            <div class="hidden md:block">
+              <div class="ml-10 flex items-baseline space-x-6"> ${isLoggedIn ? `
+                  <a href="/dashboard" class="text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
+                  <a href="/profile" class="text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-all" data-link>
+                    ${lang.t('nav_profile')} <span class="text-xs opacity-70">(${user.username || 'Oyuncu'})</span>
+                  </a>
+                  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-6 py-2 rounded-md text-sm font-bold transition-all ml-4">
+                    ${lang.t('nav_logout')}
+                  </button>
+                ` : `
+                  <a href="/login" class="text-gray-300 hover:text-white hover:bg-white/10 px-4 py-2 rounded-md text-sm font-medium transition-all" data-link>${lang.t('nav_login')}</a>
+                  <a href="/register" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-md text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5" data-link>
+                    ${lang.t('nav_register')}
+                  </a>
+                `}
+                
+                <div class="relative ml-6 group border-l border-gray-700 pl-6">
                     <select id="lang-select" class="appearance-none bg-gray-900/80 hover:bg-gray-800 text-white border border-gray-700 hover:border-indigo-500 rounded-md py-1 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer">
                         <option value="tr" ${lang.getCurrentLang() === 'tr' ? 'selected' : ''}>TR 🇹🇷</option>
                         <option value="en" ${lang.getCurrentLang() === 'en' ? 'selected' : ''}>EN 🇬🇧</option>
@@ -70,26 +58,22 @@ export const Navbar = {
                     </div>
                 </div>
 
-			  </div>
-			</div>
-		  </div>
-		</div>
-	  `;
-	},
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    },
   
-	// Navbar yüklendikten sonra çalışacak olaylar
-	afterRender: () => {
-	  const logoutBtn = document.getElementById('nav-logout');
-	  if (logoutBtn) {
-		logoutBtn.addEventListener('click', () => {
-		  // Çıkış işlemleri
-		  localStorage.removeItem('token');
-		  localStorage.removeItem('user');
-		  
-		  // Login sayfasına yönlendir ve sayfayı yenile (Navbar güncellensin diye)
-		  window.location.href = '/login';
-		});
-	  }
+    afterRender: () => {
+      const logoutBtn = document.getElementById('nav-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        });
+      }
 
       const langSelect = document.getElementById('lang-select');
       if (langSelect) {
@@ -98,5 +82,5 @@ export const Navbar = {
             lang.setLanguage(target.value);
         });
       }
-	}
-  };
+    }
+};

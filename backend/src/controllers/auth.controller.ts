@@ -7,34 +7,22 @@ import util from 'util';
 import { pipeline } from 'stream';
 import axios from 'axios';
 import qrcode from 'qrcode';
-
-// --- DÜZELTME BURADA ---
-// Artık PrismaClient'ı buradan çağırmıyoruz.
-// Merkezi db.ts dosyasından hazır 'prisma' nesnesini alıyoruz.
 import { prisma } from '../db'; 
-const { authenticator } = require('otplib');
 
+const { authenticator } = require('otplib');
+authenticator.options = { window: 1 };
 const pump = util.promisify(pipeline);
 
-// --- DÜZELTME BURADA ---
-// const prisma = new PrismaClient();  <-- BU SATIRI SİLDİK!
-// Çünkü yukarıda import { prisma } from '../db' diyerek zaten aldık.
-// -----------------------
+// --- TİP TANIMLARI ---
+interface RegisterBody { Body: { email: string; username: string; password: string; } }
+interface LoginBody { Body: { email: string; password: string; } }
+interface Verify2FABody { Body: { userId: number; code: string; } }
+interface UserPayload { id: number; email: string; username: string; }
 
-// TİP TANIMLARI
-interface RegisterBody {
-  Body: { email: string; username: string; password: string; }
-}
-interface LoginBody {
-  Body: { email: string; password: string; }
-}
-interface Verify2FABody { 
-  Body: { userId: number; code: string; } 
-}
+// ... (register, login, verify2FALogin, updateAvatar, me fonksiyonları AYNI KALACAK) ...
+// (Burayı kalabalık etmemek için önceki cevaptaki kodları koruduğunu varsayıyorum.
+// Sadece login42 ve callback42'yi değiştiriyoruz)
 
-// ----------------------------------------------------------------
-// 1. REGISTER
-// ----------------------------------------------------------------
 export const register = async (request: FastifyRequest<RegisterBody>, reply: FastifyReply) => {
   try {
     const { email, username, password } = request.body;
@@ -45,124 +33,64 @@ export const register = async (request: FastifyRequest<RegisterBody>, reply: Fas
   }
 };
 
-// ----------------------------------------------------------------
-// 2. LOGIN
-// ----------------------------------------------------------------
 export const login = async (request: FastifyRequest<LoginBody>, reply: FastifyReply) => {
   const { email, password } = request.body;
   const result = await loginUser(email, password, request.server.jwt);
-
   if (!result) return reply.code(401).send({ message: 'INVALID_CREDENTIALS' });
-
   const user = await prisma.user.findUnique({ where: { email } });
-
   if (user && user.isTwoFactorEnabled) {
-    return reply.send({ 
-      message: '2FA_REQUIRED', 
-      require2FA: true, 
-      userId: user.id 
-    });
+    return reply.send({ message: '2FA_REQUIRED', require2FA: true, userId: user.id });
   }
-
   return reply.send({ message: 'LOGIN_SUCCESS', token: result.token });
 };
 
-// ----------------------------------------------------------------
-// 3. 2FA VERIFY LOGIN
-// ----------------------------------------------------------------
 export const verify2FALogin = async (req: FastifyRequest<Verify2FABody>, reply: FastifyReply) => {
     try {
         const { userId, code } = req.body;
         const user = await prisma.user.findUnique({ where: { id: userId } });
-
-        if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
-            return reply.status(400).send({ message: 'INVALID_REQUEST' });
-        }
-
-        // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
-        if (!code || String(code).length !== 6) {
-            return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
-        }
-
-        // authenticator.verify kullanımı daha güvenlidir
-        // Eğer token formatı yanlışsa (harf vs.) hata fırlatabilir, try-catch ile yakalıyoruz.
+        if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) return reply.status(400).send({ message: 'INVALID_REQUEST' });
+        if (!code || String(code).length !== 6) return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
         let isValid = false;
-        try {
-            isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
-        } catch (err) {
-             return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
-        }
-        
-        if (!isValid) {
-            return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
-        }
-
-        const token = req.server.jwt.sign({
-            id: user.id, email: user.email, username: user.username,
-        });
+        try { isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret }); } 
+        catch (err) { return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); }
+        if (!isValid) return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
+        const token = req.server.jwt.sign({ id: user.id, email: user.email, username: user.username });
         return reply.send({ message: 'LOGIN_SUCCESS', token });
-    } catch (err) {
-        console.error("2FA Verify Hatası:", err);
-        return reply.status(401).send({ message: 'INVALID_CODE_FORMAT' });
-    }
+    } catch (err) { return reply.status(401).send({ message: 'INVALID_CODE_FORMAT' }); }
 };
 
-// ----------------------------------------------------------------
-// 4. AVATAR UPDATE
-// ----------------------------------------------------------------
 export const updateAvatar = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userPayload = request.user as UserPayload;
     const data = await request.file();
     if (!data) return reply.code(400).send({ message: 'Dosya yüklenmedi' });
-  
-    const user = await prisma.user.findUnique({ where: { id: request.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: userPayload.id } });
     if (user?.avatar && user.avatar !== 'default.png') {
-      try { await unlink(`./uploads/${user.avatar}`); } catch (err) {}
+      try { if (fs.existsSync(`./uploads/${user.avatar}`)) await unlink(`./uploads/${user.avatar}`); } catch (err) {}
     }
-  
-    const fileName = `${request.user.id}_${data.filename}`;
+    const fileName = `${userPayload.id}_${data.filename}`;
     await pump(data.file, fs.createWriteStream(`./uploads/${fileName}`));
-  
-    await prisma.user.update({
-      where: { id: request.user.id },
-      data: { avatar: fileName }
-    });
-  
+    await prisma.user.update({ where: { id: userPayload.id }, data: { avatar: fileName } });
     return reply.send({ message: 'Avatar güncellendi', url: `/uploads/${fileName}` });
 };
 
-// ----------------------------------------------------------------
-// 5. ME
-// ----------------------------------------------------------------
 export const me = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
+      const userPayload = request.user as UserPayload;
       const user = await prisma.user.findUnique({
-        where: { id: request.user.id },
+        where: { id: userPayload.id },
         include: {
-          gamesAsPlayer1: {
-            include: { player2: true, winner: true },
-            take: 15,
-            orderBy: { createdAt: 'desc' }
-          },
-          gamesAsPlayer2: {
-            include: { player1: true, winner: true },
-            take: 15,
-            orderBy: { createdAt: 'desc' }
-          }
+          gamesAsPlayer1: { include: { player2: true, winner: true }, take: 15, orderBy: { createdAt: 'desc' } },
+          gamesAsPlayer2: { include: { player1: true, winner: true }, take: 15, orderBy: { createdAt: 'desc' } }
         }
       });
-
       if (!user) return reply.code(404).send({ message: 'Kullanıcı bulunamadı' });
-      
       const { password, twoFactorSecret, ...safeUser } = user;
-      
       return reply.send({ user: safeUser });
-    } catch (error) {
-      return reply.code(500).send({ message: 'SERVER_ERROR' });
-    }
+    } catch (error) { return reply.code(500).send({ message: 'SERVER_ERROR' }); }
 };
 
 // ----------------------------------------------------------------
-// 6. 42 AUTH
+// 6. 42 AUTH (GÜNCELLENDİ)
 // ----------------------------------------------------------------
 export const login42 = async (req: FastifyRequest, reply: FastifyReply) => {
     const authorizationUrl = `https://api.intra.42.fr/oauth/authorize?client_id=${process.env.FORTYTWO_CLIENT_ID}&redirect_uri=${process.env.FORTYTWO_CALLBACK_URL}&response_type=code`;
@@ -187,11 +115,13 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
       });
       const fortyTwoUser = userResponse.data;
       
+      // Fotoğraf URL'sini güvenli al
       const avatarUrl = fortyTwoUser.image?.link || 'default.png';
 
       let user = await prisma.user.findUnique({ where: { email: fortyTwoUser.email } });
   
       if (!user) {
+        // --- YENİ KULLANICI ---
         let newUsername = fortyTwoUser.login;
         const checkUsername = await prisma.user.findUnique({ where: { username: newUsername } });
         if (checkUsername) newUsername = `${fortyTwoUser.login}_42_${Math.floor(Math.random() * 1000)}`;
@@ -201,8 +131,15 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
             email: fortyTwoUser.email,
             username: newUsername,
             password: '', 
-            avatar: avatarUrl,
+            avatar: avatarUrl, // Kaydet
           }
+        });
+      } else {
+        // --- MEVCUT KULLANICI (GÜNCELLEME) ---
+        // Kullanıcı zaten varsa bile avatarını 42'den güncelle (belki oradaki fotosunu değiştirdi)
+        user = await prisma.user.update({
+            where: { id: user.id },
+            data: { avatar: avatarUrl } // <--- BU SATIR EKSİKTİ!
         });
       }
   
@@ -219,72 +156,32 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
     }
 };
 
-// ----------------------------------------------------------------
-// 7. 2FA SETUP (GENERATE & TURN ON)
-// ----------------------------------------------------------------
+// ... (2FA Setup fonksiyonları aynı) ...
 export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
-      const userJwt = req.user as any;
-      const user = await prisma.user.findUnique({ where: { id: userJwt.id } });
+      const userPayload = req.user as UserPayload;
+      const user = await prisma.user.findUnique({ where: { id: userPayload.id } });
       if (!user) return reply.code(404).send({message: 'User not found'});
-
       const secret = authenticator.generateSecret();
-      console.log('📝 Yeni Secret:', secret);
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { twoFactorSecret: secret }
-      });
-  
+      await prisma.user.update({ where: { id: user.id }, data: { twoFactorSecret: secret } });
       const otpauth = `otpauth://totp/FT_TRANSCENDENCE:${user.email}?secret=${secret}&issuer=FT_TRANSCENDENCE&algorithm=SHA1&digits=6&period=30`;
       const imageUrl = await qrcode.toDataURL(otpauth);
-  
       return reply.send({ qrCodeUrl: imageUrl });
-    } catch (error) {
-      console.error('🔥 2FA Generate Hatası:', error);
-      return reply.status(500).send({ message: 'QR_GENERATE_ERROR' });
-    }
+    } catch (error) { return reply.status(500).send({ message: 'QR_GENERATE_ERROR' }); }
 };
   
 export const turnOn2FA = async (req: FastifyRequest<{ Body: { code: string } }>, reply: FastifyReply) => {
     const { code } = req.body;
-    const userJwt = req.user as any;
-  
+    const userPayload = req.user as UserPayload;
     try {
-      const user = await prisma.user.findUnique({ where: { id: userJwt.id } });
-
-      console.log('🔍 2FA Açma İsteği:', { 
-          userId: userJwt.id, 
-          codeGelen: code,
-          secretVarMi: !!user?.twoFactorSecret
-      });
-
-      if (!user || !user.twoFactorSecret) {
-          return reply.status(400).send({ message: 'SETUP_REQUIRED' });
-      }
-
-      // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
-      if (!code || String(code).length !== 6) {
-          return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
-      }
-
+      const user = await prisma.user.findUnique({ where: { id: userPayload.id } });
+      if (!user || !user.twoFactorSecret) return reply.status(400).send({ message: 'SETUP_REQUIRED' });
+      if (!code || String(code).length !== 6) return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
       let isValid = false;
-      try {
-          isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
-      } catch (err) {
-          console.error("2FA Verify Token Error:", err);
-          return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
-      }
-
-      if (!isValid) {
-          return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
-      }
-  
+      try { isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret }); } 
+      catch (err) { return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); }
+      if (!isValid) return reply.status(401).send({ message: 'INVALID_2FA_CODE' });
       await prisma.user.update({ where: { id: user.id }, data: { isTwoFactorEnabled: true } });
       return reply.send({ message: '2FA_ENABLED_SUCCESS' });
-
-    } catch (error) {
-      console.error('🔥 2FA TurnOn Hatası:', error);
-      return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); // 500 yerine 400 Bad Request
-    }
+    } catch (error) { return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); }
 };

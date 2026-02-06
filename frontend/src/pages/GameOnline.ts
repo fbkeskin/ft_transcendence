@@ -1,0 +1,264 @@
+// frontend/src/pages/GameOnline.ts
+import { navigate } from '../router';
+import { saveGameReq } from '../services/game.service';
+import { lang } from '../services/language.service';
+import { socketService } from '../services/socket.service';
+import { getProfileReq } from '../services/auth.service'; // <--- EKLENDİ
+
+export const GameOnline = {
+  render: () => `
+    <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
+      
+      <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
+        ONLINE ARENA
+      </div>
+
+      <div class="flex gap-20 text-6xl font-mono font-bold select-none opacity-20 mb-4">
+        <div id="score-left">0</div> <div id="score-right">0</div> </div>
+
+      <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-slate-700 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
+
+      <div class="mt-4 w-full max-w-[960px] flex justify-between px-10 text-slate-500 text-sm font-mono select-none">
+        <div>
+             <p class="text-xl text-red-500 font-bold mb-1" id="p1-name">...</p>
+        </div>
+        <div>
+             <p class="text-xl text-blue-500 font-bold mb-1" id="p2-name">...</p>
+        </div>
+      </div>
+
+      <div id="game-over-modal" class="hidden absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+        <div class="bg-slate-800 p-8 rounded-xl text-center border border-indigo-500 shadow-2xl min-w-[300px]">
+            <h2 class="text-4xl font-bold mb-4 text-white" id="winner-text">...</h2>
+            <button id="exit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition mt-4">${lang.t('game_exit_btn')}</button>
+        </div>
+      </div>
+    </div>
+  `,
+
+  init: async () => {
+    // 1. Kendi Profilini Çek (İsimler için gerekli)
+    let myUsername = "BEN";
+    try {
+        const user = await getProfileReq();
+        myUsername = user.username;
+    } catch (e) {
+        navigate('/login');
+        return;
+    }
+
+    // 2. ROL VE RAKİP KONTROLÜ
+    const role = socketService.currentGameRole;
+    const opponentName = socketService.currentOpponentName;
+    
+    if (!role) {
+        navigate('/dashboard');
+        return;
+    }
+
+    // İSİMLERİ BELİRLE
+    // Host (P1) her zaman 'myUsername', Rakip 'opponentName'
+    // Ama eğer biz P2 isek, o zaman P1 rakip, P2 biziz.
+    let p1Name = "";
+    let p2Name = "";
+
+    if (role === 'player1') {
+        p1Name = myUsername;
+        p2Name = opponentName;
+    } else {
+        p1Name = opponentName;
+        p2Name = myUsername;
+    }
+
+    console.log(`🎮 OYUN BAŞLADI! Ben: ${myUsername} (${role}) | Rakip: ${opponentName}`);
+
+    const canvas = document.getElementById('pong-canvas') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d')!;
+
+    // Ekrana İsimleri Yaz
+    document.getElementById('p1-name')!.innerText = `🔴 ${p1Name}`;
+    document.getElementById('p2-name')!.innerText = `🔵 ${p2Name}`;
+
+    const WIN_SCORE = 3; 
+    const PADDLE_WIDTH = 15; const PADDLE_HEIGHT = 100; const BALL_SIZE = 14; 
+    
+    let gameRunning = true;
+    let score1 = 0; 
+    let score2 = 0; 
+
+    // POZİSYONLAR
+    const player1 = { x: 10, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#ef4444' };
+    const player2 = { x: canvas.width - 10 - PADDLE_WIDTH, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#3b82f6' };
+    const ball = { x: canvas.width/2, y: canvas.height/2, width: BALL_SIZE, height: BALL_SIZE, speedX: 7, speedY: 7, color: '#ffffff' };
+    
+    const keys: { [key: string]: boolean } = {};
+    let animationFrameId: number;
+
+    // --- SOCKET LISTENERS ---
+    
+    socketService.onOpponentMove((data) => {
+        if (role === 'player1') player2.y = data.y; 
+        else player1.y = data.y; 
+    });
+
+    socketService.onBallSync((data) => {
+        if (role === 'player2') {
+            ball.x = data.ballX;
+            ball.y = data.ballY;
+            score1 = data.score1;
+            score2 = data.score2;
+            updateScore();
+        }
+    });
+
+    socketService.onGameEnded((data) => {
+        showEndScreen(data.winner);
+    });
+
+	// RAKİP BAĞLANTIYI KOPARIRSA
+    socketService.onOpponentLeft(async () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        Modal.closeAll();
+        
+        await Modal.alert("🏆 HÜKMEN GALİBİYET!", "Rakip korktu ve kaçtı! Oyunu kazandın.");
+        
+        // Host olmasan bile kazandığın için kaydetmek isteyebilirsin
+        // Ama şimdilik Dashboard'a atalım, backend zaten available yaptı.
+        navigate('/dashboard');
+    });
+
+    // --- OYUN DÖNGÜSÜ ---
+
+    function gameLoop() {
+        if (!gameRunning) return;
+        update(); 
+        draw(); 
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+        const paddleSpeed = 9;
+        
+        // TUŞ KONTROLLERİ
+        if (role === 'player1') {
+            if (keys['ArrowUp'] && player1.y > 0) player1.y -= paddleSpeed;
+            if (keys['ArrowDown'] && player1.y < canvas.height - PADDLE_HEIGHT) player1.y += paddleSpeed;
+            socketService.sendPaddleMove(player1.y);
+        } else {
+            if (keys['ArrowUp'] && player2.y > 0) player2.y -= paddleSpeed;
+            if (keys['ArrowDown'] && player2.y < canvas.height - PADDLE_HEIGHT) player2.y += paddleSpeed;
+            socketService.sendPaddleMove(player2.y);
+        }
+
+        // TOP HAREKETİ (SADECE HOST)
+        if (role === 'player1') {
+            ball.x += ball.speedX; 
+            ball.y += ball.speedY;
+
+            if (ball.y <= 0) { ball.y = 0; ball.speedY = -ball.speedY; }
+            else if (ball.y + BALL_SIZE >= canvas.height) { ball.y = canvas.height - BALL_SIZE; ball.speedY = -ball.speedY; }
+
+            if (checkCollision(ball, player1)) { 
+                ball.speedX = Math.abs(ball.speedX); 
+                ball.x = player1.x + PADDLE_WIDTH; 
+                increaseSpeed(); 
+            }
+            if (checkCollision(ball, player2)) { 
+                ball.speedX = -Math.abs(ball.speedX); 
+                ball.x = player2.x - BALL_SIZE; 
+                increaseSpeed(); 
+            }
+
+            if (ball.x > canvas.width) { score1++; resetBall(); } 
+            else if (ball.x + BALL_SIZE < 0) { score2++; resetBall(); }
+
+            updateScore();
+            socketService.sendBallUpdate(ball.x, ball.y, score1, score2);
+
+            if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
+                // KAZANANI BELİRLE (İSİM OLARAK)
+                // score1 = p1Name, score2 = p2Name
+                const winnerName = (score1 >= WIN_SCORE) ? p1Name : p2Name;
+                endGameAsHost(winnerName);
+            }
+        }
+    }
+
+    async function endGameAsHost(winnerName: string) {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        
+        socketService.sendGameOver(winnerName);
+        
+        try {
+            // ID gönderiyoruz (Daha önceki fix'imiz)
+            await saveGameReq(score1, score2, socketService.currentOpponentId);
+            console.log("Oyun başarıyla kaydedildi!");
+        } catch (err) { console.error(err); }
+
+        showEndScreen(winnerName);
+    }
+
+    function showEndScreen(winnerName: string) {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        
+        const winnerText = document.getElementById('winner-text')!;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> KAZANDI! 🎉`;
+        document.getElementById('game-over-modal')?.classList.remove('hidden');
+    }
+
+    // --- HELPERLAR ---
+    function checkCollision(b: any, p: any) { return (b.x < p.x + PADDLE_WIDTH && b.x + b.width > p.x && b.y < p.y + PADDLE_HEIGHT && b.y + b.height > p.y); }
+    function increaseSpeed() { if (Math.abs(ball.speedX) < 16) { ball.speedX *= 1.1; ball.speedY *= 1.1; } }
+    
+    function draw() {
+        if(!canvas.getContext) return;
+        ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
+        ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
+        
+        ctx.fillStyle = player1.color; ctx.fillRect(player1.x, player1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+        ctx.fillStyle = player2.color; ctx.fillRect(player2.x, player2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+        ctx.fillStyle = ball.color; ctx.beginPath(); ctx.arc(ball.x+BALL_SIZE/2, ball.y+BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI*2); ctx.fill();
+    }
+
+    function resetBall() {
+        ball.x = canvas.width/2 - BALL_SIZE/2; ball.y = canvas.height/2 - BALL_SIZE/2;
+        ball.speedX = 7 * (Math.random() > 0.5 ? 1 : -1); ball.speedY = 7 * (Math.random() > 0.5 ? 1 : -1);
+    }
+
+    function updateScore() {
+        const sLeft = document.getElementById('score-left');
+        const sRight = document.getElementById('score-right');
+        if(sLeft) sLeft.innerText = score1.toString();
+        if(sRight) sRight.innerText = score2.toString();
+    }
+
+    // --- INPUT HANDLERS ---
+    const handleKeyDown = (e: KeyboardEvent) => { 
+        if(["ArrowUp", "ArrowDown", " ", "Escape"].indexOf(e.key) > -1) e.preventDefault();
+        keys[e.key] = true; 
+    };
+    const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    document.getElementById('exit-btn')?.addEventListener('click', () => {
+        navigate('/dashboard');
+    });
+
+    gameLoop();
+
+    return () => {
+        gameRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        socketService.offGameEvents(); 
+    };
+  }
+};

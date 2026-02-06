@@ -11,11 +11,11 @@ const util_1 = __importDefault(require("util"));
 const stream_1 = require("stream");
 const axios_1 = __importDefault(require("axios"));
 const qrcode_1 = __importDefault(require("qrcode"));
-// --- DÜZELTME BURADA ---
-// Artık PrismaClient'ı buradan çağırmıyoruz.
-// Merkezi db.ts dosyasından hazır 'prisma' nesnesini alıyoruz.
 const db_1 = require("../db");
+// "require" kullanarak TypeScript hatasından kaçınıyoruz
 const { authenticator } = require('otplib');
+// Mac/Docker saat farkı toleransı
+authenticator.options = { window: 1 };
 const pump = util_1.default.promisify(stream_1.pipeline);
 // ----------------------------------------------------------------
 // 1. REGISTER
@@ -60,12 +60,9 @@ const verify2FALogin = async (req, reply) => {
         if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
             return reply.status(400).send({ message: 'INVALID_REQUEST' });
         }
-        // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
         if (!code || String(code).length !== 6) {
             return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
         }
-        // authenticator.verify kullanımı daha güvenlidir
-        // Eğer token formatı yanlışsa (harf vs.) hata fırlatabilir, try-catch ile yakalıyoruz.
         let isValid = false;
         try {
             isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
@@ -91,20 +88,22 @@ exports.verify2FALogin = verify2FALogin;
 // 4. AVATAR UPDATE
 // ----------------------------------------------------------------
 const updateAvatar = async (request, reply) => {
+    // TİP DÜZELTMESİ: request.user'ı UserPayload olarak görüyoruz
+    const userPayload = request.user;
     const data = await request.file();
     if (!data)
         return reply.code(400).send({ message: 'Dosya yüklenmedi' });
-    const user = await db_1.prisma.user.findUnique({ where: { id: request.user.id } });
+    const user = await db_1.prisma.user.findUnique({ where: { id: userPayload.id } });
     if (user?.avatar && user.avatar !== 'default.png') {
         try {
             await (0, promises_1.unlink)(`./uploads/${user.avatar}`);
         }
         catch (err) { }
     }
-    const fileName = `${request.user.id}_${data.filename}`;
+    const fileName = `${userPayload.id}_${data.filename}`;
     await pump(data.file, fs_1.default.createWriteStream(`./uploads/${fileName}`));
     await db_1.prisma.user.update({
-        where: { id: request.user.id },
+        where: { id: userPayload.id },
         data: { avatar: fileName }
     });
     return reply.send({ message: 'Avatar güncellendi', url: `/uploads/${fileName}` });
@@ -115,8 +114,10 @@ exports.updateAvatar = updateAvatar;
 // ----------------------------------------------------------------
 const me = async (request, reply) => {
     try {
+        // TİP DÜZELTMESİ: request.user'ı UserPayload olarak görüyoruz
+        const userPayload = request.user;
         const user = await db_1.prisma.user.findUnique({
-            where: { id: request.user.id },
+            where: { id: userPayload.id },
             include: {
                 gamesAsPlayer1: {
                     include: { player2: true, winner: true },
@@ -193,12 +194,13 @@ const callback42 = async (req, reply) => {
 };
 exports.callback42 = callback42;
 // ----------------------------------------------------------------
-// 7. 2FA SETUP (GENERATE & TURN ON)
+// 7. 2FA SETUP
 // ----------------------------------------------------------------
 const generate2FA = async (req, reply) => {
     try {
-        const userJwt = req.user;
-        const user = await db_1.prisma.user.findUnique({ where: { id: userJwt.id } });
+        // TİP DÜZELTMESİ
+        const userPayload = req.user;
+        const user = await db_1.prisma.user.findUnique({ where: { id: userPayload.id } });
         if (!user)
             return reply.code(404).send({ message: 'User not found' });
         const secret = authenticator.generateSecret();
@@ -219,18 +221,18 @@ const generate2FA = async (req, reply) => {
 exports.generate2FA = generate2FA;
 const turnOn2FA = async (req, reply) => {
     const { code } = req.body;
-    const userJwt = req.user;
+    // TİP DÜZELTMESİ
+    const userPayload = req.user;
     try {
-        const user = await db_1.prisma.user.findUnique({ where: { id: userJwt.id } });
+        const user = await db_1.prisma.user.findUnique({ where: { id: userPayload.id } });
         console.log('🔍 2FA Açma İsteği:', {
-            userId: userJwt.id,
+            userId: userPayload.id,
             codeGelen: code,
             secretVarMi: !!user?.twoFactorSecret
         });
         if (!user || !user.twoFactorSecret) {
             return reply.status(400).send({ message: 'SETUP_REQUIRED' });
         }
-        // Manuel Validasyon: Kod kesinlikle 6 haneli olmalı
         if (!code || String(code).length !== 6) {
             return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
         }
@@ -250,7 +252,7 @@ const turnOn2FA = async (req, reply) => {
     }
     catch (error) {
         console.error('🔥 2FA TurnOn Hatası:', error);
-        return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); // 500 yerine 400 Bad Request
+        return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' });
     }
 };
 exports.turnOn2FA = turnOn2FA;

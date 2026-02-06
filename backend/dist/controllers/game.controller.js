@@ -3,28 +3,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.saveGame = void 0;
 const db_1 = require("../db");
 const saveGame = async (req, reply) => {
-    const { score1, score2, opponentName, type } = req.body;
-    const userId = req.user.id; // Token'dan gelen senin ID'n
+    const { score1, score2, opponentName } = req.body;
+    // --- DÜZELTME BURADA ---
+    // req.user'ı 'UserPayload' olarak zorluyoruz (Type Casting)
+    const userPayload = req.user;
+    const userId = userPayload.id;
+    // -----------------------
     try {
         // Kazananı belirle
         // Eğer sen (P1) kazandıysan winnerId senin ID'n olur.
-        // Eğer AI/Guest kazandıysa winnerId NULL olur (veya null bırakırız).
+        // Eğer AI/Guest kazandıysa winnerId NULL olur.
         let winnerId = null;
-        if (score1 > score2)
+        // Gelen veriler string olabilir, garantiye almak için parseInt yapıyoruz
+        const s1 = parseInt(score1);
+        const s2 = parseInt(score2);
+        if (s1 > s2)
             winnerId = userId;
-        // Eğer rakip kayıtlı bir user olsaydı onun id'sini atardık.
         const newGame = await db_1.prisma.game.create({
             data: {
                 player1Id: userId,
-                score1: parseInt(score1),
-                score2: parseInt(score2),
-                guestName: opponentName || "Guest", // "Yapay Zeka" veya "Misafir"
+                score1: s1,
+                score2: s2,
+                guestName: opponentName || "Guest",
                 winnerId: winnerId
                 // player2Id BOŞ kalacak çünkü AI/Guest kayıtlı değil
             }
         });
         // İstatistikleri Güncelle (Wins/Losses)
-        if (score1 > score2) {
+        if (s1 > s2) {
             // 1. Galibiyet sayısını artır ve güncel veriyi al
             const updatedUser = await db_1.prisma.user.update({
                 where: { id: userId },

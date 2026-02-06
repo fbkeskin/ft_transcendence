@@ -1,112 +1,89 @@
-import { lang } from '../services/language.service';
+// frontend/src/utils/Modal.ts
 
 export class Modal {
+    // Mevcut Alert (Tek butonlu)
+    static alert(title: string, message: string): Promise<void> {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity duration-300';
+        modal.innerHTML = `
+          <div class="bg-gray-800 border border-gray-600 rounded-xl p-6 max-w-sm w-full shadow-2xl transform scale-100 transition-transform duration-300">
+            <h3 class="text-xl font-bold text-white mb-2 border-b border-gray-700 pb-2">${title}</h3>
+            <p class="text-gray-300 mb-6 text-sm leading-relaxed">${message}</p>
+            <div class="flex justify-end">
+              <button id="modal-ok-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                Tamam
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Animasyon için küçük bir timeout
+        setTimeout(() => modal.classList.add('opacity-100'), 10);
   
-  // Basit Uyarı Kutusu (Alert)
-  static alert(title: string, message: string): Promise<void> {
-    return new Promise((resolve) => {
-      this.createModal(title, message, false, () => resolve(), () => resolve());
-    });
-  }
-
-  // Veri Giriş Kutusu (Prompt)
-  static prompt(title: string, defaultValue: string = ""): Promise<string | null> {
-    return new Promise((resolve) => {
-      this.createModal(title, defaultValue, true, 
-        (val) => resolve(val), // OK
-        () => resolve(null)    // CANCEL
-      );
-    });
-  }
-
-  private static createModal(
-      title: string, 
-      contentOrPlaceholder: string, 
-      isPrompt: boolean, 
-      onConfirm: (val: string) => void, 
-      onCancel: () => void
-  ) {
-    // 1. Arka Plan (Overlay)
-    const overlay = document.createElement('div');
-    overlay.className = "fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in p-4";
-
-    // 2. Kutu (Container)
-    const box = document.createElement('div');
-    box.className = "bg-slate-800 border border-slate-600 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0";
-    // Animasyon için setTimeout ile scale-100 yapacağız
-    setTimeout(() => box.classList.remove('scale-95', 'opacity-0'), 10);
-
-    // 3. Başlık
-    const titleEl = document.createElement('h3');
-    titleEl.className = "text-xl font-bold text-white mb-2 flex items-center gap-2";
-    titleEl.innerText = title;
-
-    // 4. İçerik (Mesaj veya Input)
-    let inputEl: HTMLInputElement | null = null;
-    let messageEl: HTMLParagraphElement | null = null;
-
-    if (isPrompt) {
-        inputEl = document.createElement('input');
-        inputEl.type = "text";
-        inputEl.value = contentOrPlaceholder;
-        inputEl.className = "w-full bg-slate-900 border border-slate-600 text-white rounded p-3 mt-2 focus:border-indigo-500 outline-none transition";
-        // Otomatik odaklanma
-        setTimeout(() => inputEl?.focus(), 50);
-    } else {
-        messageEl = document.createElement('p');
-        messageEl.className = "text-slate-300 mb-6";
-        messageEl.innerText = contentOrPlaceholder;
-    }
-
-    // 5. Butonlar
-    const btnContainer = document.createElement('div');
-    btnContainer.className = "flex justify-end gap-3 mt-6";
-
-    // İptal Butonu (Sadece Prompt ise veya Alert ama opsiyonel kapatma istenirse - şimdilik sadece Prompt)
-    if (isPrompt) {
-        const cancelBtn = document.createElement('button');
-        cancelBtn.innerText = lang.t('btn_cancel');
-        cancelBtn.className = "px-4 py-2 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition font-bold text-sm";
-        cancelBtn.onclick = () => close(false);
-        btnContainer.appendChild(cancelBtn);
-    }
-
-    // Tamam Butonu
-    const okBtn = document.createElement('button');
-    okBtn.innerText = lang.t('btn_ok');
-    okBtn.className = "px-6 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/20 transition transform active:scale-95";
-    okBtn.onclick = () => close(true);
-    btnContainer.appendChild(okBtn);
-
-    // Enter tuşu desteği
-    if (inputEl) {
-        inputEl.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') close(true);
+        const btn = modal.querySelector('#modal-ok-btn');
+        btn?.addEventListener('click', () => {
+          modal.classList.remove('opacity-100'); // Kapanış animasyonu
+          setTimeout(() => {
+              document.body.removeChild(modal);
+              resolve();
+          }, 300);
         });
+      });
     }
-
-    // Elemanları Birleştir
-    box.appendChild(titleEl);
-    if (messageEl) box.appendChild(messageEl);
-    if (inputEl) box.appendChild(inputEl);
-    box.appendChild(btnContainer);
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    // Kapatma Fonksiyonu
-    const close = (confirmed: boolean) => {
-        // Çıkış Animasyonu
-        box.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            if (document.body.contains(overlay)) {
-                document.body.removeChild(overlay);
-            }
-            if (confirmed) {
-                onConfirm(inputEl ? inputEl.value : "");
-            } else {
-                onCancel();
-            }
-        }, 200);
-    };
+  
+    // --- YENİ EKLENEN: CONFIRM (KABUL ET / REDDET) ---
+    static confirm(title: string, message: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm';
+            
+            modal.innerHTML = `
+              <div class="bg-slate-800 border-2 border-indigo-500/50 rounded-2xl p-6 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] animate-bounce-in">
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl">⚔️</span>
+                    <h3 class="text-xl font-bold text-white tracking-wide">${title}</h3>
+                </div>
+                
+                <p class="text-gray-300 mb-8 text-sm">${message}</p>
+                
+                <div class="flex justify-between gap-4">
+                  <button id="modal-cancel-btn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 font-bold py-3 px-4 rounded-xl transition border border-slate-600">
+                    Reddet
+                  </button>
+                  <button id="modal-confirm-btn" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-105">
+                    Kabul Et!
+                  </button>
+                </div>
+              </div>
+            `;
+            
+            document.body.appendChild(modal);
+      
+            const cancelBtn = modal.querySelector('#modal-cancel-btn');
+            const confirmBtn = modal.querySelector('#modal-confirm-btn');
+      
+            // Reddet butonuna basınca FALSE döner
+            cancelBtn?.addEventListener('click', () => {
+              document.body.removeChild(modal);
+              resolve(false);
+            });
+      
+            // Kabul et butonuna basınca TRUE döner
+            confirmBtn?.addEventListener('click', () => {
+              document.body.removeChild(modal);
+              resolve(true);
+            });
+          });
+    }
+	// --- YENİ EKLENECEK METOD: TÜM MODALLARI KAPAT ---
+    // Bunu çağırdığımız an ekrandaki tüm açık pencereler silinir.
+    static closeAll() {
+        // Modal sınıfımızın kullandığı CSS sınıflarına sahip elemanları bulup siliyoruz
+        const modals = document.querySelectorAll('.fixed.inset-0');
+        modals.forEach(modal => modal.remove());
+    }
   }
-}
