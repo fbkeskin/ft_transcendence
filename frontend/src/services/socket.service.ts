@@ -111,6 +111,11 @@ class SocketService {
         callback(); 
     }
 
+    // YENİ: Herhangi bir event'i dinlemek için genel metod
+    subscribeToEvent(event: string, callback: (data: any) => void) {
+        this.socket?.on(event, callback);
+    }
+
     private notifyListeners() {
         this.listeners.forEach(callback => callback());
     }

@@ -277,6 +277,12 @@ export const Dashboard = {
                 sentRequestsLocal.delete(data.accepterId);
                 await refreshData();
             });
+
+            // YENİ: Genel Liste Güncelleme Bildirimi (Silme veya Diğer İşlemler)
+            socketService.subscribeToEvent('friend_list_update', async () => {
+                console.log("🔄 Arkadaş listesi güncelleme bildirimi alındı.");
+                await refreshData();
+            });
         }
 
         // --- EVENT LISTENERLAR ---
