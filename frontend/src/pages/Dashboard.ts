@@ -285,56 +285,66 @@ export const Dashboard = {
             });
         }
 
-        // --- EVENT LISTENERLAR ---
-        document.body.addEventListener('click', async (e) => {
-            const target = e.target as HTMLElement;
-            
-            // ARKADAŞ EKLEME (BUTON YÖNETİMİ DÜZELTİLDİ)
-            if (target.classList.contains('add-friend-btn')) {
-                const id = Number(target.getAttribute('data-id'));
-                
-                // 1. Hemen UI'yı güncelle (Beklemeden)
-                sentRequestsLocal.add(id);
-                renderLobby(); // Listeyi tekrar çizince buton disabled olarak gelecek
+    // --- GLOBAL EVENT LISTENER YÖNETİMİ ---
+    // Önceki listener'ı temizle (Varsa)
+    if ((window as any).dashboardClickHandler) {
+        document.body.removeEventListener('click', (window as any).dashboardClickHandler);
+    }
 
-                try {
-                    await sendFriendReq(id);
-                    // Başarılı olursa zaten renderLobby() disabled bırakacak
-                } catch (err: any) { 
-                    // Hata olursa geri al
-                    sentRequestsLocal.delete(id);
-                    renderLobby();
-                    
-                    if (err.message && err.message.includes('Zaten')) {
-                         Modal.alert(lang.t('dash_friend_req_success'), lang.t('dash_friend_req_exists'));
-                         // Yine de listede kalsın
-                         sentRequestsLocal.add(id);
-                         renderLobby();
-                    } else {
-                         Modal.alert(lang.t('common_error'), err.message); 
-                    }
+    // Yeni Handler Oluştur
+    const clickHandler = async (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        
+        // ARKADAŞ EKLEME
+        if (target.classList.contains('add-friend-btn')) {
+            const id = Number(target.getAttribute('data-id'));
+            sentRequestsLocal.add(id);
+            renderLobby();
+            try {
+                await sendFriendReq(id);
+            } catch (err: any) { 
+                sentRequestsLocal.delete(id);
+                renderLobby();
+                if (err.message && err.message.includes('Zaten')) {
+                        Modal.alert(lang.t('dash_friend_req_success'), lang.t('dash_friend_req_exists'));
+                        sentRequestsLocal.add(id);
+                        renderLobby();
+                } else {
+                        Modal.alert(lang.t('common_error'), err.message); 
                 }
             }
+        }
 
-            if (target.classList.contains('accept-btn')) {
-                const id = Number(target.getAttribute('data-id'));
-                try {
-                    await acceptFriendReq(id);
-                    await refreshData(); 
-                } catch (err: any) { console.error(err); }
-            }
+        // ARKADAŞ KABUL
+        if (target.classList.contains('accept-btn')) {
+            const id = Number(target.getAttribute('data-id'));
+            try { await acceptFriendReq(id); await refreshData(); } catch (err) { console.error(err); }
+        }
 
-            if (target.classList.contains('remove-friend-btn') || target.classList.contains('reject-btn')) {
-                const id = Number(target.getAttribute('data-id'));
-                const isConfirm = await Modal.confirm(lang.t('dash_remove_confirm_title'), lang.t('dash_remove_confirm_desc'));
-                if (isConfirm) {
-                    try {
-                        await removeFriendReq(id);
-                        await refreshData(); 
-                    } catch (err: any) { console.error(err); }
-                }
+        // ARKADAŞ SİL / REDDET
+        if (target.classList.contains('remove-friend-btn') || target.classList.contains('reject-btn')) {
+            const id = Number(target.getAttribute('data-id'));
+            const isConfirm = await Modal.confirm(lang.t('dash_remove_confirm_title'), lang.t('dash_remove_confirm_desc'));
+            if (isConfirm) {
+                try { await removeFriendReq(id); await refreshData(); } catch (err) { console.error(err); }
             }
-        });
+        }
+
+        // OYUN DAVETİ
+        const inviteBtn = target.closest('.invite-btn');
+        if (inviteBtn && !inviteBtn.hasAttribute('disabled')) {
+             const targetId = parseInt(inviteBtn.getAttribute('data-id') || '0', 10);
+             if(targetId) { 
+                 Modal.closeAll(); // Varsa açık modalları kapat
+                 socketService.sendGameInvite(targetId); 
+                 Modal.alert(lang.t('dash_invite_sent_title'), lang.t('dash_invite_sent_desc')); 
+             }
+        }
+    };
+
+    // Handler'ı global değişkene ata ve ekle
+    (window as any).dashboardClickHandler = clickHandler;
+    document.body.addEventListener('click', clickHandler);
 
     } catch (err) {
         console.error("Dash Error", err);
@@ -348,16 +358,7 @@ export const Dashboard = {
     if (buttons[1]) buttons[1].addEventListener('click', () => navigate('/game/ai'));
     if (buttons[2]) buttons[2].addEventListener('click', () => navigate('/tournament/new'));
 
-    // Davetler
-    document.body.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        const btn = target.closest('.invite-btn');
-        if (btn && !btn.hasAttribute('disabled')) {
-             const targetId = parseInt(btn.getAttribute('data-id') || '0', 10);
-             if(targetId) { socketService.sendGameInvite(targetId); Modal.alert(lang.t('dash_invite_sent_title'), lang.t('dash_invite_sent_desc')); }
-        }
-    });
-
+    // Socket Dinleyicileri (Tekrar eklenmemesi için kontrol gerekebilir ama socketService singleton olduğu için sorun az)
     socketService.onIncomingInvite(async (data) => {
         Modal.closeAll();
         const accepted = await Modal.confirm(lang.t('dash_invite_received_title'), `<strong>${data.senderName}</strong> ${lang.t('dash_invite_received_desc')}`);
