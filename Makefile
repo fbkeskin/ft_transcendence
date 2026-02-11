@@ -51,6 +51,9 @@ fclean: down
 	@docker-compose down --rmi all --volumes --remove-orphans
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
+	@echo "$(YELLOW)Cleaning dependencies (node_modules & package-lock.json)...$(RESET)"
+	@rm -rf frontend/node_modules frontend/package-lock.json
+	@rm -rf backend/node_modules backend/package-lock.json
 	@echo "$(YELLOW)Cleaning uploads (preserving default.png)...$(RESET)"
 	@find uploads/ -type f ! -name 'default.png' -delete
 	@echo "$(GREEN)Full clean complete (Database and uploads cleaned).$(RESET)"
