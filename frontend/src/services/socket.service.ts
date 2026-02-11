@@ -111,6 +111,10 @@ class SocketService {
         callback(); 
     }
 
+    clearListeners() {
+        this.listeners = [];
+    }
+
     // YENİ: Herhangi bir event'i dinlemek için genel metod
     subscribeToEvent(event: string, callback: (data: any) => void) {
         this.socket?.on(event, callback);
@@ -145,6 +149,19 @@ class SocketService {
     // YENİ: Meşgul hatası dinleyicisi
     onInviteError(callback: (data: {message: string}) => void) {
         this.socket?.on('invite_error', callback);
+    }
+
+    // Dashboard listener temizliği
+    offDashboardEvents() {
+        this.socket?.off('game_invite');
+        this.socket?.off('game_start');
+        this.socket?.off('invite_rejected');
+        this.socket?.off('invite_error');
+        this.socket?.off('online_users_list');
+        // friend_request vb. Dashboard.ts içinde subscribeToEvent ile ekleniyor
+        this.socket?.off('friend_request');
+        this.socket?.off('friend_accepted');
+        this.socket?.off('friend_list_update');
     }
 
     // --- OYUN İÇİ SOCKET METODLARI ---

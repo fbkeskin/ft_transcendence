@@ -9,6 +9,8 @@ export const fr = {
   // Common Buttons
   btn_ok: "D'ACCORD",
   btn_cancel: "ANNULER",
+  btn_accept: "ACCEPTER",
+  btn_reject: "REFUSER",
 
   // Common Titles
   common_success: "✅ Succès",
@@ -117,6 +119,25 @@ export const fr = {
   dash_tour_status: "Statut",
   dash_tour_status_win: "🏆 VICTOIRE",
   dash_tour_status_join: "PARTICIPATION",
+
+  // Tournament Bracket
+  tour_bracket_title: "⚔️ TABLEAU DU TOURNOI",
+  tour_bracket_winner: "🏆 CHAMPION DÉSIGNÉ !",
+  tour_bracket_back: "Retour au tableau ➔",
+  tour_bracket_semi1: "Demi-finale 1",
+  tour_bracket_semi2: "Demi-finale 2",
+  tour_bracket_winner_label: "Gagnant",
+  tour_bracket_waiting: "En attente...",
+  tour_bracket_final: "👑 FINALE 👑",
+  tour_bracket_final_waiting: "En attente des finalistes...",
+  tour_bracket_next_match: "Prochain match :",
+  tour_bracket_start_match: "DÉMARRER LE MATCH",
+  tour_bracket_finish: "Retour au menu principal",
+  tour_not_found: "Tournoi non trouvé !",
+
+  // Game Online
+  game_online_forfeit_title: "🏆 VICTOIRE PAR FORFAIT !",
+  game_online_forfeit_desc: "L'adversaire a fui ! Vous gagnez la partie.",
 
   // Tournament
   tour_title: "🏆 MODE TOURNOI",

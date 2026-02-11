@@ -3,6 +3,7 @@ import { navigate } from '../router';
 import { saveGameReq } from '../services/game.service';
 import { getProfileReq } from '../services/auth.service';
 import { lang } from '../services/language.service';
+import { escapeHTML } from '../utils/escape';
 
 export const GameAI = {
   render: () => `
@@ -151,7 +152,7 @@ export const GameAI = {
         cancelAnimationFrame(animationFrameId); // STABILITY FIX
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> ${lang.t('game_winner')} 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {

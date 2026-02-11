@@ -9,6 +9,8 @@ export const tr = {
   // Common Buttons
   btn_ok: "TAMAM",
   btn_cancel: "İPTAL",
+  btn_accept: "KABUL ET",
+  btn_reject: "REDDET",
   
   // Common Titles
   common_success: "✅ Başarılı",
@@ -118,6 +120,25 @@ export const tr = {
   dash_tour_status: "Durum",
   dash_tour_status_win: "🏆 ZAFER",
   dash_tour_status_join: "KATILIM",
+  
+  // Tournament Bracket
+  tour_bracket_title: "⚔️ TURNUVA TABLOSU",
+  tour_bracket_winner: "🏆 ŞAMPİYON BELLİ OLDU!",
+  tour_bracket_back: "Turnuva Tablosuna Dön ➔",
+  tour_bracket_semi1: "Yarı Final 1",
+  tour_bracket_semi2: "Yarı Final 2",
+  tour_bracket_winner_label: "Kazanan",
+  tour_bracket_waiting: "Bekleniyor...",
+  tour_bracket_final: "👑 FİNAL 👑",
+  tour_bracket_final_waiting: "Finalistler bekleniyor...",
+  tour_bracket_next_match: "Sıradaki Maç:",
+  tour_bracket_start_match: "MAÇINI BAŞLAT",
+  tour_bracket_finish: "Ana Menüye Dön",
+  tour_not_found: "Turnuva bulunamadı!",
+
+  // Game Online
+  game_online_forfeit_title: "🏆 HÜKMEN GALİBİYET!",
+  game_online_forfeit_desc: "Rakip korktu ve kaçtı! Oyunu kazandın.",
 
   // Tournament
   tour_title: "🏆 TURNUVA MODU",

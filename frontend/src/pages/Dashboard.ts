@@ -6,6 +6,7 @@ import { navigate } from '../router';
 import { lang } from '../services/language.service';
 import { Modal } from '../utils/Modal';
 import { socketService } from '../services/socket.service';
+import { escapeHTML } from '../utils/escape.ts';
 
 export const Dashboard = {
   render: () => `
@@ -101,6 +102,10 @@ export const Dashboard = {
 
   init: async () => {
     try {
+        // Önceki listenerları temizle (Çünkü Dashboard her render'da init olur, socketService ise singleton'dır)
+        socketService.offDashboardEvents();
+        socketService.clearListeners();
+
         const user = await getProfileReq();
         let friends: any[] = [];
         let pendingRequests: any[] = [];
@@ -171,7 +176,7 @@ export const Dashboard = {
                 pendingContainer.classList.remove('hidden');
                 pendingList.innerHTML = pendingRequests.map((req: any) => `
                     <div class="flex items-center justify-between bg-slate-700/50 p-2 rounded border border-indigo-500/30">
-                        <span class="text-xs font-bold">${req.username}</span>
+                        <span class="text-xs font-bold">${escapeHTML(req.username)}</span>
                         <div class="flex gap-1">
                             <button class="accept-btn bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-[10px]" data-id="${req.id}">✓</button>
                             <button class="reject-btn bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-[10px]" data-id="${req.id}">✗</button>
@@ -201,7 +206,7 @@ export const Dashboard = {
                                 <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${statusColor} border-2 border-slate-800"></span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-xs font-bold text-gray-200">${f.username}</span>
+                                <span class="text-xs font-bold text-gray-200">${escapeHTML(f.username)}</span>
                                 <span class="text-[9px] text-gray-500">${statusText}</span>
                             </div>
                         </div>
@@ -243,7 +248,7 @@ export const Dashboard = {
                 <li class="flex items-center justify-between bg-slate-800 p-2 rounded border border-slate-700">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-green-500 shadow-green-glow"></span>
-                        <span class="text-xs font-bold text-gray-200">${u.username}</span>
+                        <span class="text-xs font-bold text-gray-200">${escapeHTML(u.username)}</span>
                     </div>
                     <div class="flex gap-1">
                         ${actionBtn}
@@ -361,14 +366,14 @@ export const Dashboard = {
     // Socket Dinleyicileri (Tekrar eklenmemesi için kontrol gerekebilir ama socketService singleton olduğu için sorun az)
     socketService.onIncomingInvite(async (data) => {
         Modal.closeAll();
-        const accepted = await Modal.confirm(lang.t('dash_invite_received_title'), `<strong>${data.senderName}</strong> ${lang.t('dash_invite_received_desc')}`);
+        const accepted = await Modal.confirm(lang.t('dash_invite_received_title'), `<strong>${escapeHTML(data.senderName)}</strong> ${lang.t('dash_invite_received_desc')}`);
         socketService.respondToInvite(data.senderId, accepted);
     });
-    socketService.onInviteRejected((data) => { Modal.closeAll(); Modal.alert(lang.t('dash_invite_rejected_title'), `${data.rejecterName} ${lang.t('dash_invite_rejected_desc')}`); });
+    socketService.onInviteRejected((data) => { Modal.closeAll(); Modal.alert(lang.t('dash_invite_rejected_title'), `${escapeHTML(data.rejecterName)} ${lang.t('dash_invite_rejected_desc')}`); });
     socketService.onGameStart((data) => {
         Modal.closeAll();
         socketService.currentGameRole = data.role; socketService.currentOpponentName = data.opponent; socketService.currentOpponentId = data.opponentId;
-        Modal.alert(lang.t('dash_game_starting'), `${lang.t('dash_game_starting_desc')} ${data.opponent}`).then(() => navigate('/game/online'));
+        Modal.alert(lang.t('dash_game_starting'), `${lang.t('dash_game_starting_desc')} ${escapeHTML(data.opponent)}`).then(() => navigate('/game/online'));
     });
   }
 };
@@ -413,7 +418,7 @@ function renderMatchHistory(user: any) {
         const myScore = isPlayer1 ? game.score1 : game.score2;
         const enemyScore = isPlayer1 ? game.score2 : game.score1;
         let resultBadges = (myScore > enemyScore) ? `<span class="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/20">${lang.t('dash_win')}</span>` : `<span class="bg-red-500/10 text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-500/20">${lang.t('dash_loss')}</span>`;
-        matchBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 font-medium text-slate-200">${opponentName}</td><td class="px-4 py-3 font-mono text-indigo-300 font-bold tracking-widest">${myScore} - ${enemyScore}</td><td class="px-4 py-3">${resultBadges}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(game.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
+        matchBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 font-medium text-slate-200">${escapeHTML(opponentName)}</td><td class="px-4 py-3 font-mono text-indigo-300 font-bold tracking-widest">${myScore} - ${enemyScore}</td><td class="px-4 py-3">${resultBadges}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(game.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
     });
     const tabMatches = document.getElementById('tab-hist-matches')!;
     const tabTournaments = document.getElementById('tab-hist-tournaments')!;
@@ -438,6 +443,6 @@ function renderTournamentHistory(tournaments: any[], user: any) {
     else tournaments.forEach((t: any, index: number) => {
         const isChampion = t.winner === user.username;
         let statusBadge = isChampion ? `<span class="bg-yellow-500/10 text-yellow-400 px-2 py-1 rounded text-xs font-bold border border-yellow-500/20">${lang.t('dash_tour_status_win')}</span>` : `<span class="bg-slate-700 text-gray-400 px-2 py-1 rounded text-xs border border-slate-600">${lang.t('dash_tour_status_join')}</span>`;
-        tournamentBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 text-xs text-gray-400 max-w-[150px] truncate">${t.player1}, ${t.player2}...</td><td class="px-4 py-3 text-center font-bold text-indigo-300">${t.winner}</td><td class="px-4 py-3 text-center">${statusBadge}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(t.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
+        tournamentBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 text-xs text-gray-400 max-w-[150px] truncate">${escapeHTML(t.player1)}, ${escapeHTML(t.player2)}...</td><td class="px-4 py-3 text-center font-bold text-indigo-300">${escapeHTML(t.winner)}</td><td class="px-4 py-3 text-center">${statusBadge}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(t.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
     });
 }

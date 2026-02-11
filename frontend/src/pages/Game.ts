@@ -5,6 +5,7 @@ import { getProfileReq } from '../services/auth.service';
 import { lang } from '../services/language.service';
 import { Modal } from '../utils/Modal';
 import { saveTournamentReq } from '../services/tournament.service';
+import { escapeHTML } from '../utils/escape';
 
 export const Game = {
   render: () => `
@@ -162,7 +163,7 @@ export const Game = {
         cancelAnimationFrame(animationFrameId);
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> ${lang.t('game_winner')} 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         // --- TURNUVA VS NORMAL AYRIMI ---
@@ -215,7 +216,7 @@ export const Game = {
 
         const exitBtn = document.getElementById('exit-btn');
         if (exitBtn) {
-            exitBtn.innerText = "Turnuva Tablosuna Dön ➔";
+            exitBtn.innerText = lang.t('tour_bracket_back');
             // ... (Event listener kodları aynı) ...
             const newBtn = exitBtn.cloneNode(true);
             exitBtn.parentNode?.replaceChild(newBtn, exitBtn);

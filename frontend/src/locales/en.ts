@@ -9,6 +9,8 @@ export const en = {
   // Common Buttons
   btn_ok: "OK",
   btn_cancel: "CANCEL",
+  btn_accept: "ACCEPT",
+  btn_reject: "REJECT",
 
   // Common Titles
   common_success: "✅ Success",
@@ -117,6 +119,25 @@ export const en = {
   dash_tour_status: "Status",
   dash_tour_status_win: "🏆 VICTORY",
   dash_tour_status_join: "PARTICIPATION",
+
+  // Tournament Bracket
+  tour_bracket_title: "⚔️ TOURNAMENT BRACKET",
+  tour_bracket_winner: "🏆 CHAMPION DECIDED!",
+  tour_bracket_back: "Return to Bracket ➔",
+  tour_bracket_semi1: "Semi-Final 1",
+  tour_bracket_semi2: "Semi-Final 2",
+  tour_bracket_winner_label: "Winner",
+  tour_bracket_waiting: "Waiting...",
+  tour_bracket_final: "👑 FINAL 👑",
+  tour_bracket_final_waiting: "Waiting for finalists...",
+  tour_bracket_next_match: "Next Match:",
+  tour_bracket_start_match: "START MATCH",
+  tour_bracket_finish: "Back to Main Menu",
+  tour_not_found: "Tournament not found!",
+
+  // Game Online
+  game_online_forfeit_title: "🏆 WIN BY FORFEIT!",
+  game_online_forfeit_desc: "The opponent fled! You win the game.",
 
   // Tournament
   tour_title: "🏆 TOURNAMENT MODE",

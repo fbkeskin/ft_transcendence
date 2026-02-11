@@ -3,7 +3,8 @@ import { navigate } from '../router';
 import { saveGameReq } from '../services/game.service';
 import { lang } from '../services/language.service';
 import { socketService } from '../services/socket.service';
-import { getProfileReq } from '../services/auth.service'; // <--- EKLENDİ
+import { getProfileReq } from '../services/auth.service';
+import { escapeHTML } from '../utils/escape';
 
 export const GameOnline = {
   render: () => `
@@ -121,7 +122,7 @@ export const GameOnline = {
         cancelAnimationFrame(animationFrameId);
         Modal.closeAll();
         
-        await Modal.alert("🏆 HÜKMEN GALİBİYET!", "Rakip korktu ve kaçtı! Oyunu kazandın.");
+        await Modal.alert(lang.t('game_online_forfeit_title'), lang.t('game_online_forfeit_desc'));
         
         // Host olmasan bile kazandığın için kaydetmek isteyebilirsin
         // Ama şimdilik Dashboard'a atalım, backend zaten available yaptı.
@@ -205,7 +206,7 @@ export const GameOnline = {
         cancelAnimationFrame(animationFrameId);
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> KAZANDI! 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
     }
 
