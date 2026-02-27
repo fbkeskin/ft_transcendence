@@ -12,24 +12,23 @@ export const Login = {
         <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400 tracking-widest">${lang.t('login_title')}</h2>
 
         <form id="login-form" class="space-y-4 transition-all duration-500">
-		<div>
-		<label class="block text-xs uppercase text-slate-400 mb-1">${lang.t('email_label')}</label>
-		<input type="email" id="email" required
-			oninvalid="if(this.value === ''){this.setCustomValidity('${lang.t('common_fill_field')}')}else{this.setCustomValidity('Lütfen geçerli bir e-posta adresi girin (örn: kullanici@mail.com)')}"
-			oninput="this.setCustomValidity('')"
-			class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" 
-			placeholder="${lang.t('email_placeholder')}">
-		</div>
+            <div>
+                <label class="block text-xs uppercase text-slate-400 mb-1">${lang.t('email_label')}</label>
+                <input type="email" id="email" required
+                    oninvalid="if(this.value === ''){this.setCustomValidity('${lang.t('common_fill_field') || 'Lütfen bu alanı doldurun'}')}else{this.setCustomValidity('Lütfen geçerli bir e-posta adresi girin')}"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" 
+                    placeholder="${lang.t('email_placeholder')}">
+            </div>
             <div>
                 <label class="block text-xs uppercase text-slate-400 mb-1">${lang.t('password_label')}</label>
                 <input type="password" id="password" required
-                    oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                    oninvalid="this.setCustomValidity('${lang.t('common_fill_field') || 'Lütfen bu alanı doldurun'}')"
                     oninput="this.setCustomValidity('')"
                     class="w-full bg-slate-900 border border-slate-600 rounded p-3 focus:border-indigo-500 outline-none text-white" 
                     placeholder="${lang.t('password_placeholder')}">
             </div>
-            
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded transition shadow-lg shadow-indigo-500/30">
+            <button type="submit" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded transition shadow-lg shadow-indigo-500/30">
                 ${lang.t('login_btn')}
             </button>
             
@@ -52,13 +51,13 @@ export const Login = {
 
             <div>
                 <input type="text" id="2fa-code" maxlength="6" required
-                    oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                    oninvalid="this.setCustomValidity('${lang.t('common_fill_field') || 'Lütfen bu alanı doldurun'}')"
                     oninput="this.setCustomValidity('')"
                     class="w-full bg-slate-900 border border-slate-600 rounded p-4 text-center text-2xl tracking-[10px] focus:border-emerald-500 outline-none text-emerald-400 font-mono" 
                     placeholder="000000">
             </div>
 
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg shadow-emerald-500/30">
+            <button type="submit" id="verify-2fa-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded transition shadow-lg shadow-emerald-500/30">
                 ${lang.t('twofa_verify_btn')}
             </button>
             
@@ -72,12 +71,14 @@ export const Login = {
   `,
   
   init: async () => {
+    // 0. GÜVENLİK TEMİZLİĞİ
     const urlCheck = new URLSearchParams(window.location.search);
     if (!urlCheck.get('token') && !urlCheck.get('2fa_required')) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     }
 
+    // Elementleri Seç (Tip dönüşümleri HTMLFormElement yapıldı)
     const loginForm = document.getElementById('login-form') as HTMLFormElement;
     const twoFaForm = document.getElementById('2fa-form') as HTMLFormElement;
     
@@ -85,20 +86,27 @@ export const Login = {
     const passwordInput = document.getElementById('password') as HTMLInputElement;
     const codeInput = document.getElementById('2fa-code') as HTMLInputElement;
 
-    document.getElementById('back-home-btn')?.addEventListener('click', () => navigate('/'));
+    // Ana Sayfaya Dön Butonu
+    document.getElementById('back-home-btn')?.addEventListener('click', () => {
+        navigate('/');
+    });
 
     let tempUserId: number | null = null;
 
-    // --- URL KONTROLÜ (Aynı) ---
+    // ============================================================
+    // URL KONTROLÜ (42'den Dönüş) - DEĞİŞMEDİ
+    // ============================================================
     const urlParams = new URLSearchParams(window.location.search);
+    
     const token = urlParams.get('token');
-
     if (token) {
         localStorage.setItem('token', token);
         try {
             const user = await getProfileReq();
             localStorage.setItem('user', JSON.stringify(user));
-        } catch (err) {}
+        } catch (err) {
+            console.error("Profil bilgisi çekilemedi:", err);
+        }
         window.history.replaceState({}, document.title, "/login");
         navigate('/dashboard');
         return;
@@ -119,11 +127,13 @@ export const Login = {
         Modal.alert(lang.t('login_error'), errorParam);
         window.history.replaceState({}, document.title, "/login");
     }
+    // ============================================================
 
-    // --- 1. LOGIN FORM SUBMIT (YENİLENDİ) ---
-    // Artık click değil submit dinliyoruz. Tarayıcı boşlukları kendi engeller.
+
+    // --- 1. LOGIN FORM SUBMIT ---
+    // DİKKAT: Artık butonun click eventini değil, formun submit eventini dinliyoruz.
     loginForm?.addEventListener('submit', async (e) => {
-      e.preventDefault(); 
+      e.preventDefault(); // Sayfanın yenilenmesini engeller. Bu satır çalışıyorsa validasyon geçilmiş demektir.
       
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
@@ -148,22 +158,26 @@ export const Login = {
       }
     });
 
-    // --- 2. 2FA FORM SUBMIT (YENİLENDİ) ---
+    // --- 2. 2FA DOĞRULA FORM SUBMIT ---
     twoFaForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const code = codeInput.value.trim();
-        if (!tempUserId) return;
+        if (!code || !tempUserId) return Modal.alert(lang.t('common_error'), lang.t('twofa_missing'));
 
         try {
             const res = await verify2FALoginReq(tempUserId, code);
             
             if (res.token) {
                 localStorage.setItem('token', res.token);
+                
                 try {
                     const user = await getProfileReq();
                     localStorage.setItem('user', JSON.stringify(user));
-                } catch (pErr) {}
+                } catch (pErr) {
+                    console.error('Profil alınamadı', pErr);
+                }
+
                 navigate('/dashboard');
             }
         } catch (err: any) {
@@ -172,6 +186,7 @@ export const Login = {
         }
     });
 
+    // --- Geri Dön Butonu ---
     document.getElementById('back-to-login')?.addEventListener('click', () => {
         twoFaForm?.classList.add('hidden');
         loginForm?.classList.remove('hidden');
