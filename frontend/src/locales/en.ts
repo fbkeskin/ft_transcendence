@@ -15,7 +15,13 @@ export const en = {
   // Common Titles
   common_success: "✅ Success",
   common_error: "❌ Error",
+  common_info: "ℹ️ Info",
   common_warning: "⚠️ Warning",
+
+  // Invitation Errors
+  error_USER_BUSY: "User is currently busy.",
+  error_USER_IN_OTHER_GAME: "User is in another game, but the invite was sent.",
+  error_USER_OFFLINE: "User is offline.",
 
   // Common Placeholders
   email_placeholder: "mail@example.com",
@@ -91,7 +97,11 @@ export const en = {
   dash_tab_friends: "👥 FRIENDS",
   dash_tab_matches: "📊 1v1 MATCHES",
   dash_tab_tournaments: "🏆 TOURNAMENTS",
-  dash_req_title: "REQUESTS",
+  dash_tab_invites: "📩 REQUESTS",
+  dash_game_invites: "GAME INVITES",
+  dash_no_invites: "No invites yet.",
+  dash_invitation_sent: "Invited you to a match!",
+  dash_req_title: "FRIEND REQUESTS",
   dash_my_list: "MY LIST",
   dash_no_friend: "No friends yet :(",
   dash_no_user: "No one here :(",
@@ -137,7 +147,8 @@ export const en = {
 
   // Game Online
   game_online_forfeit_title: "🏆 WIN BY FORFEIT!",
-  game_online_forfeit_desc: "The opponent fled! You win the game.",
+  game_online_interrupt_warn: "Your current game will be cancelled and you will switch to this match.",
+  game_ready_confirm_desc: "Are you ready to start the match? Your opponent will be waited for after your confirmation.",
 
   // Tournament
   tour_title: "🏆 TOURNAMENT MODE",

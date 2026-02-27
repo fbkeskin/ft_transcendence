@@ -126,6 +126,14 @@ export const Game = {
 
     function gameLoop() {
         if (!gameRunning) return;
+
+        // PAUSE KONTROLÜ: Eğer ekranda bir modal varsa oyunu duraklat
+        if (document.querySelector('.fixed.inset-0')) {
+            draw(); // Sadece çiz (Donmuş görüntü için)
+            animationFrameId = requestAnimationFrame(gameLoop);
+            return;
+        }
+
         update(); 
         draw(); 
         animationFrameId = requestAnimationFrame(gameLoop);
@@ -272,6 +280,11 @@ export const Game = {
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
 
+    // YENİ: Socket durumunu meşgul yap (Eğer token varsa)
+    import('../services/socket.service').then(({ socketService }) => {
+        socketService.updateStatus('BUSY');
+    });
+
     const handleRestart = () => {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
@@ -293,6 +306,12 @@ export const Game = {
     return () => {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
+        
+        // YENİ: Durumu tekrar müsait yap
+        import('../services/socket.service').then(({ socketService }) => {
+            socketService.updateStatus('AVAILABLE');
+        });
+
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
         if (!isTournament) {

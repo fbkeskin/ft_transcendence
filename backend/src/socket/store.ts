@@ -3,7 +3,7 @@
 export interface OnlineUser {
 	socketId: string;
 	username: string;
-	status: 'AVAILABLE' | 'BUSY' | 'IN_GAME';
+	status: 'AVAILABLE' | 'BUSY' | 'IN_GAME' | 'WAITING';
 	opponentId?: number;
   }
   

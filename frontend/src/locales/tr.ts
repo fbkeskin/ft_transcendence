@@ -15,7 +15,13 @@ export const tr = {
   // Common Titles
   common_success: "✅ Başarılı",
   common_error: "❌ Hata",
+  common_info: "ℹ️ Bilgi",
   common_warning: "⚠️ Dikkat",
+  
+  // Invitation Errors
+  error_USER_BUSY: "Kullanıcı şu an meşgul.",
+  error_USER_IN_OTHER_GAME: "Kullanıcı şu an başka bir oyunda, yine de davet iletildi.",
+  error_USER_OFFLINE: "Kullanıcı çevrimdışı.",
   
   // Common Placeholders
   email_placeholder: "mail@ornek.com",
@@ -92,7 +98,11 @@ export const tr = {
   dash_tab_friends: "👥 ARKADAŞLAR",
   dash_tab_matches: "📊 1v1 MAÇLAR",
   dash_tab_tournaments: "🏆 TURNUVALAR",
-  dash_req_title: "İSTEKLER",
+  dash_tab_invites: "📩 İSTEKLER",
+  dash_game_invites: "OYUN DAVETLERİ",
+  dash_no_invites: "Henüz bir davet yok.",
+  dash_invitation_sent: "Seni maça çağırdı!",
+  dash_req_title: "ARKADAŞLIK İSTEKLERİ",
   dash_my_list: "LİSTEM",
   dash_no_friend: "Arkadaşın yok :(",
   dash_no_user: "Kimse yok :(",
@@ -138,7 +148,8 @@ export const tr = {
 
   // Game Online
   game_online_forfeit_title: "🏆 HÜKMEN GALİBİYET!",
-  game_online_forfeit_desc: "Rakip korktu ve kaçtı! Oyunu kazandın.",
+  game_online_interrupt_warn: "Mevcut oyunun iptal edilecek ve bu maça geçilecek.",
+  game_ready_confirm_desc: "Maça girmeye hazır mısın? Onay verdiğinde rakibin beklenir.",
 
   // Tournament
   tour_title: "🏆 TURNUVA MODU",

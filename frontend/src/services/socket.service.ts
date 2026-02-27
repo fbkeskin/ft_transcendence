@@ -5,30 +5,26 @@ import { io, Socket } from 'socket.io-client';
 interface OnlineUser {
   id: number;
   username: string;
-  status?: string; // BUSY, AVAILABLE, IN_GAME vb.
+  status?: 'AVAILABLE' | 'BUSY' | 'IN_GAME';
 }
 
 class SocketService {
   private socket: Socket | null = null;
-  
-  // Singleton instance (Tekil nesne)
   private static instance: SocketService;
 
-  // OYUN VERİLERİNİ GEÇİCİ TUTACAK DEĞİŞKENLER
   public currentGameRole: 'player1' | 'player2' | null = null;
   public currentOpponentName: string = "Rakip";
   public currentOpponentId: number = 0;
   
-  // ID -> Username eşleşmesi
-  private onlineUsers: Map<number, string> = new Map();
-  
-  // UI güncellemeleri için dinleyiciler
-  private listeners: (() => void)[] = [];
+  // DAVET LİSTESİ
+  private pendingInvites: { senderId: number, senderName: string, timestamp: number }[] = [];
 
-  // Singleton Yapısı: Constructor private yapılır
+  private onlineUsers: Map<number, string> = new Map();
+  private listeners: (() => void)[] = [];
+  private eventListeners: Map<string, ((data: any) => void)[]> = new Map();
+
   private constructor() {}
 
-  // Sadece bu method üzerinden erişilebilir
   public static getInstance(): SocketService {
       if (!SocketService.instance) {
           SocketService.instance = new SocketService();
@@ -37,55 +33,46 @@ class SocketService {
   }
 
   connect() {
-    // KORUMA: Eğer zaten bağlıysa tekrar bağlanma!
-    if (this.socket && this.socket.connected) {
-        console.log("⚠️ Socket zaten bağlı, yeni bağlantı açılmadı.");
-        return;
-    }
+    if (this.socket && this.socket.connected) return;
 
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Varsa eskiyi kapat (Garanti olsun)
-    if (this.socket) {
-        this.socket.disconnect();
-    }
+    if (this.socket) this.socket.disconnect();
 
     console.log("🔌 Socket bağlantısı başlatılıyor...");
     this.socket = io('http://localhost:3000', {
       auth: { token },
       transports: ['websocket'],
-      reconnection: true, // Otomatik tekrar bağlanma
+      reconnection: true,
       reconnectionAttempts: 5
     });
 
     this.socket.on('connect', () => {
       console.log('✅ SOCKET BAĞLANDI! ID:', this.socket?.id);
+      this.eventListeners.forEach((callbacks, event) => {
+          callbacks.forEach(cb => this.socket?.on(event, cb));
+      });
     });
 
     this.socket.on('disconnect', () => {
       console.log('❌ SOCKET KOPTU');
       this.onlineUsers.clear();
       this.notifyListeners();
-      // socket nesnesini null yapmıyoruz ki reconnection çalışsın
     });
 
-    // Listeyi alıp Map'e çeviriyoruz
     this.socket.on('online_users_list', (users: OnlineUser[]) => {
-        // console.log("📋 Liste alındı:", users);
         this.onlineUsers.clear();
         users.forEach(u => this.onlineUsers.set(u.id, u.username));
         this.notifyListeners();
     });
 
-    // Tekil kullanıcı güncellemesi
     this.socket.on('user_status', (data: { userId: number, username?: string, status: string }) => {
         if (data.status === 'ONLINE' && data.username) {
             this.onlineUsers.set(data.userId, data.username);
         } else if (data.status === 'OFFLINE') {
             this.onlineUsers.delete(data.userId);
         }
-        // BUSY durumu şimdilik listeden silmiyor, sadece status güncelliyor (istenirse eklenebilir)
         this.notifyListeners();
     });
   }
@@ -97,13 +84,23 @@ class SocketService {
         }
     }
 
-    sendPing() {
-        this.socket?.emit('ping');
+    sendPing() { this.socket?.emit('ping'); }
+
+    updateStatus(status: 'AVAILABLE' | 'BUSY' | 'IN_GAME') {
+        this.socket?.emit('update_status', { status });
     }
 
-    // Dashboard'a listeyi {id, username} dizisi olarak ver
     getOnlineUsers(): OnlineUser[] {
         return Array.from(this.onlineUsers.entries()).map(([id, username]) => ({ id, username }));
+    }
+
+    getPendingInvites() {
+        return this.pendingInvites;
+    }
+
+    removeInvite(senderId: number) {
+        this.pendingInvites = this.pendingInvites.filter(i => i.senderId !== senderId);
+        this.notifyListeners();
     }
 
     subscribe(callback: () => void) {
@@ -111,108 +108,102 @@ class SocketService {
         callback(); 
     }
 
-    clearListeners() {
-        this.listeners = [];
-    }
+    clearListeners() { this.listeners = []; }
 
-    // YENİ: Herhangi bir event'i dinlemek için genel metod
     subscribeToEvent(event: string, callback: (data: any) => void) {
-        this.socket?.on(event, callback);
+        if (!this.eventListeners.has(event)) this.eventListeners.set(event, []);
+        this.eventListeners.get(event)?.push(callback);
+        if (this.socket && this.socket.connected) {
+            this.socket.on(event, callback);
+        }
     }
 
-    private notifyListeners() {
-        this.listeners.forEach(callback => callback());
+    private removeEventListeners(event: string) {
+        this.socket?.off(event);
+        this.eventListeners.delete(event);
     }
 
-    // --- DAVET SİSTEMİ ---
+    private notifyListeners() { this.listeners.forEach(callback => callback()); }
 
-    sendGameInvite(targetUserId: number) {
-        this.socket?.emit('invite_game', { targetUserId });
-    }   
+    sendGameInvite(targetUserId: number) { this.socket?.emit('invite_game', { targetUserId }); }   
+    respondToInvite(senderId: number, accepted: boolean) { this.socket?.emit('invite_response', { senderId, accepted }); }
 
-    respondToInvite(senderId: number, accepted: boolean) {
-        this.socket?.emit('invite_response', { senderId, accepted });
+    // YENİ: Hazırlık Handshake
+    onMatchReadyCheck(callback: (data: { opponent: string, opponentId: number }) => void) {
+        this.subscribeToEvent('match_ready_check', callback);
     }
 
-    onGameStart(callback: (data: any) => void) {
-        this.socket?.on('game_start', callback);
+    confirmReady(opponentId: number) {
+        this.socket?.emit('confirm_ready', { opponentId });
     }
 
-    onInviteRejected(callback: (data: any) => void) {
-        this.socket?.on('invite_rejected', callback);
-    }
+        onGameStart(callback: (data: any) => void) { this.subscribeToEvent('game_start', callback); }
 
-    onIncomingInvite(callback: (data: { senderId: number, senderName: string }) => void) {
-        this.socket?.on('game_invite', callback);
-    }
+        onInviteRejected(callback: (data: any) => void) { this.subscribeToEvent('invite_rejected', callback); }
 
-    // YENİ: Meşgul hatası dinleyicisi
-    onInviteError(callback: (data: {message: string}) => void) {
-        this.socket?.on('invite_error', callback);
-    }
+        onIncomingInvite(callback: (data: { senderId: number, senderName: string }) => void) { 
 
-    // Dashboard listener temizliği
+            this.subscribeToEvent('game_invite', (data) => {
+
+                // Listeye ekle (Eğer zaten yoksa)
+
+                if (!this.pendingInvites.find(i => i.senderId === data.senderId)) {
+
+                    this.pendingInvites.push({ ...data, timestamp: Date.now() });
+
+                    this.notifyListeners();
+
+                }
+
+                callback(data);
+
+            }); 
+
+        }
+
+        
+
+        onInviteError(callback: (data: { type: 'INFO' | 'ERROR', code: string, message: string }) => void) { 
+
+            this.subscribeToEvent('invite_error', callback); 
+
+        }
+
     offDashboardEvents() {
-        this.socket?.off('game_invite');
-        this.socket?.off('game_start');
-        this.socket?.off('invite_rejected');
-        this.socket?.off('invite_error');
-        this.socket?.off('online_users_list');
-        // friend_request vb. Dashboard.ts içinde subscribeToEvent ile ekleniyor
-        this.socket?.off('friend_request');
-        this.socket?.off('friend_accepted');
-        this.socket?.off('friend_list_update');
+        this.removeEventListeners('invite_error');
+        this.removeEventListeners('online_users_list');
+        this.removeEventListeners('friend_request');
+        this.removeEventListeners('friend_accepted');
+        this.removeEventListeners('friend_list_update');
     }
 
-    // --- OYUN İÇİ SOCKET METODLARI ---
-    
-    // Raketimi gönder
     sendPaddleMove(y: number) {
         if (this.socket && this.currentOpponentId) {
             this.socket.emit('game_paddle_move', { y, opponentId: this.currentOpponentId });
         }
     }
-
-    // (Sadece P1) Topu gönder
     sendBallUpdate(ballX: number, ballY: number, score1: number, score2: number) {
         if (this.socket && this.currentOpponentId) {
             this.socket.emit('game_ball_update', { ballX, ballY, score1, score2, opponentId: this.currentOpponentId });
         }
     }
-    
-    // (Sadece P1) Oyun bitti sinyali
     sendGameOver(winner: string) {
         if (this.socket && this.currentOpponentId) {
              this.socket.emit('game_over_signal', { winner, opponentId: this.currentOpponentId });
         }
     }
 
-    // DINLEYICILER
-    onOpponentMove(callback: (data: {y: number}) => void) {
-        this.socket?.on('game_opponent_move', callback);
-    }
-
-    onBallSync(callback: (data: {ballX: number, ballY: number, score1: number, score2: number}) => void) {
-        this.socket?.on('game_ball_sync', callback);
-    }
-
-    onGameEnded(callback: (data: {winner: string}) => void) {
-        this.socket?.on('game_ended', callback);
-    }
-
-    // YENİ: Rakip Oyundan Düştü
-    onOpponentLeft(callback: () => void) {
-        this.socket?.on('game_opponent_left', callback);
-    }
+    onOpponentMove(callback: (data: {y: number}) => void) { this.subscribeToEvent('game_opponent_move', callback); }
+    onBallSync(callback: (data: {ballX: number, ballY: number, score1: number, score2: number}) => void) { this.subscribeToEvent('game_ball_sync', callback); }
+    onGameEnded(callback: (data: {winner: string}) => void) { this.subscribeToEvent('game_ended', callback); }
+    onOpponentLeft(callback: () => void) { this.subscribeToEvent('game_opponent_left', callback); }
     
-    // Listener temizliği (Component unmount olunca)
     offGameEvents() {
-        this.socket?.off('game_opponent_move');
-        this.socket?.off('game_ball_sync');
-        this.socket?.off('game_ended');
-        this.socket?.off('game_opponent_left');
+        this.removeEventListeners('game_opponent_move');
+        this.removeEventListeners('game_ball_sync');
+        this.removeEventListeners('game_ended');
+        this.removeEventListeners('game_opponent_left');
     }
 }
 
-// Singleton olduğu için artık 'new' ile değil, getInstance ile export ediyoruz
 export const socketService = SocketService.getInstance();
