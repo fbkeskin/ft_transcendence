@@ -232,7 +232,6 @@ export const Dashboard = {
                         <div class="flex flex-col"><span class="text-xs font-bold text-gray-200">${escapeHTML(f.username)}</span></div>
                     </div>
                     <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        ${isOnline ? `<button class="invite-btn text-[10px] bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-white" data-id="${f.id}">${lang.t('dash_invite')}</button>` : ''}
                         <button class="remove-friend-btn text-[10px] bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded" data-id="${f.id}">${lang.t('dash_remove')}</button>
                     </div>
                 </div>`;
