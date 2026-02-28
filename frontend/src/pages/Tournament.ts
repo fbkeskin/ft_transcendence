@@ -1,6 +1,7 @@
 // frontend/src/pages/Tournament.ts
 import { navigate } from '../router';
 import { Modal } from '../utils/Modal';
+import { lang } from '../services/language.service';
 
 export const Tournament = {
   render: () => `
@@ -15,42 +16,50 @@ export const Tournament = {
         
         <div class="text-center mb-8">
             <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-2">
-                🏆 TURNUVA MODU
+                ${lang.t('tour_title')}
             </h1>
-            <p class="text-gray-400 text-sm">4 Oyuncu girin, şampiyonu belirleyelim!</p>
+            <p class="text-gray-400 text-sm">${lang.t('tour_desc')}</p>
         </div>
 
         <form id="tournament-form" class="space-y-4">
             
             <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Yarı Final 1</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">${lang.t('tour_semi_1')}</label>
                 <div class="flex gap-4">
-                    <input type="text" id="p1" placeholder="Oyuncu 1" maxlength="10" required 
+                    <input type="text" id="p1" placeholder="${lang.t('tour_p1_placeholder')}" maxlength="10" required 
+                        oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white placeholder-gray-600">
                     <div class="flex items-center text-gray-500 font-bold italic">VS</div>
-                    <input type="text" id="p2" placeholder="Oyuncu 2" maxlength="10" required 
+                    <input type="text" id="p2" placeholder="${lang.t('tour_p2_placeholder')}" maxlength="10" required 
+                        oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white placeholder-gray-600">
                 </div>
             </div>
 
             <div class="space-y-2 pt-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Yarı Final 2</label>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">${lang.t('tour_semi_2')}</label>
                 <div class="flex gap-4">
-                    <input type="text" id="p3" placeholder="Oyuncu 3" maxlength="10" required 
+                    <input type="text" id="p3" placeholder="${lang.t('tour_p3_placeholder')}" maxlength="10" required 
+                        oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-600">
                     <div class="flex items-center text-gray-500 font-bold italic">VS</div>
-                    <input type="text" id="p4" placeholder="Oyuncu 4" maxlength="10" required 
+                    <input type="text" id="p4" placeholder="${lang.t('tour_p4_placeholder')}" maxlength="10" required 
+                        oninvalid="this.setCustomValidity('${lang.t('common_fill_field')}')"
+                        oninput="this.setCustomValidity('')"
                         class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-600">
                 </div>
             </div>
 
             <button type="submit" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl shadow-lg transform transition hover:scale-[1.02] active:scale-95">
-                🔥 TURNUVAYI BAŞLAT
+                ${lang.t('tour_start_btn')}
             </button>
         </form>
         
         <button id="back-btn" class="w-full mt-4 text-gray-500 hover:text-gray-300 text-sm font-medium transition">
-            ← Dashboard'a Dön
+            ${lang.t('tour_back_btn')}
         </button>
 
       </div>
@@ -73,7 +82,7 @@ export const Tournament = {
             const names = [p1, p2, p3, p4];
             const uniqueNames = new Set(names);
             if (uniqueNames.size !== 4) {
-                Modal.alert("Hata", "Oyuncu isimleri birbirinden farklı olmalıdır!");
+                Modal.alert(lang.t('common_error'), lang.t('tour_err_unique'));
                 return;
             }
 

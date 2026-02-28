@@ -144,15 +144,15 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
       }
   
       if (user.isTwoFactorEnabled) {
-          return reply.redirect(`http://localhost:5173/login?userId=${user.id}&2fa_required=true`);
+          return reply.redirect(`/login?userId=${user.id}&2fa_required=true`);
       }
 
       const token = req.server.jwt.sign({ id: user.id, email: user.email, username: user.username });
-      return reply.redirect(`http://localhost:5173/login?token=${token}`);
+      return reply.redirect(`/login?token=${token}`);
   
     } catch (error) {
       console.error('42 Auth Hatası:', error);
-      return reply.redirect('http://localhost:5173/login?error=42_auth_failed');
+      return reply.redirect('/login?error=42_auth_failed');
     }
 };
 

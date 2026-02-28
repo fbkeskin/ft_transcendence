@@ -1,5 +1,6 @@
 // frontend/src/services/game.service.ts
-const API_URL = 'http://localhost:3000/game';
+
+const API_URL = '/game';
 
 // DÜZELTME: opponentId hem sayı (Online) hem string (AI/Local) olabilir
 export const saveGameReq = async (score1: number, score2: number, opponentId: number | string) => {

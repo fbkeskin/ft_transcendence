@@ -39,3 +39,13 @@ services:
       - /app/node_modules           # Container'ın kendi modüllerini koru
     # Frontend'in Backend'e ulaşabilmesi için bir ayar yapmamıza gerek yok
     # çünkü tarayıcı (istemci) üzerinden konuşacaklar.
+  # --- EKLENEN YENİ SERVİS ---
+  nginx:
+    container_name: ft_nginx_dev
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend

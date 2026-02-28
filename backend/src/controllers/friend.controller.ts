@@ -30,15 +30,17 @@ export const sendFriendRequest = async (req: FastifyRequest, reply: FastifyReply
     });
 
     // --- SOCKET BİLDİRİMİ ---
+    const io = (req.server as any).io;
     const targetSocketId = getSocketId(Number(receiverId));
+    const mySocketId = getSocketId(user.id);
     
     if (targetSocketId) {
-        const io = (req.server as any).io;
         io.to(targetSocketId).emit('friend_request', {
             senderId: user.id,
             senderName: user.username 
         });
     }
+    if (mySocketId) io.to(mySocketId).emit('friend_list_update');
 
     return reply.send({ message: "İstek gönderildi" });
 };
@@ -54,14 +56,17 @@ export const acceptFriendRequest = async (req: FastifyRequest, reply: FastifyRep
     });
 
     // --- SOCKET BİLDİRİMİ ---
+    const io = (req.server as any).io;
     const targetSocketId = getSocketId(Number(senderId));
+    const mySocketId = getSocketId(user.id);
+
     if (targetSocketId) {
-        const io = (req.server as any).io;
         io.to(targetSocketId).emit('friend_accepted', {
             accepterId: user.id,
             accepterName: user.username
         });
     }
+    if (mySocketId) io.to(mySocketId).emit('friend_list_update');
 
     return reply.send({ message: "Arkadaşlık kabul edildi!" });
 };
@@ -79,6 +84,14 @@ export const removeFriend = async (req: FastifyRequest, reply: FastifyReply) => 
             ]
         }
     });
+
+    // --- SOCKET BİLDİRİMİ ---
+    const io = (req.server as any).io;
+    const targetSocketId = getSocketId(Number(targetId));
+    const mySocketId = getSocketId(user.id);
+    
+    if (targetSocketId) io.to(targetSocketId).emit('friend_list_update');
+    if (mySocketId) io.to(mySocketId).emit('friend_list_update');
 
     return reply.send({ message: "Arkadaş silindi." });
 };

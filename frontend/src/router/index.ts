@@ -37,23 +37,42 @@ export const navigate = (path: string) => {
   render();
 };
 
+const protectedRoutes = ['/dashboard', '/profile', '/game/online', '/tournament/new', '/tournament/bracket'];
+const guestRoutes = ['/login', '/register'];
+
 const render = async () => {
-    // 0. ÖNCEKİ SAYFAYI TEMİZLE
+    const path = window.location.pathname;
+    const token = localStorage.getItem('token');
+
+    // 1. AUTH GUARD: Giriş yapmamış kullanıcıyı korumalı rotalardan at
+    if (protectedRoutes.some(pr => path.startsWith(pr)) && !token) {
+        window.history.pushState({}, "", "/login");
+        // Recursive olmasın diye direkt devam etmeyip render'ı tekrar tetikleyebiliriz
+        // ama render() içinde olduğumuz için manuel render() çağırmak yerine 
+        // path'i güncelleyip devam etmek daha temiz.
+        return render(); 
+    }
+
+    // 2. GUEST GUARD: Giriş yapmış kullanıcıyı login/register'dan at
+    if (guestRoutes.includes(path) && token) {
+        window.history.pushState({}, "", "/dashboard");
+        return render();
+    }
+
+    // 3. ÖNCEKİ SAYFAYI TEMİZLE
     if (currentCleanup) {
         currentCleanup();
         currentCleanup = null;
     }
-
-    const path = window.location.pathname;
     
-    // 1. NAVBAR'I GÜNCELLE
+    // 4. NAVBAR'I GÜNCELLE
     const navContainer = document.getElementById('navbar');
     if (navContainer) {
       navContainer.innerHTML = Navbar.render();
       Navbar.afterRender(); // Logout butonunu dinle
     }
   
-    // 2. SAYFA İÇERİĞİNİ GÜNCELLE
+    // 5. SAYFA İÇERİĞİNİ GÜNCELLE
     const app = document.getElementById('app');
     const component = routes[path] || routes['/404'];
   

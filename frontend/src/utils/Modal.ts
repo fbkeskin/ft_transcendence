@@ -1,4 +1,5 @@
 // frontend/src/utils/Modal.ts
+import { lang } from '../services/language.service';
 
 export class Modal {
     // Mevcut Alert (Tek butonlu)
@@ -12,7 +13,7 @@ export class Modal {
             <p class="text-gray-300 mb-6 text-sm leading-relaxed">${message}</p>
             <div class="flex justify-end">
               <button id="modal-ok-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                Tamam
+                ${lang.t('btn_ok')}
               </button>
             </div>
           </div>
@@ -52,10 +53,10 @@ export class Modal {
                 
                 <div class="flex justify-between gap-4">
                   <button id="modal-cancel-btn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 font-bold py-3 px-4 rounded-xl transition border border-slate-600">
-                    Reddet
+                    ${lang.t('btn_reject')}
                   </button>
                   <button id="modal-confirm-btn" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition transform hover:scale-105">
-                    Kabul Et!
+                    ${lang.t('btn_accept')}
                   </button>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { getProfileReq } from '../services/auth.service';
 import { lang } from '../services/language.service';
 import { Modal } from '../utils/Modal';
 import { saveTournamentReq } from '../services/tournament.service';
+import { escapeHTML } from '../utils/escape';
 
 export const Game = {
   render: () => `
@@ -60,8 +61,8 @@ export const Game = {
     const isTournament = urlParams.get('tournament') === 'true';
 
     // Oyuncu İsimleri
-    let leftPlayerName = lang.t('dash_guest'); // Player 1 (W/S)
-    let rightPlayerName = "Player 2";          // Player 2 (Ok Tuşları)
+    let leftPlayerName = "[GUEST_PLAYER]"; // Player 1 (W/S) - Constant for default
+    let rightPlayerName = "Player 2";      // Player 2 (Ok Tuşları)
 
     if (isTournament) {
         // --- TURNUVA MODU ---
@@ -97,16 +98,17 @@ export const Game = {
 
         // Sol taraf için misafir ismi sor
         try {
-            const input = await Modal.prompt(lang.t('game_ask_guest'), leftPlayerName);
+            const input = await Modal.prompt(lang.t('game_ask_guest'), lang.t('dash_guest'));
             if (input && input.trim() !== "") leftPlayerName = input.trim();
-        } catch (e) { /* İptal edildi */ }
+        } catch (e) { /* İptal edildi, "[GUEST_PLAYER]" kalır */ }
     }
 
-    // Arayüzü Güncelle
-    document.getElementById('p1-name')!.innerText = `🔴 ${leftPlayerName}`;
+    // Arayüzü Güncelle (Eğer constant ise çevir)
+    const displayNameLeft = leftPlayerName === "[GUEST_PLAYER]" ? lang.t('dash_guest') : leftPlayerName;
+    document.getElementById('p1-name')!.innerText = `🔴 ${displayNameLeft}`;
     document.getElementById('p2-name')!.innerText = `🔵 ${rightPlayerName}`;
     const titleEl = document.getElementById('game-title');
-    if (titleEl) titleEl.innerText = `${leftPlayerName} vs ${rightPlayerName}`;
+    if (titleEl) titleEl.innerText = `${displayNameLeft} vs ${rightPlayerName}`;
 
     // --- OYUN AYARLARI ---
     const WIN_SCORE = 3; 
@@ -125,6 +127,14 @@ export const Game = {
 
     function gameLoop() {
         if (!gameRunning) return;
+
+        // PAUSE KONTROLÜ: Eğer ekranda bir modal varsa oyunu duraklat
+        if (document.querySelector('.fixed.inset-0')) {
+            draw(); // Sadece çiz (Donmuş görüntü için)
+            animationFrameId = requestAnimationFrame(gameLoop);
+            return;
+        }
+
         update(); 
         draw(); 
         animationFrameId = requestAnimationFrame(gameLoop);
@@ -162,7 +172,7 @@ export const Game = {
         cancelAnimationFrame(animationFrameId);
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> ${lang.t('game_winner')} 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         // --- TURNUVA VS NORMAL AYRIMI ---
@@ -215,7 +225,7 @@ export const Game = {
 
         const exitBtn = document.getElementById('exit-btn');
         if (exitBtn) {
-            exitBtn.innerText = "Turnuva Tablosuna Dön ➔";
+            exitBtn.innerText = lang.t('tour_bracket_back');
             // ... (Event listener kodları aynı) ...
             const newBtn = exitBtn.cloneNode(true);
             exitBtn.parentNode?.replaceChild(newBtn, exitBtn);
@@ -271,6 +281,11 @@ export const Game = {
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
 
+    // YENİ: Socket durumunu meşgul yap (Eğer token varsa)
+    import('../services/socket.service').then(({ socketService }) => {
+        socketService.updateStatus('BUSY');
+    });
+
     const handleRestart = () => {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
@@ -292,6 +307,12 @@ export const Game = {
     return () => {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
+        
+        // YENİ: Durumu tekrar müsait yap
+        import('../services/socket.service').then(({ socketService }) => {
+            socketService.updateStatus('AVAILABLE');
+        });
+
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
         if (!isTournament) {

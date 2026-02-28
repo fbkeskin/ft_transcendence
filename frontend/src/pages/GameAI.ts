@@ -3,6 +3,7 @@ import { navigate } from '../router';
 import { saveGameReq } from '../services/game.service';
 import { getProfileReq } from '../services/auth.service';
 import { lang } from '../services/language.service';
+import { escapeHTML } from '../utils/escape';
 
 export const GameAI = {
   render: () => `
@@ -87,6 +88,14 @@ export const GameAI = {
 
     function gameLoop() {
         if (!gameRunning) return;
+
+        // PAUSE KONTROLÜ
+        if (document.querySelector('.fixed.inset-0')) {
+            draw();
+            animationFrameId = requestAnimationFrame(gameLoop);
+            return;
+        }
+
         update(); 
         draw(); 
         animationFrameId = requestAnimationFrame(gameLoop); // STABILITY FIX
@@ -95,6 +104,9 @@ export const GameAI = {
     function startAILogic() {
         aiInterval = setInterval(() => {
             if (!gameRunning) return;
+            // PAUSE KONTROLÜ (AI için de)
+            if (document.querySelector('.fixed.inset-0')) return;
+
             if (ball.speedX < 0) { // Top sola (AI'ya) geliyorsa
                 const distanceToPaddle = ball.x - player1.x;
                 const timeToReach = distanceToPaddle / Math.abs(ball.speedX);
@@ -151,12 +163,12 @@ export const GameAI = {
         cancelAnimationFrame(animationFrameId); // STABILITY FIX
         
         const winnerText = document.getElementById('winner-text')!;
-        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${winnerName}</span> ${lang.t('game_winner')} 🎉`;
+        winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
 
         try {
             // DİKKAT: score2 = SEN, score1 = AI
-            await saveGameReq(score2, score1, lang.t('game_ai_name'));
+            await saveGameReq(score2, score1, "[AI_PLAYER]");
             console.log(lang.t('game_ai_saved'));
         } catch (err) { console.error(err); }
     }
@@ -206,6 +218,11 @@ export const GameAI = {
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
 
+    // YENİ: Socket durumunu meşgul yap
+    import('../services/socket.service').then(({ socketService }) => {
+        socketService.updateStatus('BUSY');
+    });
+
     const handleRestart = () => {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
@@ -235,6 +252,12 @@ export const GameAI = {
         gameRunning = false;
         cancelAnimationFrame(animationFrameId);
         clearInterval(aiInterval);
+
+        // YENİ: Durumu tekrar müsait yap
+        import('../services/socket.service').then(({ socketService }) => {
+            socketService.updateStatus('AVAILABLE');
+        });
+
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
         restartBtn?.removeEventListener('click', handleRestart);

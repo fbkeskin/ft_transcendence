@@ -29,13 +29,15 @@ declare module "fastify" {
 
 // --- DÜZELTME BURADA: LOGGER'I AÇIYORUZ ---
 const server = fastify({ 
-  logger: true // <--- ARTIK HATALARI GÖRECEĞİZ
+  logger: true 
 });
 // ------------------------------------------
 
 // 1. Eklentiler
 server.register(cors, { 
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], 
+  // DİKKAT 1: Nginx ve farklı IP'ler için origin'i dinamik (true) yaptık.
+  // Bu sayede tarayıcı hangi IP'den gelirse gelsin CORS hatası vermeyecek.
+  origin: true, 
   credentials: true 
 });
 
@@ -58,7 +60,8 @@ server.register(fastifySwaggerUi, { routePrefix: '/docs' });
 // 2. Socket.io
 server.register(socketioServer, {
   cors: {
-    origin: "http://localhost:5173",
+    // DİKKAT 2: Socket.io CORS ayarını da dinamik yaptık.
+    origin: true,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -81,26 +84,23 @@ server.register(friendRoutes, { prefix: '/friends' });
 
 // --- YENİ: ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
 server.get('/', (req, reply) => {
-	return reply.redirect('/docs');
-  });
+    return reply.redirect('/docs');
+});
 
 // 5. Socket Logic
 server.ready(err => {
-	if (err) throw err;
-  
-	// Tüm socket mantığını buraya devrettik, app.ts temiz kaldı!
-	handleSocket(server);
-  });
+    if (err) throw err;
+    handleSocket(server);
+});
 
 const start = async () => {
   try {
-    // 0.0.0.0 Docker için çok önemli
+    // 0.0.0.0 Docker için çok önemli (Bu zaten doğruydu, dokunmadık)
     await server.listen({ port: 3000, host: '0.0.0.0' });
     console.log('Sunucu 3000 portunda çalışıyor 🚀');
   } catch (err) {
-    // --- DÜZELTME: Hatayı konsola da basıyoruz ---
     server.log.error(err);
-    console.error("KRİTİK HATA:", err); // <--- Bunu ekledik
+    console.error("KRİTİK HATA:", err); 
     process.exit(1);
   }
 };
