@@ -18,12 +18,12 @@ export const Register = {
                         class="w-full bg-slate-700 p-3 rounded border border-slate-600 outline-none text-white focus:border-indigo-500 transition">
                 </div>
                 
-				<div>
-				<input type="email" id="email" placeholder="${lang.t('email_placeholder')}" required
-					oninvalid="if(this.value === ''){this.setCustomValidity('${lang.t('common_fill_field')}')}else{this.setCustomValidity('Lütfen geçerli bir e-posta adresi girin (örn: kullanici@mail.com)')}"
-					oninput="this.setCustomValidity('')"
-					class="w-full bg-slate-700 p-3 rounded border border-slate-600 outline-none text-white focus:border-indigo-500 transition">
-				</div>
+                <div>
+                <input type="email" id="email" placeholder="${lang.t('email_placeholder')}" required
+                    oninvalid="if(this.value === ''){this.setCustomValidity('${lang.t('common_fill_field')}')}else{this.setCustomValidity('${lang.t('il')}')}"
+                    oninput="this.setCustomValidity('')"
+                    class="w-full bg-slate-700 p-3 rounded border border-slate-600 outline-none text-white focus:border-indigo-500 transition">
+                </div>
                 
                 <div>
                     <input type="password" id="password" placeholder="${lang.t('password_placeholder')}" required

@@ -22,7 +22,8 @@ export const Profile = {
                         </div>
                     </div>
                     <input type="file" id="avatar-input" accept="image/*" class="hidden">
-                    <label for="avatar-input" class="text-xs bg-slate-700 px-3 py-1 rounded cursor-pointer hover:bg-slate-600 transition text-white border border-slate-600">
+                    
+                    <label id="avatar-label" for="avatar-input" class="text-xs bg-slate-700 px-3 py-1 rounded cursor-pointer hover:bg-slate-600 transition text-white border border-slate-600 text-center">
                         ${lang.t('prof_change_avatar_btn')}
                     </label>
                 </div>
@@ -88,6 +89,9 @@ export const Profile = {
     const emailInput = document.getElementById('email-display') as HTMLInputElement;
     const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
     
+    // YENİ: Avatar label elementini seç
+    const avatarLabel = document.getElementById('avatar-label');
+    
     // 2FA Elementleri
     const statusOnDiv = document.getElementById('2fa-status-on');
     const setupAreaDiv = document.getElementById('2fa-setup-area');
@@ -109,13 +113,17 @@ export const Profile = {
             ? finalUrl 
             : `${finalUrl}?t=${new Date().getTime()}`;
 
+        // --- YENİ: 42 Kullanıcısı ise Avatar Butonunu Gizle ---
+        if (user.avatar && user.avatar.startsWith('http')) {
+            avatarLabel?.classList.add('hidden');
+        }
+        // ------------------------------------------------------
+
         // 2. 2FA Durumunu Kontrol Et
         if (user.isTwoFactorEnabled) {
-            // Eğer AÇIKSA: Yeşil kutuyu göster, kurulumu gizle
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
         } else {
-            // Eğer KAPALIYSA: Kurulum alanını göster
             statusOnDiv?.classList.add('hidden');
             setupAreaDiv?.classList.remove('hidden');
         }
@@ -132,7 +140,7 @@ export const Profile = {
         if (fileInput.files && fileInput.files[0]) {
             try {
                 const result = await uploadAvatarReq(fileInput.files[0]);
-                avatarImg.src = `http://localhost:3000${result.url}?t=${new Date().getTime()}`;
+                avatarImg.src = `${result.url}?t=${new Date().getTime()}`;
                 await Modal.alert(lang.t('common_success'), lang.t('prof_avatar_updated'));
             } catch (err: any) { await Modal.alert(lang.t('common_error'), lang.t(err.message)); }
         }
@@ -141,12 +149,10 @@ export const Profile = {
     // B) "2FA Kurulumunu Başlat" Butonu
     btnEnable?.addEventListener('click', async () => {
         try {
-            // Backend'den QR Kod iste
             const res = await generate2FAReq(); 
-            // QR Resmini koy ve alanı aç
             qrImage.src = res.qrCodeUrl;
             qrContainer?.classList.remove('hidden');
-            btnEnable.classList.add('hidden'); // Butonu gizle
+            btnEnable.classList.add('hidden'); 
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message || 'prof_qr_error'));
         }
@@ -158,12 +164,9 @@ export const Profile = {
         if (!code) return Modal.alert(lang.t('common_warning'), lang.t('prof_code_missing'));
 
         try {
-            // Kodu doğrula
             await turnOn2FAReq(code);
-            
             await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_success'));
             
-            // Ekranı güncelle
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
             

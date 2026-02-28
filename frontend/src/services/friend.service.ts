@@ -1,7 +1,7 @@
 // frontend/src/services/friend.service.ts
 import { fetchWrapper } from '../utils/fetchWrapper';
 
-const API_URL = 'http://localhost:3000/friends';
+const API_URL = '/friends';
 
 export const sendFriendReq = (receiverId: number) => fetchWrapper.post(`${API_URL}/add`, { receiverId });
 export const acceptFriendReq = (senderId: number) => fetchWrapper.post(`${API_URL}/accept`, { senderId });

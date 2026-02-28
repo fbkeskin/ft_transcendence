@@ -54,7 +54,7 @@ export const handleSocket = (server: FastifyInstance) => {
                 socket.emit('invite_error', { 
                     type: 'ERROR', 
                     code: 'USER_BUSY', 
-                    message: `Kullanıcı şu an meşgul.` 
+                    message: `error_USER_BUSY` 
                 });
                 return;
             }
@@ -64,7 +64,7 @@ export const handleSocket = (server: FastifyInstance) => {
                 socket.emit('invite_error', { 
                     type: 'INFO', 
                     code: 'USER_IN_OTHER_GAME', 
-                    message: `Kullanıcı şu an başka bir oyunda, yine de davet iletildi.` 
+                    message: `error_USER_IN_OTHER_GAME` 
                 });
             }
 
@@ -82,7 +82,7 @@ export const handleSocket = (server: FastifyInstance) => {
             socket.emit('invite_error', { 
                 type: 'ERROR', 
                 code: 'USER_OFFLINE', 
-                message: 'Kullanıcı çevrimdışı!' 
+                message: 'error_USER_OFFLINE' 
             });
         }
       });

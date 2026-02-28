@@ -20,8 +20,8 @@ class LanguageService
     {
         this.currentLang = lang;
         localStorage.setItem('lang', lang);
-      // window.location.reload();
-      window.dispatchEvent(new Event('languageChanged'));
+      	window.location.reload();
+      	// window.dispatchEvent(new Event('languageChanged'));
     }
    }
    

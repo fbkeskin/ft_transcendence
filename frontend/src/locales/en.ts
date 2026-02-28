@@ -163,6 +163,7 @@ export const en = {
   tour_back_btn: "← Back to Game Zone",
   tour_err_unique: "Player names must be unique!",
   common_fill_field: "Please fill out this field.",
+  invalid_email: "Please enter a valid email address.",
 
 
   // Profile

@@ -19,7 +19,7 @@ export const fr = {
   common_warning: "⚠️ Attention",
 
   // Invitation Errors
-  error_USER_BUSY: "L'utilisateur est actuellement occupé.",
+  error_USER_BUSY: "L utilisateur est actuellement occupé.",
   error_USER_IN_OTHER_GAME: "L'utilisateur est dans une autre partie, mais l'invitation a été envoyée.",
   error_USER_OFFLINE: "L'utilisateur est hors ligne.",
 
@@ -163,6 +163,7 @@ export const fr = {
   tour_back_btn: "← Retour à la zone de jeu",
   tour_err_unique: "Les noms des joueurs doivent être uniques !",
   common_fill_field: "Veuillez renseigner ce champ.",
+  invalid_email: "Veuillez saisir une adresse courriel valide.",
 
 
   // Profile

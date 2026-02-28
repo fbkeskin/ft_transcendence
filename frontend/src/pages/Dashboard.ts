@@ -31,11 +31,13 @@ export const Dashboard = {
             
             <div class="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700">
                 <div class="flex flex-col items-center">
-                    <div class="relative group cursor-pointer mb-4">
+                    
+                    <div id="avatar-container" class="relative group cursor-pointer mb-4">
                         <img id="user-avatar" src="" alt="Avatar" class="w-32 h-32 rounded-full border-4 border-indigo-500 object-cover shadow-lg bg-gray-700 object-top">
-                        <label for="avatar-input" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"><span class="text-xs font-bold text-center px-2">${lang.t('dash_change_avatar')}</span></label>
+                        <label id="dashboard-avatar-label" for="avatar-input" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"><span class="text-xs font-bold text-center px-2">${lang.t('dash_change_avatar')}</span></label>
                         <input type="file" id="avatar-input" class="hidden" accept="image/*">
                     </div>
+
                     <h2 id="user-name" class="text-2xl font-bold mb-1">...</h2>
                     <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">${lang.t('dash_level')} 0</span>
                     <div class="grid grid-cols-3 gap-2 w-full text-center">
@@ -220,7 +222,9 @@ export const Dashboard = {
             else friendsContainer.innerHTML = friends.map((f: any) => {
                 const isOnline = onlineUsers.some(u => u.id === f.id);
                 const statusColor = isOnline ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-gray-500';
-                const avatarSrc = f.avatar ? (f.avatar.startsWith('http') ? f.avatar : `http://localhost:3000/uploads/${f.avatar}`) : 'https://via.placeholder.com/30';
+                
+                const avatarSrc = f.avatar ? (f.avatar.startsWith('http') ? f.avatar : `/uploads/${f.avatar}`) : 'https://via.placeholder.com/30';
+                
                 return `
                 <div class="flex items-center justify-between bg-slate-700/30 p-2 rounded border border-slate-600 hover:bg-slate-700 transition group">
                     <div class="flex items-center gap-2">
@@ -259,7 +263,12 @@ export const Dashboard = {
         socketService.subscribeToEvent('friend_request', async () => { badge.classList.remove('hidden'); await refreshData(); });
         socketService.subscribeToEvent('friend_accepted', async (data: any) => { sentRequestsLocal.delete(data.accepterId); await refreshData(); });
         socketService.subscribeToEvent('friend_list_update', async () => await refreshData());
-        socketService.onInviteError((data) => { Modal.closeAll(); Modal.alert(lang.t('common_error'), data.message); });
+        socketService.onInviteError((data) => { 
+			Modal.closeAll(); 
+			// data.message doğrudan "error_USER_BUSY" anahtarını içeriyor,
+			// bu yüzden onu lang.t() içine almalıyız.
+			Modal.alert(lang.t('common_error'), lang.t(data.message)); 
+		});
     }
 
     const clickHandler = async (e: MouseEvent) => {
@@ -308,18 +317,33 @@ export const Dashboard = {
 
 function renderProfile(user: any, friends: any[], pending: any[]) {
     const avatarEl = document.getElementById('user-avatar') as HTMLImageElement;
-    const avatarSrc = user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `http://localhost:3000/uploads/${user.avatar}`) : 'https://via.placeholder.com/150';
+    
+    const avatarSrc = user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `/uploads/${user.avatar}`) : 'https://via.placeholder.com/150';
     avatarEl.src = avatarSrc;
+    
+    // --- YENİ EKLENEN KISIM: 42 Kullanıcısı İse Hover Özelliğini Kapat ---
+    if (user.avatar && user.avatar.startsWith('http')) {
+        const avatarLabel = document.getElementById('dashboard-avatar-label');
+        const avatarContainer = document.getElementById('avatar-container');
+        const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
+        
+        avatarLabel?.classList.add('hidden'); // Siyah filigranı gizle
+        avatarContainer?.classList.remove('group', 'cursor-pointer'); // Fare el işaretini iptal et
+        if (fileInput) fileInput.disabled = true; // Dosya yükleme girişini tamamen devre dışı bırak
+    }
+    // ----------------------------------------------------------------------
+
     document.getElementById('user-name')!.innerText = user.username;
     document.getElementById('user-wins')!.innerText = user.wins.toString();
     document.getElementById('user-losses')!.innerText = user.losses.toString();
     document.getElementById('user-level')!.innerText = `${lang.t('dash_level')} ${user.level}`;
+    
     const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
     fileInput?.addEventListener('change', async () => {
         if (fileInput.files && fileInput.files[0]) {
             try {
                 const result = await uploadAvatarReq(fileInput.files[0]);
-                avatarEl.src = `http://localhost:3000${result.url}?t=${new Date().getTime()}`;
+                avatarEl.src = `${result.url}?t=${new Date().getTime()}`;
                 await Modal.alert(lang.t('common_success'), lang.t('prof_avatar_updated'));
             } catch (err: any) { await Modal.alert(lang.t('common_error'), lang.t(err.message)); }
         }

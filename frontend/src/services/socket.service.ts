@@ -41,7 +41,10 @@ class SocketService {
     if (this.socket) this.socket.disconnect();
 
     console.log("🔌 Socket bağlantısı başlatılıyor...");
-    this.socket = io('http://localhost:3000', {
+    
+    // DÜZELTME: 'http://localhost:3000' yerine '/' kullanıyoruz.
+    // Nginx, /socket.io/ isteklerini otomatik olarak Backend'e yönlendirecek.
+    this.socket = io('/', {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,

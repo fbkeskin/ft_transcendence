@@ -1,7 +1,8 @@
 // frontend/src/services/tournament.service.ts
 import { fetchWrapper } from '../utils/fetchWrapper';
 
-const API_URL = 'http://localhost:3000/tournament';
+// DÜZELTME: Nginx uyumlu olması için localhost kısmı silindi
+const API_URL = '/tournament';
 
 export const saveTournamentReq = async (players: string[], winner: string) => {
     return await fetchWrapper.post(`${API_URL}/create`, {

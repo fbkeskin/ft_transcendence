@@ -164,6 +164,7 @@ export const tr = {
   tour_back_btn: "← Oyun Alanına Dön",
   tour_err_unique: "Oyuncu isimleri birbirinden farklı olmalıdır!",
   common_fill_field: "Lütfen bu alanı doldurun.",
+  invalid_email: "Lütfen geçerli bir e-posta adresi girin.",
 
 
   // Profile

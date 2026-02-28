@@ -1,15 +1,13 @@
 // frontend/src/services/auth.service.ts
 // DİKKAT: Bu dosya FRONTEND klasöründe olmalı!
 
-const API_URL = 'http://localhost:3000'; // Backend kök adresi
+const API_URL = ''; // Nginx Reverse Proxy nedeniyle boş bırakıldı
 
 // 1. PROFİL BİLGİSİNİ ÇEKME
 export const getProfileReq = async () => {
     const token = localStorage.getItem('token'); 
     if (!token) throw new Error('Token bulunamadı!');
   
-    // ESKİSİ: /me
-    // YENİSİ: /auth/me
     const response = await fetch(`${API_URL}/auth/me`, {
       method: 'GET',
       headers: {
@@ -32,8 +30,6 @@ export const getProfileReq = async () => {
 // 2. GİRİŞ YAPMA (LOGIN)
 export const loginReq = async (email: string, password: string) => {
   try {
-    // ESKİSİ: /login
-    // YENİSİ: /auth/login
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,8 +66,6 @@ export const loginReq = async (email: string, password: string) => {
 
 // 3. KAYIT OLMA (REGISTER)
 export const registerReq = async (email: string, username: string, password: string) => {
-    // ESKİSİ: /register
-    // YENİSİ: /auth/register
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {
@@ -97,8 +91,6 @@ export const uploadAvatarReq = async (file: File) => {
     const formData = new FormData();
     formData.append('avatar', file); 
   
-    // ESKİSİ: /avatar
-    // YENİSİ: /auth/avatar
     const response = await fetch(`${API_URL}/auth/avatar`, {
       method: 'POST',
       headers: {
@@ -116,8 +108,6 @@ export const uploadAvatarReq = async (file: File) => {
 // 5. 2FA FONKSİYONLARI
 export const generate2FAReq = async () => {
     const token = localStorage.getItem('token');
-    // ESKİSİ: /2fa/generate
-    // YENİSİ: /auth/2fa/generate
     const response = await fetch(`${API_URL}/auth/2fa/generate`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
@@ -133,8 +123,6 @@ export const generate2FAReq = async () => {
 
 export const turnOn2FAReq = async (code: string) => {
   const token = localStorage.getItem('token');
-  // ESKİSİ: /2fa/turn-on
-  // YENİSİ: /auth/2fa/turn-on
   const response = await fetch(`${API_URL}/auth/2fa/turn-on`, {
     method: 'POST',
     headers: { 
@@ -151,7 +139,6 @@ export const turnOn2FAReq = async (code: string) => {
 // Opsiyonel: 2FA Kapatma
 export const turnOff2FAReq = async () => {
   const token = localStorage.getItem('token');
-  // YENİSİ: /auth/2fa/turn-off
   await fetch(`${API_URL}/auth/2fa/turn-off`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` }
@@ -160,7 +147,6 @@ export const turnOff2FAReq = async () => {
 
 // Login olduktan sonraki 2FA doğrulama isteği
 export const verify2FALoginReq = async (userId: number, code: string) => {
-  // Backend'de: app.ts (/auth) + route (/2fa/verify) = /auth/2fa/verify
   const response = await fetch(`${API_URL}/auth/2fa/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
