@@ -1,5 +1,6 @@
 // frontend/src/components/Navbar.ts
 import { lang } from '../services/language.service';
+import { navigate } from '../router';
 
 export const Navbar = {
     render: () => {
@@ -71,7 +72,7 @@ export const Navbar = {
         logoutBtn.addEventListener('click', () => {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          window.location.href = '/login';
+          navigate('/login');
         });
       }
 
