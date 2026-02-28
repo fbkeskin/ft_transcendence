@@ -334,6 +334,13 @@ function renderMatchHistory(user: any) {
     else allGames.forEach((game: any, index: number) => {
         const isPlayer1 = game.player1Id === user.id;
         let opponentName = isPlayer1 ? (game.player2 ? game.player2.username : (game.guestName || lang.t('dash_guest'))) : (game.player1 ? game.player1.username : lang.t('dash_opponent'));
+
+        // Çoklu Dil Desteği: Key-bazlı veya eski sabit isimleri o anki dile çevir
+        if (opponentName === "[AI_PLAYER]" || opponentName === "ARTIFICIAL INTELLIGENCE" || opponentName === "YAPAY ZEKA") 
+            opponentName = lang.t('game_ai_name');
+        else if (opponentName === "[GUEST_PLAYER]" || opponentName === "GUEST" || opponentName === "MİSAFİR" || opponentName === "Guest") 
+            opponentName = lang.t('dash_guest');
+
         const myScore = isPlayer1 ? game.score1 : game.score2; const enemyScore = isPlayer1 ? game.score2 : game.score1;
         let resultBadges = (myScore > enemyScore) ? `<span class="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/20">${lang.t('dash_win')}</span>` : `<span class="bg-red-500/10 text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-500/20">${lang.t('dash_loss')}</span>`;
         matchBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 font-medium text-slate-200">${escapeHTML(opponentName)}</td><td class="px-4 py-3 font-mono text-indigo-300 font-bold tracking-widest">${myScore} - ${enemyScore}</td><td class="px-4 py-3">${resultBadges}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(game.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;

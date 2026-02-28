@@ -168,7 +168,7 @@ export const GameAI = {
 
         try {
             // DİKKAT: score2 = SEN, score1 = AI
-            await saveGameReq(score2, score1, lang.t('game_ai_name'));
+            await saveGameReq(score2, score1, "[AI_PLAYER]");
             console.log(lang.t('game_ai_saved'));
         } catch (err) { console.error(err); }
     }
