@@ -23,11 +23,6 @@ export const Dashboard = {
                 </span>
             </div>
         </div>
-        <div class="bg-slate-800 px-4 py-2 rounded-full border border-slate-700 flex items-center gap-2 shadow-sm">
-            <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
-            <span class="text-xs font-bold text-gray-400">System Online</span>
-        </div>
-      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         
