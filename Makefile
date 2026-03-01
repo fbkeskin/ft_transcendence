@@ -14,48 +14,46 @@ all: up
 # 1. Konteynerleri İnşa Et ve Başlat (Detached Mode - Arka planda)
 up:
 	@echo "$(GREEN)Building and starting containers...$(RESET)"
-	@docker-compose up -d --build
+	@docker-compose -p $(NAME) up -d --build --remove-orphans
 	@echo "$(GREEN)Containers are up and running!$(RESET)"
 	@echo "$(BLUE)Type 'make logs' to see the output.$(RESET)"
 
 # 2. Konteynerleri Durdur ve Kaldır (Ağları da temizler)
 down:
 	@echo "$(RED)Stopping and removing containers...$(RESET)"
-	@docker-compose down
+	@docker-compose -p $(NAME) down --remove-orphans
 
 # 3. Sadece Durdur (Kaldırmadan)
 stop:
 	@echo "$(YELLOW)Stopping containers...$(RESET)"
-	@docker-compose stop
+	@docker-compose -p $(NAME) stop
 
 # 4. Başlat (Build etmeden, sadece start)
 start:
 	@echo "$(GREEN)Starting containers...$(RESET)"
-	@docker-compose start
+	@docker-compose -p $(NAME) start
 
 # 5. Logları İzle (Ctrl+C ile çıkılır)
 logs:
-	@docker-compose logs -f
+	@docker-compose -p $(NAME) logs -f
 
 # 6. Temizlik (Containerları siler ama Database verisi kalır)
-clean: down
+clean:
+	@echo "$(RED)Cleaning containers and networks...$(RESET)"
+	@docker-compose -p $(NAME) down -v --remove-orphans
 	@echo "$(YELLOW)Cleaned up containers and networks.$(RESET)"
 
 # 7. Derin Temizlik (Database verisini, imageları ve her şeyi siler - SIFIRLAR)
-# Docker tarafını temizle (Container, Network, Volume, Image)
-# SENİN BİLGİSAYARINDAKİ SQLite veritabanı dosyasını sil (Krıtik Nokta Burası)
-# Eğer yüklenen resimleri de silmek istersen (Uploads):
-# @rm -rf uploads/* <-- İsteğe bağlı, genelde fclean bunu da siler.
-fclean: down
+fclean:
 	@echo "$(RED)Removing images, volumes, and DATABASE files...$(RESET)"
-	@docker-compose down --rmi all --volumes --remove-orphans
+	@docker-compose -p $(NAME) down --rmi all --volumes --remove-orphans
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
 	@echo "$(YELLOW)Cleaning dependencies (node_modules & package-lock.json)...$(RESET)"
 	@rm -rf frontend/node_modules frontend/package-lock.json
 	@rm -rf backend/node_modules backend/package-lock.json
 	@echo "$(YELLOW)Cleaning uploads (preserving default.png)...$(RESET)"
-	@find uploads/ -type f ! -name 'default.png' -delete
+	@find uploads/ -type f ! -name 'default.png' ! -name '.gitkeep' -delete
 	@echo "$(GREEN)Full clean complete (Database and uploads cleaned).$(RESET)"
 
 # 8. Yeniden Başlat (Sıfırdan kurar)
