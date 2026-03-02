@@ -134,13 +134,6 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
             avatar: avatarUrl, // Kaydet
           }
         });
-      } else {
-        // --- MEVCUT KULLANICI (GÜNCELLEME) ---
-        // Kullanıcı zaten varsa bile avatarını 42'den güncelle (belki oradaki fotosunu değiştirdi)
-        user = await prisma.user.update({
-            where: { id: user.id },
-            data: { avatar: avatarUrl } // <--- BU SATIR EKSİKTİ!
-        });
       }
   
       if (user.isTwoFactorEnabled) {
