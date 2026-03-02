@@ -165,6 +165,8 @@ export const tr = {
   tour_err_unique: "Oyuncu isimleri birbirinden farklı olmalıdır!",
   common_fill_field: "Lütfen bu alanı doldurun.",
   invalid_email: "Lütfen geçerli bir e-posta adresi girin.",
+  error_min_length: "En az 3 karakter girilmelidir.",
+  error_min_length_pass: "En az 6 karakter girilmelidir.",
 
 
   // Profile

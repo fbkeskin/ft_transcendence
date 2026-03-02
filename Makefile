@@ -47,6 +47,7 @@ clean:
 fclean:
 	@echo "$(RED)Removing images, volumes, and DATABASE files...$(RESET)"
 	@docker compose -p $(NAME) down --rmi all --volumes --remove-orphans
+	@docker rm -f ft_frontend_dev ft_backend_dev ft_nginx_dev 2>/dev/null || true
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
 	@echo "$(YELLOW)Cleaning dependencies (node_modules & package-lock.json)...$(RESET)"

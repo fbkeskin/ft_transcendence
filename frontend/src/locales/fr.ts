@@ -164,6 +164,8 @@ export const fr = {
   tour_err_unique: "Les noms des joueurs doivent être uniques !",
   common_fill_field: "Veuillez renseigner ce champ.",
   invalid_email: "Veuillez saisir une adresse courriel valide.",
+  error_min_length: "Au moins 3 caractères requis.",
+  error_min_length_pass: "Au moins 6 caractères requis.",
 
 
   // Profile

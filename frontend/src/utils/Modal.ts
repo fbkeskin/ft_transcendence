@@ -20,22 +20,30 @@ export class Modal {
         `;
         
         document.body.appendChild(modal);
-        
-        // Animasyon için küçük bir timeout
         setTimeout(() => modal.classList.add('opacity-100'), 10);
-  
-        const btn = modal.querySelector('#modal-ok-btn');
-        btn?.addEventListener('click', () => {
-          modal.classList.remove('opacity-100'); // Kapanış animasyonu
-          setTimeout(() => {
-              document.body.removeChild(modal);
-              resolve();
-          }, 300);
-        });
+
+        const close = () => {
+            modal.classList.remove('opacity-100');
+            window.removeEventListener('keydown', handleKey);
+            setTimeout(() => {
+                if (modal.parentNode) document.body.removeChild(modal);
+                resolve();
+            }, 300);
+        };
+
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+                e.preventDefault();
+                close();
+            }
+        };
+
+        window.addEventListener('keydown', handleKey);
+        modal.querySelector('#modal-ok-btn')?.addEventListener('click', close);
       });
     }
   
-    // --- YENİ EKLENEN: CONFIRM (KABUL ET / REDDET) ---
+    // --- CONFIRM (KABUL ET / REDDET) ---
     static confirm(title: string, message: string): Promise<boolean> {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
@@ -43,14 +51,11 @@ export class Modal {
             
             modal.innerHTML = `
               <div class="bg-slate-800 border-2 border-indigo-500/50 rounded-2xl p-6 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] animate-bounce-in">
-                
                 <div class="flex items-center gap-3 mb-4">
                     <span class="text-2xl">⚔️</span>
                     <h3 class="text-xl font-bold text-white tracking-wide">${title}</h3>
                 </div>
-                
                 <p class="text-gray-300 mb-8 text-sm">${message}</p>
-                
                 <div class="flex justify-between gap-4">
                   <button id="modal-cancel-btn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 font-bold py-3 px-4 rounded-xl transition border border-slate-600">
                     ${lang.t('btn_reject')}
@@ -63,27 +68,30 @@ export class Modal {
             `;
             
             document.body.appendChild(modal);
-      
-            const cancelBtn = modal.querySelector('#modal-cancel-btn');
-            const confirmBtn = modal.querySelector('#modal-confirm-btn');
-      
-            // Reddet butonuna basınca FALSE döner
-            cancelBtn?.addEventListener('click', () => {
-              document.body.removeChild(modal);
-              resolve(false);
-            });
-      
-            // Kabul et butonuna basınca TRUE döner
-            confirmBtn?.addEventListener('click', () => {
-              document.body.removeChild(modal);
-              resolve(true);
-            });
-          });
+
+            const handleAction = (result: boolean) => {
+                window.removeEventListener('keydown', handleKey);
+                if (modal.parentNode) document.body.removeChild(modal);
+                resolve(result);
+            };
+
+            const handleKey = (e: KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAction(true);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleAction(false);
+                }
+            };
+
+            window.addEventListener('keydown', handleKey);
+            modal.querySelector('#modal-cancel-btn')?.addEventListener('click', () => handleAction(false));
+            modal.querySelector('#modal-confirm-btn')?.addEventListener('click', () => handleAction(true));
+        });
     }
-	// --- YENİ EKLENECEK METOD: TÜM MODALLARI KAPAT ---
-    // Bunu çağırdığımız an ekrandaki tüm açık pencereler silinir.
+
     static closeAll() {
-        // Modal sınıfımızın kullandığı CSS sınıflarına sahip elemanları bulup siliyoruz
         const modals = document.querySelectorAll('.fixed.inset-0');
         modals.forEach(modal => modal.remove());
     }

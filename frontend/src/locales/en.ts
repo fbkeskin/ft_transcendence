@@ -164,6 +164,8 @@ export const en = {
   tour_err_unique: "Player names must be unique!",
   common_fill_field: "Please fill out this field.",
   invalid_email: "Please enter a valid email address.",
+  error_min_length: "Min 3 characters required.",
+  error_min_length_pass: "Min 6 characters required.",
 
 
   // Profile
