@@ -14,39 +14,39 @@ all: up
 # 1. Konteynerleri İnşa Et ve Başlat (Detached Mode - Arka planda)
 up:
 	@echo "$(GREEN)Building and starting containers...$(RESET)"
-	@docker-compose -p $(NAME) up -d --build --remove-orphans
+	@docker compose -p $(NAME) up -d --build --remove-orphans
 	@echo "$(GREEN)Containers are up and running!$(RESET)"
 	@echo "$(BLUE)Type 'make logs' to see the output.$(RESET)"
 
 # 2. Konteynerleri Durdur ve Kaldır (Ağları da temizler)
 down:
 	@echo "$(RED)Stopping and removing containers...$(RESET)"
-	@docker-compose -p $(NAME) down --remove-orphans
+	@docker compose -p $(NAME) down --remove-orphans
 
 # 3. Sadece Durdur (Kaldırmadan)
 stop:
 	@echo "$(YELLOW)Stopping containers...$(RESET)"
-	@docker-compose -p $(NAME) stop
+	@docker compose -p $(NAME) stop
 
 # 4. Başlat (Build etmeden, sadece start)
 start:
 	@echo "$(GREEN)Starting containers...$(RESET)"
-	@docker-compose -p $(NAME) start
+	@docker compose -p $(NAME) start
 
 # 5. Logları İzle (Ctrl+C ile çıkılır)
 logs:
-	@docker-compose -p $(NAME) logs -f
+	@docker compose -p $(NAME) logs -f
 
 # 6. Temizlik (Containerları siler ama Database verisi kalır)
 clean:
 	@echo "$(RED)Cleaning containers and networks...$(RESET)"
-	@docker-compose -p $(NAME) down -v --remove-orphans
+	@docker compose -p $(NAME) down -v --remove-orphans
 	@echo "$(YELLOW)Cleaned up containers and networks.$(RESET)"
 
 # 7. Derin Temizlik (Database verisini, imageları ve her şeyi siler - SIFIRLAR)
 fclean:
 	@echo "$(RED)Removing images, volumes, and DATABASE files...$(RESET)"
-	@docker-compose -p $(NAME) down --rmi all --volumes --remove-orphans
+	@docker compose -p $(NAME) down --rmi all --volumes --remove-orphans
 	@rm -f backend/prisma/dev.db
 	@rm -f backend/prisma/dev.db-journal
 	@echo "$(YELLOW)Cleaning dependencies (node_modules & package-lock.json)...$(RESET)"
