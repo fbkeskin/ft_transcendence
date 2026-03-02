@@ -10,6 +10,7 @@ import { escapeHTML } from '../utils/escape.ts';
 
 // MODÜL SEVİYESİNDE TANIM (Dil değişse bile bu hafıza silinmez)
 const sentInvitesLocal = new Set<number>();
+const sentRequestsLocal = new Set<number>();
 
 export const Dashboard = {
   render: () => `
@@ -112,14 +113,12 @@ export const Dashboard = {
 
   init: async () => {
     try {
-        socketService.offDashboardEvents();
         socketService.clearListeners();
 
         const user = await getProfileReq();
         let friends: any[] = [];
         let pendingRequests: any[] = [];
-        const sentRequestsLocal = new Set<number>();
-        // sentInvitesLocal artık yukarıda tanımlı (modül seviyesinde)
+        // sentRequestsLocal ve sentInvitesLocal artık yukarıda tanımlı (modül seviyesinde)
 
         const refreshData = async () => {
             try {
@@ -130,6 +129,14 @@ export const Dashboard = {
                 ]);
                 friends = fData;
                 pendingRequests = pData;
+                
+                // Badge Güncelleme
+                const badge = document.getElementById('friend-req-badge');
+                if (badge) {
+                    if (pendingRequests.length > 0) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
+                }
+
                 renderTournamentStats(tData, user);
                 renderMatchHistory(user);
                 renderTournamentHistory(tData, user);
@@ -270,34 +277,51 @@ export const Dashboard = {
         renderLobby(); renderFriendsList(); renderInvites(); updateBadges();
     });
 
+    // Sayfaya özel socket aboneliklerini temizlemek için bir dizi
+    const pageUnsubscribes: (() => void)[] = [socketUnsubscribe];
+
     if (socketService.subscribeToEvent) {
-        socketService.subscribeToEvent('friend_request', async () => { badge.classList.remove('hidden'); await refreshData(); });
-        socketService.subscribeToEvent('friend_accepted', async (data: any) => { sentRequestsLocal.delete(data.accepterId); await refreshData(); });
-        socketService.subscribeToEvent('friend_list_update', async () => await refreshData());
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_request', async () => { badge.classList.remove('hidden'); await refreshData(); }));
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_accepted', async (data: any) => { 
+            sentRequestsLocal.delete(data.accepterId); 
+            await refreshData(); 
+        }));
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_list_update', async () => {
+            await refreshData();
+        }));
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_request_cancelled', async (data: any) => {
+            sentRequestsLocal.delete(data.senderId);
+            await refreshData();
+        }));
         
-        socketService.onInviteRejected(() => { 
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_rejected', async (data: any) => {
+            if (data.rejecterId) {
+                sentRequestsLocal.delete(data.rejecterId);
+                await refreshData();
+            }
+        }));
+        
+        pageUnsubscribes.push(socketService.onInviteRejected(() => { 
             sentInvitesLocal.clear(); 
             renderLobby(); 
-        });
+        }));
 
-        // --- YENİ EKLENEN TEMİZLİK DİNLEYİCİLERİ ---
-        socketService.onMatchReadyCheck(() => {
+        pageUnsubscribes.push(socketService.onMatchReadyCheck(() => {
             sentInvitesLocal.clear();
             renderLobby();
-        });
+        }));
 
-        socketService.onGameStart(() => {
+        pageUnsubscribes.push(socketService.onGameStart(() => {
             sentInvitesLocal.clear();
             renderLobby();
-        });
-        // ------------------------------------------
+        }));
 
-        socketService.onInviteError((data) => { 
+        pageUnsubscribes.push(socketService.onInviteError((data) => { 
 			Modal.closeAll(); 
             sentInvitesLocal.clear(); 
             renderLobby();
 			Modal.alert(lang.t('common_error'), lang.t(data.message)); 
-		});
+		}));
     }
 
     const clickHandler = async (e: MouseEvent) => {
@@ -313,17 +337,43 @@ export const Dashboard = {
             socketService.removeInvite(id); 
         }
         if (target.classList.contains('add-friend-btn')) {
-            const id = Number(target.getAttribute('data-id')); sentRequestsLocal.add(id); renderLobby();
-            try { await sendFriendReq(id); } catch (err: any) { 
-                sentRequestsLocal.delete(id); renderLobby();
-                if (err.message && err.message.includes('Zaten')) { Modal.alert(lang.t('dash_friend_req_success'), lang.t('dash_friend_req_exists')); sentRequestsLocal.add(id); renderLobby(); }
-                else Modal.alert(lang.t('common_error'), err.message);
+            const id = Number(target.getAttribute('data-id')); 
+            if (sentRequestsLocal.has(id)) return; // Zaten tıklandıysa bekle
+
+            sentRequestsLocal.add(id); 
+            renderLobby(); // Anında butonu kilitle
+            
+            try { 
+                const res = await sendFriendReq(id); 
+                if (res.message === 'FRIEND_ACCEPTED_MUTUAL') {
+                    // Artık standart bilgi formatında
+                    Modal.alert(lang.t('common_info'), lang.t('FRIEND_ACCEPTED_MUTUAL'));
+                    await refreshData();
+                }
+            } catch (err: any) { 
+                sentRequestsLocal.delete(id); 
+                renderLobby();
+                const errMsg = typeof err === 'string' ? err : (err.message || 'Unknown Error');
+                const transErr = lang.t(errMsg);
+                
+                if (errMsg === 'FRIEND_REQUEST_ALREADY_SENT') { 
+                    Modal.alert(lang.t('common_info'), transErr); 
+                    sentRequestsLocal.add(id); 
+                    renderLobby(); 
+                }
+                else Modal.alert(lang.t('common_error'), transErr);
             }
         }
         if (target.classList.contains('accept-btn')) { const id = Number(target.getAttribute('data-id')); try { await acceptFriendReq(id); await refreshData(); } catch (err) { console.error(err); } }
         if (target.classList.contains('remove-friend-btn') || target.classList.contains('reject-btn')) {
             const id = Number(target.getAttribute('data-id')); const isConfirm = await Modal.confirm(lang.t('dash_remove_confirm_title'), lang.t('dash_remove_confirm_desc'));
-            if (isConfirm) { try { await removeFriendReq(id); await refreshData(); } catch (err) { console.error(err); } }
+            if (isConfirm) { 
+                try { 
+                    await removeFriendReq(id); 
+                    sentRequestsLocal.delete(id); // İsteği iptal ettiysek butonu aç
+                    await refreshData(); 
+                } catch (err) { console.error(err); } 
+            }
         }
         
         const inviteBtn = target.closest('.invite-btn');
@@ -334,7 +384,8 @@ export const Dashboard = {
                  renderLobby();
                  Modal.closeAll(); 
                  socketService.sendGameInvite(targetId); 
-                 Modal.alert(lang.t('dash_invite_sent_title'), lang.t('dash_invite_sent_desc')); 
+                 // Davet uyarısını bilgi formatına çektik
+                 Modal.alert(lang.t('common_info'), lang.t('dash_invite_sent_desc')); 
              }
         }
     };
@@ -348,8 +399,9 @@ export const Dashboard = {
     if (buttons[2]) buttons[2].addEventListener('click', () => navigate('/tournament/new'));
 
     return () => {
-        socketService.offDashboardEvents();
-        socketService.clearListeners();
+        // Sayfaya özel socket aboneliklerini temizle
+        pageUnsubscribes.forEach(unsub => unsub());
+        
         if ((window as any).dashboardClickHandler) {
             document.body.removeEventListener('click', (window as any).dashboardClickHandler);
             (window as any).dashboardClickHandler = null;

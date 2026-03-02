@@ -39,6 +39,20 @@ socketService.onInviteRejected((data) => {
     );
 });
 
+// YENİ: Arkadaşlık Kabul Bildirimi
+socketService.subscribeToEvent('friend_accepted', (data: any) => {
+    const msg = data.isMutual 
+        ? lang.t('FRIEND_ACCEPTED_MUTUAL') 
+        : lang.t('friend_accepted_standard'); 
+    
+    Modal.alert(lang.t('common_info'), `<strong>${escapeHTML(data.accepterName)}</strong> ${msg}`);
+});
+
+// YENİ: Arkadaşlık Red Bildirimi
+socketService.subscribeToEvent('friend_rejected', (data: any) => {
+    Modal.alert(lang.t('common_info'), `<strong>${escapeHTML(data.rejecterName)}</strong> ${lang.t('friend_rejected_standard')}`);
+});
+
 // YENİ: Maç Hazırlık Handshake
 socketService.onMatchReadyCheck(async (data: { opponent: string, opponentId: number, isMutual?: boolean }) => {
     // Karşılıklı davet olup olmadığını kontrol et (Yerel liste veya Backend verisi)

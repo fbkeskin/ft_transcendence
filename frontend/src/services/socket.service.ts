@@ -109,6 +109,9 @@ class SocketService {
     subscribe(callback: () => void) {
         this.listeners.push(callback);
         callback(); 
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== callback);
+        };
     }
 
     clearListeners() { this.listeners = []; }
@@ -116,12 +119,26 @@ class SocketService {
     subscribeToEvent(event: string, callback: (data: any) => void) {
         if (!this.eventListeners.has(event)) this.eventListeners.set(event, []);
         this.eventListeners.get(event)?.push(callback);
+        
         if (this.socket && this.socket.connected) {
             this.socket.on(event, callback);
         }
+
+        // UNSIBSCRIBE fonksiyonu dönüyoruz
+        return () => {
+            const listeners = this.eventListeners.get(event);
+            if (listeners) {
+                const index = listeners.indexOf(callback);
+                if (index > -1) listeners.splice(index, 1);
+                if (listeners.length === 0) this.eventListeners.delete(event);
+            }
+            this.socket?.off(event, callback);
+        };
     }
 
     private removeEventListeners(event: string) {
+        // Bu metod artık tüm dinleyicileri SİLER. 
+        // Dikkatli kullanılmalı veya spesifik unsubscription tercih edilmeli.
         this.socket?.off(event);
         this.eventListeners.delete(event);
     }
@@ -133,20 +150,20 @@ class SocketService {
 
     // YENİ: Hazırlık Handshake
     onMatchReadyCheck(callback: (data: { opponent: string, opponentId: number }) => void) {
-        this.subscribeToEvent('match_ready_check', callback);
+        return this.subscribeToEvent('match_ready_check', callback);
     }
 
     confirmReady(opponentId: number) {
         this.socket?.emit('confirm_ready', { opponentId });
     }
 
-        onGameStart(callback: (data: any) => void) { this.subscribeToEvent('game_start', callback); }
+        onGameStart(callback: (data: any) => void) { return this.subscribeToEvent('game_start', callback); }
 
-        onInviteRejected(callback: (data: any) => void) { this.subscribeToEvent('invite_rejected', callback); }
+        onInviteRejected(callback: (data: any) => void) { return this.subscribeToEvent('invite_rejected', callback); }
 
         onIncomingInvite(callback: (data: { senderId: number, senderName: string }) => void) { 
 
-            this.subscribeToEvent('game_invite', (data) => {
+            return this.subscribeToEvent('game_invite', (data) => {
 
                 // Listeye ekle (Eğer zaten yoksa)
 
@@ -168,7 +185,7 @@ class SocketService {
 
         onInviteError(callback: (data: { type: 'INFO' | 'ERROR', code: string, message: string }) => void) { 
 
-            this.subscribeToEvent('invite_error', callback); 
+            return this.subscribeToEvent('invite_error', callback); 
 
         }
 
