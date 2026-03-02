@@ -124,6 +124,8 @@ export const tr = {
   dash_invite_rejected_desc: "kabul etmedi.",
   dash_game_starting: "🚀 OYUN BAŞLIYOR!",
   dash_game_starting_desc: "Rakip:",
+  dash_mutual_invite_title: "⚔️ KARŞILIKLI İSTEK!",
+  dash_mutual_invite_desc: "da sana istek atmıştı! Kabul ederseniz maç hemen başlayacak.",
   dash_tour_no_data: "Henüz bir turnuva düzenlenmedi.",
   dash_tour_participants: "Katılımcılar",
   dash_tour_champion: "Şampiyon",

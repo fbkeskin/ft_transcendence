@@ -1,7 +1,7 @@
 // backend/src/socket/socket.handler.ts
 import { FastifyInstance } from 'fastify';
 import { Socket } from 'socket.io';
-import { onlineUsers, OnlineUser } from './store'; 
+import { onlineUsers } from './store'; 
 
 export const handleSocket = (server: FastifyInstance) => {
   
@@ -37,7 +37,6 @@ export const handleSocket = (server: FastifyInstance) => {
           const user = onlineUsers.get(userId);
           if (user) {
               user.status = data.status;
-              console.log(`👤 ${username} status güncellendi: ${data.status}`);
               broadcastList(); 
           }
       });
@@ -49,23 +48,21 @@ export const handleSocket = (server: FastifyInstance) => {
         const senderUser = onlineUsers.get(userId);
 
         if (targetUser && senderUser) {
-            // Zaten bir davet bekliyorsa veya online maçtaysa meşgul
-            if (targetUser.status === 'IN_GAME' || targetUser.status === 'WAITING') {
-                socket.emit('invite_error', { 
-                    type: 'ERROR', 
-                    code: 'USER_BUSY', 
-                    message: `error_USER_BUSY` 
-                });
+            // --- YENİ: KARŞILIKLI İSTEK KONTROLÜ ---
+            if (targetUser.status === 'WAITING' && targetUser.opponentId === userId) {
+                console.log(`🔄 Karşılıklı istek: ${username} & ${targetUser.username}`);
+                socket.emit('match_ready_check', { opponent: targetUser.username, opponentId: targetId, isMutual: true });
+                (server as any).io.to(targetUser.socketId).emit('match_ready_check', { opponent: username, opponentId: userId, isMutual: true });
                 return;
             }
 
-            // Eğer local oyundaysa (BUSY), uyar ama gönder
+            if (targetUser.status === 'IN_GAME' || targetUser.status === 'WAITING') {
+                socket.emit('invite_error', { type: 'ERROR', code: 'USER_BUSY', message: 'error_USER_BUSY' });
+                return;
+            }
+
             if (targetUser.status === 'BUSY') {
-                socket.emit('invite_error', { 
-                    type: 'INFO', 
-                    code: 'USER_IN_OTHER_GAME', 
-                    message: `error_USER_IN_OTHER_GAME` 
-                });
+                socket.emit('invite_error', { type: 'INFO', code: 'USER_IN_OTHER_GAME', message: 'error_USER_IN_OTHER_GAME' });
             }
 
             targetUser.status = 'WAITING';
@@ -79,11 +76,7 @@ export const handleSocket = (server: FastifyInstance) => {
             });
             broadcastList();
         } else {
-            socket.emit('invite_error', { 
-                type: 'ERROR', 
-                code: 'USER_OFFLINE', 
-                message: 'error_USER_OFFLINE' 
-            });
+            socket.emit('invite_error', { type: 'ERROR', code: 'USER_OFFLINE', message: 'error_USER_OFFLINE' });
         }
       });
 
@@ -94,9 +87,6 @@ export const handleSocket = (server: FastifyInstance) => {
 
         if (senderUser && currentUser) {
           if (data.accepted) {
-             console.log(`🤝 Davet kabul edildi, hazırlık bekleniyor: ${username} & ${senderUser.username}`);
-             // Durumları WAITING'de tutmaya devam ediyoruz (veya READY_WAITING gibi bir şey)
-             // Her iki tarafa da "Hazır mısın?" diye soracak bir event gönder
              socket.emit('match_ready_check', { opponent: senderUser.username, opponentId: senderId });
              (server as any).io.to(senderUser.socketId).emit('match_ready_check', { opponent: username, opponentId: userId });
           } else {
@@ -104,39 +94,32 @@ export const handleSocket = (server: FastifyInstance) => {
              senderUser.opponentId = undefined;
              currentUser.status = 'AVAILABLE';
              currentUser.opponentId = undefined;
+             // Sadece karşı tarafa sinyal gönder
              (server as any).io.to(senderUser.socketId).emit('invite_rejected', { rejecterName: username });
           }
           broadcastList();
         }
       });
 
-      // --- YENİ: HAZIRLIK ONAYI ---
       socket.on('confirm_ready', (data: { opponentId: number }) => {
           const me = onlineUsers.get(userId);
           const opponent = onlineUsers.get(data.opponentId);
 
           if (me && opponent) {
               (me as any).isReady = true;
-              console.log(`✅ ${username} hazır.`);
-
-              // Eğer rakip de hazırsa maçı başlat!
               if ((opponent as any).isReady) {
-                  console.log(`🚀 HER İKİ TARAF HAZIR! Maç başlıyor.`);
                   me.status = 'IN_GAME';
                   opponent.status = 'IN_GAME';
                   delete (me as any).isReady;
                   delete (opponent as any).isReady;
-
                   socket.emit('game_start', { opponent: opponent.username, role: 'player2', opponentId: data.opponentId });
                   (server as any).io.to(opponent.socketId).emit('game_start', { opponent: username, role: 'player1', opponentId: userId });
               } else {
-                  // Rakibe senin hazır olduğunu fısılda (isteğe bağlı UI için)
                   (server as any).io.to(opponent.socketId).emit('opponent_ready');
               }
           }
       });
 
-      // --- OYUN İÇİ ---
       socket.on('game_paddle_move', (data: { y: number, opponentId: number }) => {
           const opponent = onlineUsers.get(data.opponentId);
           if (opponent) (server as any).io.to(opponent.socketId).emit('game_opponent_move', { y: data.y });
@@ -150,10 +133,7 @@ export const handleSocket = (server: FastifyInstance) => {
       socket.on('game_over_signal', (data: { winner: string, opponentId: number }) => {
          const opponent = onlineUsers.get(data.opponentId);
          const me = onlineUsers.get(userId);
-         if (me) { 
-             me.status = 'AVAILABLE'; 
-             me.opponentId = undefined; 
-         }
+         if (me) { me.status = 'AVAILABLE'; me.opponentId = undefined; }
          if (opponent) { 
              opponent.status = 'AVAILABLE'; 
              opponent.opponentId = undefined;

@@ -40,21 +40,35 @@ socketService.onInviteRejected((data) => {
 });
 
 // YENİ: Maç Hazırlık Handshake
-socketService.onMatchReadyCheck(async (data) => {
+socketService.onMatchReadyCheck(async (data: { opponent: string, opponentId: number, isMutual?: boolean }) => {
+    // Karşılıklı davet olup olmadığını kontrol et (Yerel liste veya Backend verisi)
+    const isMutual = data.isMutual || socketService.getPendingInvites().some(inv => inv.senderId === data.opponentId);
+    
+    // Hazırlık aşamasına geçildiği an, bu kullanıcıdan gelen daveti listeden siliyoruz.
+    socketService.removeInvite(data.opponentId);
+    
     const currentPath = window.location.pathname;
-    let message = `${lang.t('dash_game_starting_desc')} <strong>${escapeHTML(data.opponent)}</strong>. ${lang.t('game_ready_confirm_desc') || 'Maça girmeye hazır mısın?'}`;
+    
+    // Mesaj içeriğini duruma göre ayarla
+    let title = lang.t('dash_game_starting');
+    let message = `${lang.t('dash_game_starting_desc')} <strong>${escapeHTML(data.opponent)}</strong>. ${lang.t('game_ready_confirm_desc') || 'Are you ready?'}`;
+
+    if (isMutual) {
+        title = lang.t('dash_mutual_invite_title');
+        message = `<strong>${escapeHTML(data.opponent)}</strong> ${lang.t('dash_mutual_invite_desc')}`;
+    }
     
     if (currentPath === '/game/local' || currentPath === '/game/ai') {
         message += `<br><br><span class="text-amber-400 text-xs font-bold">⚠️ ${lang.t('game_online_interrupt_warn')}</span>`;
     }
 
-    const ok = await Modal.confirm(lang.t('dash_game_starting'), message);
+    const ok = await Modal.confirm(title, message);
     
     if (ok) {
         socketService.confirmReady(data.opponentId);
-        // Burada bir "Rakip bekleniyor..." loading modalı açılabilir ama şimdilik sade tutalım.
     } else {
-        // Redderse durumu düzeltebiliriz (İsteğe bağlı)
+        // REDDETME DURUMU: Backend'e bildir ki karşı tarafın ekranı da kapansın
+        socketService.respondToInvite(data.opponentId, false);
         socketService.updateStatus('AVAILABLE');
     }
 });

@@ -81,6 +81,8 @@ export const Navbar = {
         langSelect.addEventListener('change', (e: Event) => {
             const target = e.target as HTMLSelectElement;
             lang.setLanguage(target.value);
+            // Sayfayı yenilemek yerine aynı adrese tekrar navigate yapıyoruz
+            navigate(window.location.pathname);
         });
       }
     }

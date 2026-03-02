@@ -123,6 +123,8 @@ export const en = {
   dash_invite_rejected_desc: "declined.",
   dash_game_starting: "🚀 GAME STARTING!",
   dash_game_starting_desc: "Opponent:",
+  dash_mutual_invite_title: "⚔️ MUTUAL INVITE!",
+  dash_mutual_invite_desc: "also invited you! Accept to start the match immediately.",
   dash_tour_no_data: "No tournaments organized yet.",
   dash_tour_participants: "Participants",
   dash_tour_champion: "Champion",

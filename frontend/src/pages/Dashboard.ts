@@ -8,6 +8,9 @@ import { Modal } from '../utils/Modal';
 import { socketService } from '../services/socket.service';
 import { escapeHTML } from '../utils/escape.ts';
 
+// MODÜL SEVİYESİNDE TANIM (Dil değişse bile bu hafıza silinmez)
+const sentInvitesLocal = new Set<number>();
+
 export const Dashboard = {
   render: () => `
     <div class="min-h-screen bg-gray-900 text-white p-8">
@@ -116,6 +119,7 @@ export const Dashboard = {
         let friends: any[] = [];
         let pendingRequests: any[] = [];
         const sentRequestsLocal = new Set<number>();
+        // sentInvitesLocal artık yukarıda tanımlı (modül seviyesinde)
 
         const refreshData = async () => {
             try {
@@ -246,11 +250,18 @@ export const Dashboard = {
             listContainer.innerHTML = onlineList.map(u => {
                 const isFriend = friends.some(f => f.id === u.id);
                 const isSent = sentRequestsLocal.has(u.id);
+                const isInviteSent = sentInvitesLocal.has(u.id);
+
                 let actionBtn = !isFriend ? (isSent ? `<button class="text-[10px] bg-gray-600 px-2 py-1 rounded text-gray-300 cursor-not-allowed" disabled>${lang.t('dash_req_sent')}</button>` : `<button class="add-friend-btn text-[10px] bg-emerald-600 hover:bg-emerald-500 px-2 py-1 rounded text-white" data-id="${u.id}">${lang.t('dash_add_friend')}</button>`) : '';
+                
+                const inviteBtn = isInviteSent 
+                    ? `<button class="text-[10px] bg-indigo-900/50 px-2 py-1 rounded text-gray-500 cursor-not-allowed italic" disabled>${lang.t('dash_req_sent')}</button>`
+                    : `<button class="invite-btn text-[10px] bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-white" data-id="${u.id}">${lang.t('dash_invite')}</button>`;
+
                 return `
                 <li class="flex items-center justify-between bg-slate-800 p-2 rounded border border-slate-700">
                     <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 shadow-green-glow"></span><span class="text-xs font-bold text-gray-200">${escapeHTML(u.username)}</span></div>
-                    <div class="flex gap-1">${actionBtn}<button class="invite-btn text-[10px] bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-white" data-id="${u.id}">${lang.t('dash_invite')}</button></div>
+                    <div class="flex gap-1">${actionBtn}${inviteBtn}</div>
                 </li>`;
             }).join('');
         };
@@ -263,18 +274,44 @@ export const Dashboard = {
         socketService.subscribeToEvent('friend_request', async () => { badge.classList.remove('hidden'); await refreshData(); });
         socketService.subscribeToEvent('friend_accepted', async (data: any) => { sentRequestsLocal.delete(data.accepterId); await refreshData(); });
         socketService.subscribeToEvent('friend_list_update', async () => await refreshData());
+        
+        socketService.onInviteRejected(() => { 
+            sentInvitesLocal.clear(); 
+            renderLobby(); 
+        });
+
+        // --- YENİ EKLENEN TEMİZLİK DİNLEYİCİLERİ ---
+        socketService.onMatchReadyCheck(() => {
+            sentInvitesLocal.clear();
+            renderLobby();
+        });
+
+        socketService.onGameStart(() => {
+            sentInvitesLocal.clear();
+            renderLobby();
+        });
+        // ------------------------------------------
+
         socketService.onInviteError((data) => { 
 			Modal.closeAll(); 
-			// data.message doğrudan "error_USER_BUSY" anahtarını içeriyor,
-			// bu yüzden onu lang.t() içine almalıyız.
+            sentInvitesLocal.clear(); 
+            renderLobby();
 			Modal.alert(lang.t('common_error'), lang.t(data.message)); 
 		});
     }
 
     const clickHandler = async (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target.classList.contains('accept-invite-btn')) { const id = Number(target.getAttribute('data-id')); socketService.respondToInvite(id, true); socketService.removeInvite(id); }
-        if (target.classList.contains('reject-invite-btn')) { const id = Number(target.getAttribute('data-id')); socketService.respondToInvite(id, false); socketService.removeInvite(id); }
+        if (target.classList.contains('accept-invite-btn')) { 
+            const id = Number(target.getAttribute('data-id')); 
+            socketService.respondToInvite(id, true); 
+            socketService.removeInvite(id); 
+        }
+        if (target.classList.contains('reject-invite-btn')) { 
+            const id = Number(target.getAttribute('data-id')); 
+            socketService.respondToInvite(id, false); 
+            socketService.removeInvite(id); 
+        }
         if (target.classList.contains('add-friend-btn')) {
             const id = Number(target.getAttribute('data-id')); sentRequestsLocal.add(id); renderLobby();
             try { await sendFriendReq(id); } catch (err: any) { 
@@ -288,10 +325,17 @@ export const Dashboard = {
             const id = Number(target.getAttribute('data-id')); const isConfirm = await Modal.confirm(lang.t('dash_remove_confirm_title'), lang.t('dash_remove_confirm_desc'));
             if (isConfirm) { try { await removeFriendReq(id); await refreshData(); } catch (err) { console.error(err); } }
         }
+        
         const inviteBtn = target.closest('.invite-btn');
         if (inviteBtn && !inviteBtn.hasAttribute('disabled')) {
              const targetId = parseInt(inviteBtn.getAttribute('data-id') || '0', 10);
-             if(targetId) { Modal.closeAll(); socketService.sendGameInvite(targetId); Modal.alert(lang.t('dash_invite_sent_title'), lang.t('dash_invite_sent_desc')); }
+             if(targetId) { 
+                 sentInvitesLocal.add(targetId);
+                 renderLobby();
+                 Modal.closeAll(); 
+                 socketService.sendGameInvite(targetId); 
+                 Modal.alert(lang.t('dash_invite_sent_title'), lang.t('dash_invite_sent_desc')); 
+             }
         }
     };
 
