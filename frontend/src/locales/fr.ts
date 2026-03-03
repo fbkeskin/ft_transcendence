@@ -195,6 +195,7 @@ export const fr = {
   INVALID_USERNAME_LENGTH: "Le nom d'utilisateur doit contenir entre 3 et 12 caractères.",
   INVALID_USERNAME_CHARS: "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des tirets bas (_).",
   USERNAME_TAKEN: "Ce nom d'utilisateur est déjà pris par un autre utilisateur.",
+  USERNAME_COOLDOWN: "Vous ne pouvez changer votre nom d'utilisateur qu'une fois par jour.",
   UPDATE_PROFILE_ERROR: "Une erreur est survenue lors de la mise à jour du profil.",
   prof_qr_error: "Impossible de générer le code QR.",
   prof_code_missing: "Veuillez entrer le code.",

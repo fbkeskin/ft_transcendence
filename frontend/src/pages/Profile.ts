@@ -194,17 +194,31 @@ export const Profile = {
     btnUpdateProfile?.addEventListener('click', async () => {
         const newName = nameInput.value.trim();
         if (!newName) return;
+
+        // --- GÜNDE 1 KEZ DEĞİŞTİRME SINIRI ---
+        const lastChange = localStorage.getItem('lastUsernameChange');
+        if (lastChange) {
+            const lastDate = new Date(lastChange).getTime();
+            const now = new Date().getTime();
+            const hoursPassed = (now - lastDate) / (1000 * 60 * 60);
+            
+            if (hoursPassed < 24) {
+                const remainingHours = Math.ceil(24 - hoursPassed);
+                await Modal.alert(lang.t('common_info'), `${lang.t('USERNAME_COOLDOWN') || 'İsim değiştirmek için beklemen gerekiyor.'} (${remainingHours}s)`);
+                return;
+            }
+        }
+        // ------------------------------------
         
         try {
             await updateProfileReq(newName);
             
-            // LocalStorage'daki user bilgisini tazeleyelim
+            // Başarılı olursa tarihi kaydet
+            localStorage.setItem('lastUsernameChange', new Date().toISOString());
+            
             const updatedUser = await getProfileReq();
             localStorage.setItem('user', JSON.stringify(updatedUser));
-
-            // NAVIGATE ile sayfayı refresh ederek Navbar'ı da güncelliyoruz
             navigate('/profile'); 
-
             await Modal.alert(lang.t('common_success'), lang.t('PROFILE_UPDATED_SUCCESS'));
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message));

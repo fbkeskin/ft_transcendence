@@ -196,6 +196,7 @@ export const tr = {
   INVALID_USERNAME_LENGTH: "Kullanıcı adı 3 ile 12 karakter arasında olmalıdır.",
   INVALID_USERNAME_CHARS: "Kullanıcı adı sadece harf, rakam ve alt çizgi (_) içerebilir.",
   USERNAME_TAKEN: "Bu kullanıcı adı zaten başka biri tarafından alınmış.",
+  USERNAME_COOLDOWN: "Kullanıcı adını günde sadece 1 kez değiştirebilirsin.",
   UPDATE_PROFILE_ERROR: "Profil güncellenirken bir hata oluştu.",
   prof_qr_error: "QR Kod oluşturulamadı.",
   prof_code_missing: "Lütfen kodu girin.",

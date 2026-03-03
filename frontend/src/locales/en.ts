@@ -195,6 +195,7 @@ export const en = {
   INVALID_USERNAME_LENGTH: "Username must be between 3 and 12 characters.",
   INVALID_USERNAME_CHARS: "Username can only contain letters, numbers, and underscores (_).",
   USERNAME_TAKEN: "This username is already taken by another user.",
+  USERNAME_COOLDOWN: "You can only change your username once per day.",
   UPDATE_PROFILE_ERROR: "An error occurred while updating the profile.",
   prof_qr_error: "Failed to generate QR code.",
   prof_code_missing: "Please enter the code.",
