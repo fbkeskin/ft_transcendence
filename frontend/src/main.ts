@@ -77,14 +77,7 @@ socketService.onGameStart(() => {
     sentRequestsLocal.clear();
 });
 
-// YENİ: Birinin ismi değiştiğinde herkesin listesini tazele
-socketService.subscribeToEvent('user_list_updated', () => {
-    // Sadece render etmek yetmez, isimler DB'den değiştiği için veriyi tekrar çekmeliyiz.
-    // Dashboard içindeki refreshData()'yı tetikler.
-    socketService.notifyListeners(); 
-});
-
-// YENİ: Maç Hazırlık Handshake
+// Maç Hazırlık Handshake
 socketService.onMatchReadyCheck(async (data: { opponent: string, opponentId: number, isMutual?: boolean }) => {
     // Karşılıklı davet olup olmadığını kontrol et (Yerel liste veya Backend verisi)
     const isMutual = data.isMutual || socketService.getPendingInvites().some(inv => inv.senderId === data.opponentId);

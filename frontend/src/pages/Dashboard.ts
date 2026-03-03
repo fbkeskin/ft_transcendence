@@ -279,8 +279,12 @@ export const Dashboard = {
             }).join('');
         };
 
-    const socketUnsubscribe = socketService.subscribe(() => {
+    const socketUnsubscribe = socketService.subscribe(async () => {
+        // 1. Önce elimizdeki mevcut (veya yeni gelmiş) veriyle hızlıca render yap
         renderLobby(); renderFriendsList(); renderInvites(); updateBadges();
+        
+        // 2. Ardından veritabanından en güncel arkadaş/turnuva verilerini çekip tekrar çiz
+        await refreshData();
     });
 
     // Sayfaya özel socket aboneliklerini temizlemek için bir dizi
