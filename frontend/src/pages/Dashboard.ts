@@ -10,6 +10,7 @@ import { escapeHTML } from '../utils/escape.ts';
 
 // GLOBAL HAFIZALARI SERVİSLERDEN ALIYORUZ
 const sentInvitesLocal = socketService.sentInvitesLocal;
+let activeTab = 'lobby'; // Dil değiştiğinde sekmenin kaybolmaması için
 
 export const Dashboard = {
   render: () => `
@@ -65,7 +66,7 @@ export const Dashboard = {
                     </button>
                 </div>
 
-                <div id="view-lobby" class="flex-1 overflow-y-auto pr-1">
+                <div id="view-lobby" class="flex-1 overflow-y-auto pr-1 hidden">
                     <div id="online-users-list" class="space-y-2"></div>
                 </div>
 
@@ -171,12 +172,14 @@ export const Dashboard = {
         updateBadges();
 
         tabLobby.addEventListener('click', () => {
+            activeTab = 'lobby';
             tabLobby.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-green-500 transition";
             tabFriends.className = tabInvites.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition relative";
             viewLobby.classList.remove('hidden'); viewFriends.classList.add('hidden'); viewInvites.classList.add('hidden');
         });
 
         tabFriends.addEventListener('click', () => {
+            activeTab = 'friends';
             tabFriends.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-pink-500 transition relative";
             tabLobby.className = tabInvites.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition";
             viewFriends.classList.remove('hidden'); viewLobby.classList.add('hidden'); viewInvites.classList.add('hidden');
@@ -184,11 +187,18 @@ export const Dashboard = {
         });
 
         tabInvites.addEventListener('click', () => {
+            activeTab = 'invites';
             tabInvites.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition relative";
             tabLobby.className = tabFriends.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition";
             viewInvites.classList.remove('hidden'); viewLobby.classList.add('hidden'); viewFriends.classList.add('hidden');
             inviteBadge.classList.add('hidden');
         });
+
+        // --- SAYFA YÜKLENDİĞİNDE KALDIĞI SEKMEDEN DEVAM ET ---
+        if (activeTab === 'friends') tabFriends.click();
+        else if (activeTab === 'invites') tabInvites.click();
+        else tabLobby.click();
+        // --------------------------------------------------
 
         function renderInvites() {
             const list = document.getElementById('invites-list');
