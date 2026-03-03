@@ -11,12 +11,17 @@ NAME = ft_transcendence
 # Varsayılan hedef
 all: up
 
+WHITE = \033[1;37m
+
 # 1. Konteynerleri İnşa Et ve Başlat (Detached Mode - Arka planda)
 up:
 	@echo "$(GREEN)Building and starting containers...$(RESET)"
 	@docker compose -p $(NAME) up -d --build --remove-orphans
-	@echo "$(GREEN)Containers are up and running!$(RESET)"
-	@echo "$(BLUE)Type 'make logs' to see the output.$(RESET)"
+	@echo ""
+	@echo "$(GREEN)✅ Containers are up and running!$(RESET)"
+	@echo "$(GREEN)🌐 Access the application at: $(WHITE)https://localhost$(RESET)"
+	@echo "$(BLUE)📝 Type 'make logs' to see the logs.$(RESET)"
+	@echo ""
 
 # 2. Konteynerleri Durdur ve Kaldır (Ağları da temizler)
 down:
