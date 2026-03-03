@@ -152,6 +152,7 @@ export const fr = {
   // Game Online
   game_online_forfeit_title: "🏆 VICTOIRE PAR FORFAIT !",
   game_online_interrupt_warn: "Votre partie actuelle sera annulée et vous passerez à ce match.",
+  nav_lang_disabled: "La langue ne peut pas être changée pendant le jeu.",
   game_ready_confirm_desc: "Êtes-vous prêt à commencer le match ? Votre adversaire sera attendu après votre confirmation.",
 
   // Tournament

@@ -24,6 +24,8 @@ export const Navbar = {
           localStorage.removeItem('user');
       }
   
+      const isGamePage = path.startsWith('/game') || path === '/tournament/bracket';
+  
       return `
         <div class="w-full px-4 lg:px-12 border-b border-white/5 bg-slate-950/50 backdrop-blur-md sticky top-0 z-[100]">
           
@@ -36,8 +38,8 @@ export const Navbar = {
             <div class="flex items-center gap-2 md:gap-6"> 
                 ${isLoggedIn ? `
                   <div class="hidden sm:flex items-baseline space-x-4">
-                    <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
-                    <a href="/profile" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-all" data-link>${lang.t('nav_profile')}</a>
+                    <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
+                    <a href="/profile" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:sm font-medium transition-all" data-link>${lang.t('nav_profile')}</a>
                   </div>
                   <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-3 md:px-6 py-1.5 md:py-2 rounded-md text-[10px] md:text-sm font-bold transition-all">
                     ${lang.t('nav_logout')}
@@ -49,8 +51,10 @@ export const Navbar = {
                   </a>
                 `}
                 
-                <div class="relative group border-l border-gray-700 pl-2 md:pl-6 ml-2 md:ml-0">
-                    <select id="lang-select" class="appearance-none bg-gray-900/80 hover:bg-gray-800 text-white border border-gray-700 hover:border-indigo-500 rounded-md py-1 pl-2 md:pl-3 pr-8 text-[10px] md:text-sm focus:outline-none transition-colors cursor-pointer font-bold">
+                <div class="relative group border-l border-gray-700 pl-2 md:pl-6 ml-2 md:ml-0" 
+                     title="${isGamePage ? lang.t('nav_lang_disabled') : ''}">
+                    <select id="lang-select" ${isGamePage ? 'disabled' : ''} 
+                            class="appearance-none bg-gray-900/80 hover:bg-gray-800 text-white border border-gray-700 hover:border-indigo-500 rounded-md py-1 pl-2 md:pl-3 pr-8 text-[10px] md:text-sm focus:outline-none transition-colors cursor-pointer font-bold ${isGamePage ? 'opacity-50 cursor-not-allowed' : ''}">
                         <option value="tr" ${lang.getCurrentLang() === 'tr' ? 'selected' : ''}>TR 🇹🇷</option>
                         <option value="en" ${lang.getCurrentLang() === 'en' ? 'selected' : ''}>EN 🇬🇧</option>
                         <option value="fr" ${lang.getCurrentLang() === 'fr' ? 'selected' : ''}>FR 🇫🇷</option>
