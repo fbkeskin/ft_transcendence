@@ -10,7 +10,8 @@ import { escapeHTML } from '../utils/escape.ts';
 
 // GLOBAL HAFIZALARI SERVİSLERDEN ALIYORUZ
 const sentInvitesLocal = socketService.sentInvitesLocal;
-let activeTab = 'lobby'; // Dil değiştiğinde sekmenin kaybolmaması için
+let activeTab = 'lobby'; // Lobi/Arkadaş/İstek sekmesi
+let activeHistoryTab = 'matches'; // Maç/Turnuva geçmişi sekmesi
 
 export const Dashboard = {
   render: () => `
@@ -506,8 +507,24 @@ function renderMatchHistory(user: any) {
     });
     const tabMatches = document.getElementById('tab-hist-matches')!; const tabTournaments = document.getElementById('tab-hist-tournaments')!;
     const tableMatches = document.getElementById('table-matches')!; const tableTournaments = document.getElementById('table-tournaments')!;
-    tabMatches.addEventListener('click', () => { tabMatches.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-indigo-500 bg-slate-800 transition"; tabTournaments.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; tableMatches.classList.remove('hidden'); tableTournaments.classList.add('hidden'); });
-    tabTournaments.addEventListener('click', () => { tabTournaments.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-orange-500 bg-slate-800 transition"; tabMatches.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; tableTournaments.classList.remove('hidden'); tableMatches.classList.add('hidden'); });
+    
+    tabMatches.addEventListener('click', () => { 
+        activeHistoryTab = 'matches';
+        tabMatches.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-indigo-500 bg-slate-800 transition"; 
+        tabTournaments.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
+        tableMatches.classList.remove('hidden'); tableTournaments.classList.add('hidden'); 
+    });
+    
+    tabTournaments.addEventListener('click', () => { 
+        activeHistoryTab = 'tournaments';
+        tabTournaments.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-orange-500 bg-slate-800 transition"; 
+        tabMatches.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
+        tableTournaments.classList.remove('hidden'); tableMatches.classList.add('hidden'); 
+    });
+
+    // --- KALDIĞI SEKMEDEN DEVAM ET (GEÇMİŞ TABLOLARI) ---
+    if (activeHistoryTab === 'tournaments') tabTournaments.click();
+    else tabMatches.click();
 }
 function renderTournamentHistory(tournaments: any[], user: any) {
     const tournamentBody = document.getElementById('tournament-history-body')!; tournamentBody.innerHTML = '';
