@@ -12,7 +12,7 @@ export const Game = {
     <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
       
       <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
-        ${lang.t('game_local_title')}
+        ... VS ...
       </div>
 
       <div class="flex gap-20 text-6xl font-mono font-bold select-none opacity-20 mb-4">
@@ -153,7 +153,7 @@ export const Game = {
         else if (ball.x + BALL_SIZE < 0) { score2++; updateScore(); resetBall(); }
 
         if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
-            endGame(score1 >= WIN_SCORE ? leftPlayerName : rightPlayerName);
+            endGame(score1 >= WIN_SCORE ? displayNameLeft : rightPlayerName);
         }
     }
 

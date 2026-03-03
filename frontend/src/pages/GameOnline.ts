@@ -11,14 +11,14 @@ export const GameOnline = {
   render: () => `
     <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
       
-      <!-- BAŞLIK -->
-      <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
+      <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2 uppercase">
         ONLINE ARENA
       </div>
 
-      <!-- SKOR -->
       <div class="flex gap-20 text-6xl font-mono font-bold select-none opacity-20 mb-4">
-        <div id="score-left">0</div> <div id="score-right">0</div> </div>
+        <div id="score-left">0</div>
+        <div id="score-right">0</div>
+      </div>
 
       <!-- OYUN ALANI -->
       <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-slate-700 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
@@ -82,6 +82,9 @@ export const GameOnline = {
 
     document.getElementById('p1-name')!.innerText = `🔴 ${p1Name}`;
     document.getElementById('p2-name')!.innerText = `🔵 ${p2Name}`;
+    
+    const titleEl = document.getElementById('game-title');
+    if (titleEl) titleEl.innerText = `${p1Name} vs ${p2Name}`;
 
     const WIN_SCORE = 3; 
     const PADDLE_WIDTH = 15; const PADDLE_HEIGHT = 100; const BALL_SIZE = 14; 

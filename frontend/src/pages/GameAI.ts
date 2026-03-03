@@ -10,7 +10,7 @@ export const GameAI = {
     <div class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-900 text-white relative overflow-hidden py-4">
       
       <div id="game-title" class="text-indigo-500 font-bold tracking-widest text-xl opacity-80 mb-2">
-        ${lang.t('game_ai_title')}
+        AI VS ...
       </div>
 
       <div class="flex gap-24 text-6xl font-mono font-bold select-none opacity-20 mb-4">
@@ -63,6 +63,8 @@ export const GameAI = {
         const user = await getProfileReq();
         currentUsername = user.username;
         document.getElementById('player-name')!.innerText = `🔵 ${currentUsername}`;
+        const titleEl = document.getElementById('game-title');
+        if (titleEl) titleEl.innerText = `AI VS ${currentUsername}`;
     } catch(e) { navigate('/login'); return; }
 
     const WIN_SCORE = 3; 
