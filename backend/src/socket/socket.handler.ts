@@ -39,6 +39,16 @@ export const handleSocket = (server: FastifyInstance) => {
       socket.on('update_status', (data: { status: 'AVAILABLE' | 'BUSY' | 'IN_GAME' | 'WAITING' }) => {
           const user = onlineUsers.get(userId);
           if (user) {
+              // --- OYUNDAN KAÇMA KONTROLÜ ---
+              if (user.status === 'IN_GAME' && data.status !== 'IN_GAME' && user.opponentId) {
+                  const opponent = onlineUsers.get(user.opponentId);
+                  if (opponent) {
+                      (server as any).io.to(opponent.socketId).emit('game_opponent_left');
+                      opponent.status = 'AVAILABLE';
+                      opponent.opponentId = undefined;
+                  }
+              }
+              // ------------------------------
               user.status = data.status;
               broadcastList(); 
           }
@@ -130,6 +140,16 @@ export const handleSocket = (server: FastifyInstance) => {
       socket.on('disconnect', () => {
         const me = onlineUsers.get(userId);
         if (me && me.socketId === socket.id) {
+            // --- OYUNDAN AYRILMA KONTROLÜ ---
+            if (me.status === 'IN_GAME' && me.opponentId) {
+                const opponent = onlineUsers.get(me.opponentId);
+                if (opponent) {
+                    (server as any).io.to(opponent.socketId).emit('game_opponent_left');
+                    opponent.status = 'AVAILABLE';
+                    opponent.opponentId = undefined;
+                }
+            }
+            // -------------------------------
             onlineUsers.delete(userId);
             broadcastList();
         }

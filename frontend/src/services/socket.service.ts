@@ -148,6 +148,13 @@ class SocketService {
     onBallSync(callback: (data: {ballX: number, ballY: number, score1: number, score2: number}) => void) { this.subscribeToEvent('game_ball_sync', callback); }
     onGameEnded(callback: (data: {winner: string}) => void) { this.subscribeToEvent('game_ended', callback); }
     onOpponentLeft(callback: () => void) { this.subscribeToEvent('game_opponent_left', callback); }
+
+    offGameEvents() {
+        this.removeEventListeners('game_opponent_move');
+        this.removeEventListeners('game_ball_sync');
+        this.removeEventListeners('game_ended');
+        this.removeEventListeners('game_opponent_left');
+    }
 }
 
 export const socketService = SocketService.getInstance();
