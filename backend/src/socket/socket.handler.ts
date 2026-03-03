@@ -7,7 +7,7 @@ export const handleSocket = (server: FastifyInstance) => {
   
   (server as any).io.on('connection', async (socket: Socket) => {
     let userId: number;
-    let username: string;
+    let initialUsername: string;
 
     try {
       const token = socket.handshake.auth.token;
@@ -15,22 +15,25 @@ export const handleSocket = (server: FastifyInstance) => {
 
       const decoded: any = server.jwt.verify(token);
       userId = Number(decoded.id);
-      username = decoded.username;
+      initialUsername = decoded.username;
 
       onlineUsers.set(userId, { 
           socketId: socket.id, 
-          username, 
+          username: initialUsername, 
           status: 'AVAILABLE' 
       });
       
       socket.join(`user_${userId}`);
-      console.log(`✅ ${username} (ID: ${userId}) bağlandı! Socket: ${socket.id}`);
+      console.log(`✅ ${initialUsername} (ID: ${userId}) bağlandı!`);
 
       const broadcastList = () => {
         const list = Array.from(onlineUsers.entries()).map(([id, u]) => ({ id, username: u.username, status: u.status }));
         (server as any).io.emit('online_users_list', list);
       };
       broadcastList();
+
+      // YARDIMCI: Her zaman onlineUsers hafızasındaki GÜNCEL ismi getir
+      const getMyUsername = () => onlineUsers.get(userId)?.username || initialUsername;
 
       // --- STATUS GÜNCELLEME ---
       socket.on('update_status', (data: { status: 'AVAILABLE' | 'BUSY' | 'IN_GAME' | 'WAITING' }) => {
@@ -48,21 +51,16 @@ export const handleSocket = (server: FastifyInstance) => {
         const senderUser = onlineUsers.get(userId);
 
         if (targetUser && senderUser) {
-            // --- YENİ: KARŞILIKLI İSTEK KONTROLÜ ---
+            // --- KARŞILIKLI İSTEK ---
             if (targetUser.status === 'WAITING' && targetUser.opponentId === userId) {
-                console.log(`🔄 Karşılıklı istek: ${username} & ${targetUser.username}`);
                 socket.emit('match_ready_check', { opponent: targetUser.username, opponentId: targetId, isMutual: true });
-                (server as any).io.to(targetUser.socketId).emit('match_ready_check', { opponent: username, opponentId: userId, isMutual: true });
+                (server as any).io.to(targetUser.socketId).emit('match_ready_check', { opponent: getMyUsername(), opponentId: userId, isMutual: true });
                 return;
             }
 
             if (targetUser.status === 'IN_GAME' || targetUser.status === 'WAITING') {
                 socket.emit('invite_error', { type: 'ERROR', code: 'USER_BUSY', message: 'error_USER_BUSY' });
                 return;
-            }
-
-            if (targetUser.status === 'BUSY') {
-                socket.emit('invite_error', { type: 'INFO', code: 'USER_IN_OTHER_GAME', message: 'error_USER_IN_OTHER_GAME' });
             }
 
             targetUser.status = 'WAITING';
@@ -72,11 +70,9 @@ export const handleSocket = (server: FastifyInstance) => {
 
             (server as any).io.to(targetUser.socketId).emit('game_invite', {
                 senderId: userId,
-                senderName: username
+                senderName: getMyUsername()
             });
             broadcastList();
-        } else {
-            socket.emit('invite_error', { type: 'ERROR', code: 'USER_OFFLINE', message: 'error_USER_OFFLINE' });
         }
       });
 
@@ -88,14 +84,11 @@ export const handleSocket = (server: FastifyInstance) => {
         if (senderUser && currentUser) {
           if (data.accepted) {
              socket.emit('match_ready_check', { opponent: senderUser.username, opponentId: senderId });
-             (server as any).io.to(senderUser.socketId).emit('match_ready_check', { opponent: username, opponentId: userId });
+             (server as any).io.to(senderUser.socketId).emit('match_ready_check', { opponent: getMyUsername(), opponentId: userId });
           } else {
-             senderUser.status = 'AVAILABLE';
-             senderUser.opponentId = undefined;
-             currentUser.status = 'AVAILABLE';
-             currentUser.opponentId = undefined;
-             // Sadece karşı tarafa sinyal gönder
-             (server as any).io.to(senderUser.socketId).emit('invite_rejected', { rejecterName: username });
+             senderUser.status = 'AVAILABLE'; senderUser.opponentId = undefined;
+             currentUser.status = 'AVAILABLE'; currentUser.opponentId = undefined;
+             (server as any).io.to(senderUser.socketId).emit('invite_rejected', { rejecterName: getMyUsername() });
           }
           broadcastList();
         }
@@ -104,61 +97,44 @@ export const handleSocket = (server: FastifyInstance) => {
       socket.on('confirm_ready', (data: { opponentId: number }) => {
           const me = onlineUsers.get(userId);
           const opponent = onlineUsers.get(data.opponentId);
-
           if (me && opponent) {
               (me as any).isReady = true;
               if ((opponent as any).isReady) {
-                  me.status = 'IN_GAME';
-                  opponent.status = 'IN_GAME';
-                  delete (me as any).isReady;
-                  delete (opponent as any).isReady;
+                  me.status = 'IN_GAME'; opponent.status = 'IN_GAME';
+                  delete (me as any).isReady; delete (opponent as any).isReady;
                   socket.emit('game_start', { opponent: opponent.username, role: 'player2', opponentId: data.opponentId });
-                  (server as any).io.to(opponent.socketId).emit('game_start', { opponent: username, role: 'player1', opponentId: userId });
+                  (server as any).io.to(opponent.socketId).emit('game_start', { opponent: getMyUsername(), role: 'player1', opponentId: userId });
               } else {
                   (server as any).io.to(opponent.socketId).emit('opponent_ready');
               }
           }
       });
 
-      socket.on('game_paddle_move', (data: { y: number, opponentId: number }) => {
-          const opponent = onlineUsers.get(data.opponentId);
-          if (opponent) (server as any).io.to(opponent.socketId).emit('game_opponent_move', { y: data.y });
+      // (Diğer oyun socketleri aynı kalacak şekilde...)
+      socket.on('game_paddle_move', (data: any) => {
+          const opp = onlineUsers.get(data.opponentId);
+          if (opp) (server as any).io.to(opp.socketId).emit('game_opponent_move', { y: data.y });
       });
-
       socket.on('game_ball_update', (data: any) => {
-          const opponent = onlineUsers.get(data.opponentId);
-          if (opponent) (server as any).io.to(opponent.socketId).emit('game_ball_sync', data);
+          const opp = onlineUsers.get(data.opponentId);
+          if (opp) (server as any).io.to(opp.socketId).emit('game_ball_sync', data);
       });
-
-      socket.on('game_over_signal', (data: { winner: string, opponentId: number }) => {
-         const opponent = onlineUsers.get(data.opponentId);
+      socket.on('game_over_signal', (data: any) => {
+         const opp = onlineUsers.get(data.opponentId);
          const me = onlineUsers.get(userId);
          if (me) { me.status = 'AVAILABLE'; me.opponentId = undefined; }
-         if (opponent) { 
-             opponent.status = 'AVAILABLE'; 
-             opponent.opponentId = undefined;
-             (server as any).io.to(opponent.socketId).emit('game_ended', { winner: data.winner });
-         }
+         if (opp) { opp.status = 'AVAILABLE'; opp.opponentId = undefined; (server as any).io.to(opp.socketId).emit('game_ended', { winner: data.winner }); }
          broadcastList();
       });
 
       socket.on('disconnect', () => {
         const me = onlineUsers.get(userId);
-        if (me && me.socketId !== socket.id) return; 
-        if (me && me.opponentId) {
-            const opponent = onlineUsers.get(me.opponentId);
-            if (opponent) {
-                opponent.status = 'AVAILABLE';
-                opponent.opponentId = undefined;
-                (server as any).io.to(opponent.socketId).emit('game_opponent_left');
-            }
+        if (me && me.socketId === socket.id) {
+            onlineUsers.delete(userId);
+            broadcastList();
         }
-        onlineUsers.delete(userId);
-        broadcastList();
       });
 
-    } catch (err) {
-      socket.disconnect();
-    }
+    } catch (err) { socket.disconnect(); }
   });
 };

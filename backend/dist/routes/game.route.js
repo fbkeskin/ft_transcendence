@@ -9,11 +9,18 @@ async function gameRoutes(server) {
             tags: ['Game'],
             body: {
                 type: 'object',
-                required: ['score1', 'score2', 'opponentName'],
+                // opponentId zorunlu alan
+                required: ['score1', 'score2', 'opponentId'],
                 properties: {
                     score1: { type: 'number' },
                     score2: { type: 'number' },
-                    opponentName: { type: 'string' }
+                    // DÜZELTME: opponentId hem sayı (ID) hem string (GuestName) olabilir.
+                    opponentId: {
+                        anyOf: [
+                            { type: 'number' },
+                            { type: 'string' }
+                        ]
+                    }
                 }
             }
         }

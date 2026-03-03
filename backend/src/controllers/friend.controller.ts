@@ -1,9 +1,18 @@
 // backend/src/controllers/friend.controller.ts
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../db';
-import { getSocketId } from '../socket/store'; 
+import { getSocketId, onlineUsers } from '../socket/store'; 
 
 interface UserPayload { id: number; username: string; } 
+
+// YARDIMCI: Her zaman güncel ismi getir (Socket hafızası veya Veritabanı)
+const getLatestUsername = async (userId: number, fallback: string) => {
+    const onlineUser = onlineUsers.get(userId);
+    if (onlineUser) return onlineUser.username;
+    
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    return dbUser ? dbUser.username : fallback;
+};
 
 // 1. Arkadaş Ekleme İsteği
 export const sendFriendRequest = async (req: FastifyRequest, reply: FastifyReply) => {
@@ -12,23 +21,23 @@ export const sendFriendRequest = async (req: FastifyRequest, reply: FastifyReply
 
     if (user.id === Number(receiverId)) return reply.code(400).send({ message: "Kendini ekleyemezsin!" });
 
+    const currentName = await getLatestUsername(user.id, user.username);
+
     // Karşı taraftan bize gelen bekleyen bir istek var mı kontrol et
     const reversePending = await prisma.friendship.findFirst({
         where: { senderId: Number(receiverId), receiverId: user.id, status: "PENDING" }
     });
 
     if (reversePending) {
-        // Karşılıklı istek! Arkadaşlığı otomatik kabul et.
         await prisma.friendship.update({
             where: { id: reversePending.id },
             data: { status: "ACCEPTED" }
         });
 
-        // Socket bildirimi: SADECE KARŞI TARAFA GÖNDER (Çünkü biz zaten API yanıtıyla Modal göreceğiz)
         const io = (req.server as any).io;
         const targetSocketId = getSocketId(Number(receiverId));
         const mySocketId = getSocketId(user.id);
-        if (targetSocketId) io.to(targetSocketId).emit('friend_accepted', { accepterId: user.id, accepterName: user.username, isMutual: true });
+        if (targetSocketId) io.to(targetSocketId).emit('friend_accepted', { accepterId: user.id, accepterName: currentName, isMutual: true });
         if (targetSocketId) io.to(targetSocketId).emit('friend_list_update');
         if (mySocketId) io.to(mySocketId).emit('friend_list_update');
 
@@ -52,7 +61,6 @@ export const sendFriendRequest = async (req: FastifyRequest, reply: FastifyReply
         data: { senderId: user.id, receiverId: Number(receiverId), status: "PENDING" }
     });
 
-    // --- SOCKET BİLDİRİMİ ---
     const io = (req.server as any).io;
     const targetSocketId = getSocketId(Number(receiverId));
     const mySocketId = getSocketId(user.id);
@@ -60,7 +68,7 @@ export const sendFriendRequest = async (req: FastifyRequest, reply: FastifyReply
     if (targetSocketId) {
         io.to(targetSocketId).emit('friend_request', {
             senderId: user.id,
-            senderName: user.username 
+            senderName: currentName 
         });
     }
     if (mySocketId) io.to(mySocketId).emit('friend_list_update');
@@ -78,7 +86,7 @@ export const acceptFriendRequest = async (req: FastifyRequest, reply: FastifyRep
         data: { status: "ACCEPTED" }
     });
 
-    // --- SOCKET BİLDİRİMİ ---
+    const currentName = await getLatestUsername(user.id, user.username);
     const io = (req.server as any).io;
     const targetSocketId = getSocketId(Number(senderId));
     const mySocketId = getSocketId(user.id);
@@ -86,7 +94,7 @@ export const acceptFriendRequest = async (req: FastifyRequest, reply: FastifyRep
     if (targetSocketId) {
         io.to(targetSocketId).emit('friend_accepted', {
             accepterId: user.id,
-            accepterName: user.username,
+            accepterName: currentName,
             isMutual: false
         });
         io.to(targetSocketId).emit('friend_list_update');
@@ -101,7 +109,6 @@ export const removeFriend = async (req: FastifyRequest, reply: FastifyReply) => 
     const user = req.user as UserPayload;
     const { targetId } = req.body as { targetId: number }; 
 
-    // Önce kaydı bulalım ki durumunu (PENDING mi ACCEPTED mı) görelim
     const existing = await prisma.friendship.findFirst({
         where: {
             OR: [
@@ -119,21 +126,18 @@ export const removeFriend = async (req: FastifyRequest, reply: FastifyReply) => 
         where: { id: existing.id }
     });
 
-    // --- SOCKET BİLDİRİMİ ---
+    const currentName = await getLatestUsername(user.id, user.username);
     const io = (req.server as any).io;
     const targetSocketId = getSocketId(Number(targetId));
     const mySocketId = getSocketId(user.id);
     
     if (targetSocketId) {
-        // Sadece bekleyen bir istek reddedildiyse veya iptal edildiyse bildirim gönder
         if (isPending) {
             const amISender = existing.senderId === user.id;
             if (amISender) {
-                // Ben göndericiyim, isteğimi iptal ediyorum
                 io.to(targetSocketId).emit('friend_request_cancelled', { senderId: user.id });
             } else {
-                // Ben alıcıyım, gelen isteği reddediyorum
-                io.to(targetSocketId).emit('friend_rejected', { rejecterId: user.id, rejecterName: user.username });
+                io.to(targetSocketId).emit('friend_rejected', { rejecterId: user.id, rejecterName: currentName });
             }
         }
         io.to(targetSocketId).emit('friend_list_update');

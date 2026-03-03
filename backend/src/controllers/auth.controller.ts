@@ -8,6 +8,7 @@ import { pipeline } from 'stream';
 import axios from 'axios';
 import qrcode from 'qrcode';
 import { prisma } from '../db'; 
+import { updateOnlineUsername, onlineUsers } from '../socket/store';
 
 const { authenticator } = require('otplib');
 authenticator.options = { window: 1 };
@@ -18,10 +19,6 @@ interface RegisterBody { Body: { email: string; username: string; password: stri
 interface LoginBody { Body: { email: string; password: string; } }
 interface Verify2FABody { Body: { userId: number; code: string; } }
 interface UserPayload { id: number; email: string; username: string; }
-
-// ... (register, login, verify2FALogin, updateAvatar, me fonksiyonları AYNI KALACAK) ...
-// (Burayı kalabalık etmemek için önceki cevaptaki kodları koruduğunu varsayıyorum.
-// Sadece login42 ve callback42'yi değiştiriyoruz)
 
 export const register = async (request: FastifyRequest<RegisterBody>, reply: FastifyReply) => {
   try {
@@ -89,9 +86,6 @@ export const me = async (request: FastifyRequest, reply: FastifyReply) => {
     } catch (error) { return reply.code(500).send({ message: 'SERVER_ERROR' }); }
 };
 
-// ----------------------------------------------------------------
-// 6. 42 AUTH (GÜNCELLENDİ)
-// ----------------------------------------------------------------
 export const login42 = async (req: FastifyRequest, reply: FastifyReply) => {
     const authorizationUrl = `https://api.intra.42.fr/oauth/authorize?client_id=${process.env.FORTYTWO_CLIENT_ID}&redirect_uri=${process.env.FORTYTWO_CALLBACK_URL}&response_type=code`;
     return reply.redirect(authorizationUrl);
@@ -114,14 +108,11 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
         headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` },
       });
       const fortyTwoUser = userResponse.data;
-      
-      // Fotoğraf URL'sini güvenli al
       const avatarUrl = fortyTwoUser.image?.link || 'default.png';
 
       let user = await prisma.user.findUnique({ where: { email: fortyTwoUser.email } });
   
       if (!user) {
-        // --- YENİ KULLANICI ---
         let newUsername = fortyTwoUser.login;
         const checkUsername = await prisma.user.findUnique({ where: { username: newUsername } });
         if (checkUsername) newUsername = `${fortyTwoUser.login}_42_${Math.floor(Math.random() * 1000)}`;
@@ -131,7 +122,7 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
             email: fortyTwoUser.email,
             username: newUsername,
             password: '', 
-            avatar: avatarUrl, // Kaydet
+            avatar: avatarUrl,
           }
         });
       }
@@ -149,7 +140,6 @@ export const callback42 = async (req: FastifyRequest<{ Querystring: { code: stri
     }
 };
 
-// ... (2FA Setup fonksiyonları aynı) ...
 export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const userPayload = req.user as UserPayload;
@@ -189,5 +179,52 @@ export const disable2FA = async (req: FastifyRequest, reply: FastifyReply) => {
         return reply.send({ message: '2FA_DISABLED_SUCCESS' });
     } catch (error) {
         return reply.status(500).send({ message: 'DISABLE_2FA_ERROR' });
+    }
+};
+
+export const updateProfile = async (req: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply) => {
+    try {
+        const userPayload = req.user as UserPayload;
+        const { username } = req.body;
+
+        if (!username || username.length < 3 || username.length > 12) {
+            return reply.status(400).send({ message: 'INVALID_USERNAME_LENGTH' });
+        }
+
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!usernameRegex.test(username)) {
+            return reply.status(400).send({ message: 'INVALID_USERNAME_CHARS' });
+        }
+
+        const existing = await prisma.user.findUnique({ where: { username } });
+        if (existing && existing.id !== userPayload.id) {
+            return reply.status(409).send({ message: 'USERNAME_TAKEN' });
+        }
+
+        await prisma.user.update({
+            where: { id: userPayload.id },
+            data: { username }
+        });
+
+        // --- SOCKET SENKRONİZASYONU ---
+        updateOnlineUsername(userPayload.id, username);
+        const io = (req.server as any).io;
+        if (io) {
+            // 1. Tüm lobiyi (online listesini) yeni isimle tekrar yayınla
+            const list = Array.from(onlineUsers.entries()).map(([id, u]: [number, any]) => ({ 
+                id, 
+                username: u.username, 
+                status: u.status 
+            }));
+            io.emit('online_users_list', list);
+            
+            // 2. Arkadaş listelerini yenilemeleri için sinyal gönder
+            io.emit('user_list_updated');
+        }
+        // ------------------------------
+
+        return reply.send({ message: 'PROFILE_UPDATED_SUCCESS' });
+    } catch (error) {
+        return reply.status(500).send({ message: 'UPDATE_PROFILE_ERROR' });
     }
 };

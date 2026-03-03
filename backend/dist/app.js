@@ -13,16 +13,24 @@ const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("@fastify/cors"));
 const swagger_1 = require("@fastify/swagger");
 const swagger_ui_1 = require("@fastify/swagger-ui");
+const socket_handler_1 = require("./socket/socket.handler");
+const tournament_route_1 = require("./routes/tournament.route");
+const friend_route_1 = require("./routes/friend.route");
 // --- SOCKET IMPORTLARI ---
 const fastify_socket_io_1 = __importDefault(require("fastify-socket.io"));
 // -------------------------
 const auth_route_1 = require("./routes/auth.route");
 const game_route_1 = require("./routes/game.route");
-// -------------------------------------
-const server = (0, fastify_1.default)();
-// 1. JWT, Cookie, Multipart, Static, Swagger
+// --- DÜZELTME BURADA: LOGGER'I AÇIYORUZ ---
+const server = (0, fastify_1.default)({
+    logger: true
+});
+// ------------------------------------------
+// 1. Eklentiler
 server.register(cors_1.default, {
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    // DİKKAT 1: Nginx ve farklı IP'ler için origin'i dinamik (true) yaptık.
+    // Bu sayede tarayıcı hangi IP'den gelirse gelsin CORS hatası vermeyecek.
+    origin: true,
     credentials: true
 });
 server.register(jwt_1.default, { secret: 'supersecret' });
@@ -39,16 +47,16 @@ server.register(swagger_1.fastifySwagger, {
     }
 });
 server.register(swagger_ui_1.fastifySwaggerUi, { routePrefix: '/docs' });
-// --- 2. SOCKET.IO AYARLARI ---
+// 2. Socket.io
 server.register(fastify_socket_io_1.default, {
     cors: {
-        origin: "http://localhost:5173",
+        // DİKKAT 2: Socket.io CORS ayarını da dinamik yaptık.
+        origin: true,
         methods: ["GET", "POST"],
         credentials: true
     }
 });
-// --- 3. AUTHENTICATE DECORATOR (JWT KONTROLÜ) ---
-// Bu kısım olmazsa 'server.authenticate' fonksiyonu çalışmaz.
+// 3. Authenticate Decorator
 server.decorate("authenticate", async (request, reply) => {
     try {
         await request.jwtVerify();
@@ -57,36 +65,30 @@ server.decorate("authenticate", async (request, reply) => {
         reply.send(err);
     }
 });
-// ------------------------------------------------
 // 4. Rotalar
 server.register(auth_route_1.authRoutes, { prefix: '/auth' });
 server.register(game_route_1.gameRoutes, { prefix: '/game' });
-// --- 5. SOCKET BAĞLANTI DİNLEYİCİSİ ---
+server.register(tournament_route_1.tournamentRoutes, { prefix: '/tournament' });
+server.register(friend_route_1.friendRoutes, { prefix: '/friends' });
+// --- YENİ: ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
+server.get('/', (req, reply) => {
+    return reply.redirect('/docs');
+});
+// 5. Socket Logic
 server.ready(err => {
     if (err)
         throw err;
-    // (server as any).io diyerek TS kontrolünü aşıyoruz.
-    server.io.on('connection', (socket) => {
-        console.log('🔌 SOCKET: Bir kullanıcı bağlandı! ID:', socket.id);
-        // Bağlantı koptuğunda
-        socket.on('disconnect', () => {
-            console.log('❌ SOCKET: Kullanıcı ayrıldı. ID:', socket.id);
-        });
-        // Test Ping'i
-        socket.on('ping', () => {
-            console.log(`📡 Frontend (ID: ${socket.id}) PING attı!`);
-            socket.emit('pong', { message: 'Backend: PONG! Bağlantı süper.' });
-        });
-    });
+    (0, socket_handler_1.handleSocket)(server);
 });
-// ----------------------------------------
 const start = async () => {
     try {
+        // 0.0.0.0 Docker için çok önemli (Bu zaten doğruydu, dokunmadık)
         await server.listen({ port: 3000, host: '0.0.0.0' });
         console.log('Sunucu 3000 portunda çalışıyor 🚀');
     }
     catch (err) {
         server.log.error(err);
+        console.error("KRİTİK HATA:", err);
         process.exit(1);
     }
 };

@@ -148,6 +148,22 @@ export const turnOff2FAReq = async () => {
   return data;
 };
 
+// Profil Güncelleme (Sadece Username)
+export const updateProfileReq = async (username: string) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/auth/profile/update`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ username })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Profil güncellenemedi');
+    return data;
+};
+
 // Login olduktan sonraki 2FA doğrulama isteği
 export const verify2FALoginReq = async (userId: number, code: string) => {
   const response = await fetch(`${API_URL}/auth/2fa/verify`, {

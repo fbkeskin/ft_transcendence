@@ -1,6 +1,6 @@
 // src/routes/auth.route.ts
 import { FastifyInstance } from 'fastify';
-import { register, login, me, updateAvatar, login42, callback42, generate2FA, turnOn2FA, disable2FA, verify2FALogin } from '../controllers/auth.controller';
+import { register, login, me, updateAvatar, login42, callback42, generate2FA, turnOn2FA, disable2FA, updateProfile, verify2FALogin } from '../controllers/auth.controller';
 
 export async function authRoutes(server: FastifyInstance) {
   
@@ -82,6 +82,19 @@ export async function authRoutes(server: FastifyInstance) {
     onRequest: [server.authenticate],
     schema: { tags: ['Auth'], security: [{ apiKey: [] }] }
   }, disable2FA);
+
+  // PROFİL GÜNCELLEME
+  server.patch('/profile/update', {
+    onRequest: [server.authenticate],
+    schema: {
+        tags: ['Auth'],
+        security: [{ apiKey: [] }],
+        body: {
+            type: 'object',
+            properties: { username: { type: 'string' } }
+        }
+    }
+  }, updateProfile);
   
   // 5. 2FA VERIFY (Login olurken)
   server.post('/2fa/verify', {

@@ -1,5 +1,5 @@
 // frontend/src/pages/Profile.ts
-import { getProfileReq, uploadAvatarReq, generate2FAReq, turnOn2FAReq, turnOff2FAReq } from '../services/auth.service';
+import { getProfileReq, uploadAvatarReq, generate2FAReq, turnOn2FAReq, turnOff2FAReq, updateProfileReq } from '../services/auth.service';
 import { navigate } from '../router';
 import { getAvatarUrl } from '../utils/imageUrl';
 import { lang } from '../services/language.service';
@@ -31,11 +31,16 @@ export const Profile = {
                 <div class="flex-1 w-full space-y-4">
                     <div>
                         <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">${lang.t('prof_display_name')}</label>
-                        <input type="text" id="display-name" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
+                        <div class="flex gap-2">
+                            <input type="text" id="display-name" class="flex-1 bg-slate-900 p-2 rounded border border-slate-700 text-white focus:border-indigo-500 outline-none transition">
+                            <button id="btn-update-profile" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded text-xs font-bold transition">
+                                ${lang.t('btn_update') || 'GÜNCELLE'}
+                            </button>
+                        </div>
                     </div> 
                     <div>
                         <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest">${lang.t('prof_email')}</label>
-                        <input type="text" id="email-display" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-400 cursor-not-allowed">
+                        <input type="text" id="email-display" disabled class="w-full bg-slate-900/50 p-2 rounded border border-slate-700 text-slate-500 cursor-not-allowed">
                     </div>
                 </div>
             </div>
@@ -88,16 +93,12 @@ export const Profile = {
   `,
 
   init: async () => {
-    // DOM Elementlerini Seç
     const avatarImg = document.getElementById('avatar-preview') as HTMLImageElement;
     const nameInput = document.getElementById('display-name') as HTMLInputElement;
     const emailInput = document.getElementById('email-display') as HTMLInputElement;
     const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
-    
-    // YENİ: Avatar label elementini seç
     const avatarLabel = document.getElementById('avatar-label');
     
-    // 2FA Elementleri
     const statusOnDiv = document.getElementById('2fa-status-on');
     const setupAreaDiv = document.getElementById('2fa-setup-area');
     const btnEnable = document.getElementById('btn-enable-2fa') as HTMLButtonElement;
@@ -106,12 +107,10 @@ export const Profile = {
     const input2fa = document.getElementById('2fa-input') as HTMLInputElement;
     const btnVerify = document.getElementById('btn-verify-2fa');
     const btnDisable = document.getElementById('btn-disable-2fa');
+    const btnUpdateProfile = document.getElementById('btn-update-profile');
 
     try {
-        // 1. Kullanıcı Verilerini Çek
         const user = await getProfileReq();
-        
-        // Formları Doldur
         nameInput.value = user.username;
         emailInput.value = user.email;
         const finalUrl = getAvatarUrl(user.avatar);
@@ -119,13 +118,10 @@ export const Profile = {
             ? finalUrl 
             : `${finalUrl}?t=${new Date().getTime()}`;
 
-        // --- YENİ: 42 Kullanıcısı ise Avatar Butonunu Gizle ---
         if (user.avatar && user.avatar.startsWith('http')) {
             avatarLabel?.classList.add('hidden');
         }
-        // ------------------------------------------------------
 
-        // 2. 2FA Durumunu Kontrol Et
         if (user.isTwoFactorEnabled) {
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
@@ -138,8 +134,6 @@ export const Profile = {
         navigate('/login');
         return;
     }
-
-    // --- BUTTON EVENTLERİ ---
 
     // A) Avatar Yükleme
     fileInput?.addEventListener('change', async () => {
@@ -168,14 +162,11 @@ export const Profile = {
     btnVerify?.addEventListener('click', async () => {
         const code = input2fa.value;
         if (!code) return Modal.alert(lang.t('common_warning'), lang.t('prof_code_missing'));
-
         try {
             await turnOn2FAReq(code);
             await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_success'));
-            
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
-            
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message)); 
         }
@@ -188,18 +179,35 @@ export const Profile = {
             try {
                 await turnOff2FAReq();
                 await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_disabled_msg'));
-                
-                // UI Güncelle
                 statusOnDiv?.classList.add('hidden');
                 setupAreaDiv?.classList.remove('hidden');
-                // Formu sıfırla (eğer QR açıksa)
                 qrContainer?.classList.add('hidden');
                 btnEnable?.classList.remove('hidden');
-                input2fa.value = ''; // Kodu temizle
-                
+                input2fa.value = '';
             } catch (err: any) {
                 await Modal.alert(lang.t('common_error'), lang.t(err.message));
             }
+        }
+    });
+
+    // E) Profil Bilgisi Güncelleme (Username)
+    btnUpdateProfile?.addEventListener('click', async () => {
+        const newName = nameInput.value.trim();
+        if (!newName) return;
+        
+        try {
+            await updateProfileReq(newName);
+            
+            // LocalStorage'daki user bilgisini tazeleyelim
+            const updatedUser = await getProfileReq();
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            // NAVIGATE ile sayfayı refresh ederek Navbar'ı da güncelliyoruz
+            navigate('/profile'); 
+
+            await Modal.alert(lang.t('common_success'), lang.t('PROFILE_UPDATED_SUCCESS'));
+        } catch (err: any) {
+            await Modal.alert(lang.t('common_error'), lang.t(err.message));
         }
     });
 

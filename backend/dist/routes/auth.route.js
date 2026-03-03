@@ -4,11 +4,10 @@ exports.authRoutes = authRoutes;
 const auth_controller_1 = require("../controllers/auth.controller");
 async function authRoutes(server) {
     // 1. REGISTER (Kayıt Ol)
-    // Swagger'a diyoruz ki: "Bana email, username ve password lazım."
     server.post('/register', {
         schema: {
             description: 'Yeni kullanıcı kaydı oluşturur',
-            tags: ['Auth'], // Swagger'da "Auth" başlığı altında toplar
+            tags: ['Auth'],
             body: {
                 type: 'object',
                 required: ['email', 'username', 'password'],
@@ -21,7 +20,6 @@ async function authRoutes(server) {
         }
     }, auth_controller_1.register);
     // 2. LOGIN (Giriş Yap)
-    // Swagger'a diyoruz ki: "Bana email ve password lazım."
     server.post('/login', {
         schema: {
             description: 'Kullanıcı girişi yapar ve Token döner',
@@ -36,13 +34,13 @@ async function authRoutes(server) {
             }
         }
     }, auth_controller_1.login);
-    // 3. ME (Profilim) - Body gerekmez, sadece Header(Token) gerekir.
+    // 3. ME (Profilim)
     server.get('/me', {
         onRequest: [server.authenticate],
         schema: {
             description: 'Giriş yapmış kullanıcının bilgilerini getirir',
             tags: ['Auth'],
-            security: [{ apiKey: [] }] // Swagger'da kilit simgesi ister
+            security: [{ apiKey: [] }]
         }
     }, auth_controller_1.me);
     // 4. AVATAR YÜKLEME
@@ -72,6 +70,22 @@ async function authRoutes(server) {
             }
         }
     }, auth_controller_1.turnOn2FA);
+    server.post('/2fa/disable', {
+        onRequest: [server.authenticate],
+        schema: { tags: ['Auth'], security: [{ apiKey: [] }] }
+    }, auth_controller_1.disable2FA);
+    // PROFİL GÜNCELLEME
+    server.patch('/profile/update', {
+        onRequest: [server.authenticate],
+        schema: {
+            tags: ['Auth'],
+            security: [{ apiKey: [] }],
+            body: {
+                type: 'object',
+                properties: { username: { type: 'string' } }
+            }
+        }
+    }, auth_controller_1.updateProfile);
     // 5. 2FA VERIFY (Login olurken)
     server.post('/2fa/verify', {
         schema: {
