@@ -1,15 +1,14 @@
 // src/routes/auth.route.ts
 import { FastifyInstance } from 'fastify';
-import { register, login, me, updateAvatar, login42, callback42, generate2FA, turnOn2FA, verify2FALogin } from '../controllers/auth.controller';
+import { register, login, me, updateAvatar, login42, callback42, generate2FA, turnOn2FA, disable2FA, verify2FALogin } from '../controllers/auth.controller';
 
 export async function authRoutes(server: FastifyInstance) {
   
   // 1. REGISTER (Kayıt Ol)
-  // Swagger'a diyoruz ki: "Bana email, username ve password lazım."
   server.post('/register', {
     schema: {
       description: 'Yeni kullanıcı kaydı oluşturur',
-      tags: ['Auth'], // Swagger'da "Auth" başlığı altında toplar
+      tags: ['Auth'],
       body: {
         type: 'object',
         required: ['email', 'username', 'password'],
@@ -23,7 +22,6 @@ export async function authRoutes(server: FastifyInstance) {
   }, register);
 
   // 2. LOGIN (Giriş Yap)
-  // Swagger'a diyoruz ki: "Bana email ve password lazım."
   server.post('/login', {
     schema: {
       description: 'Kullanıcı girişi yapar ve Token döner',
@@ -39,13 +37,13 @@ export async function authRoutes(server: FastifyInstance) {
     }
   }, login);
 
-  // 3. ME (Profilim) - Body gerekmez, sadece Header(Token) gerekir.
+  // 3. ME (Profilim)
   server.get('/me', { 
     onRequest: [server.authenticate],
     schema: {
         description: 'Giriş yapmış kullanıcının bilgilerini getirir',
         tags: ['Auth'],
-        security: [{ apiKey: [] }] // Swagger'da kilit simgesi ister
+        security: [{ apiKey: [] }]
     }
   }, me);
 
@@ -79,6 +77,11 @@ export async function authRoutes(server: FastifyInstance) {
         }
     }
   }, turnOn2FA);
+
+  server.post('/2fa/disable', {
+    onRequest: [server.authenticate],
+    schema: { tags: ['Auth'], security: [{ apiKey: [] }] }
+  }, disable2FA);
   
   // 5. 2FA VERIFY (Login olurken)
   server.post('/2fa/verify', {

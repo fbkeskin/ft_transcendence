@@ -136,13 +136,16 @@ export const turnOn2FAReq = async (code: string) => {
   return data;
 };
 
-// Opsiyonel: 2FA Kapatma
+// 2FA Kapatma
 export const turnOff2FAReq = async () => {
   const token = localStorage.getItem('token');
-  await fetch(`${API_URL}/auth/2fa/turn-off`, {
+  const response = await fetch(`${API_URL}/auth/2fa/disable`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` }
   });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || '2FA kapatılamadı');
+  return data;
 };
 
 // Login olduktan sonraki 2FA doğrulama isteği

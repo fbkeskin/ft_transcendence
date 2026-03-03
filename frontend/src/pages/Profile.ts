@@ -1,5 +1,5 @@
 // frontend/src/pages/Profile.ts
-import { getProfileReq, uploadAvatarReq, generate2FAReq, turnOn2FAReq } from '../services/auth.service';
+import { getProfileReq, uploadAvatarReq, generate2FAReq, turnOn2FAReq, turnOff2FAReq } from '../services/auth.service';
 import { navigate } from '../router';
 import { getAvatarUrl } from '../utils/imageUrl';
 import { lang } from '../services/language.service';
@@ -44,12 +44,17 @@ export const Profile = {
                 <h3 class="text-xl font-bold text-white mb-2">${lang.t('prof_2fa_title')}</h3>
                 <p class="text-slate-400 text-sm mb-4">${lang.t('prof_2fa_desc')}</p>
 
-                <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex items-center gap-3">
-                    <span class="text-2xl">🛡️</span>
-                    <div>
-                        <p class="font-bold">${lang.t('prof_2fa_active')}</p>
-                        <p class="text-xs opacity-80">${lang.t('prof_2fa_active_desc')}</p>
+                <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🛡️</span>
+                        <div>
+                            <p class="font-bold">${lang.t('prof_2fa_active')}</p>
+                            <p class="text-xs opacity-80">${lang.t('prof_2fa_active_desc')}</p>
+                        </div>
                     </div>
+                    <button id="btn-disable-2fa" class="mt-2 text-xs text-red-400 hover:text-red-300 transition underline w-fit">
+                        ${lang.t('prof_2fa_disable_btn')}
+                    </button>
                 </div>
 
                 <div id="2fa-setup-area">
@@ -95,11 +100,12 @@ export const Profile = {
     // 2FA Elementleri
     const statusOnDiv = document.getElementById('2fa-status-on');
     const setupAreaDiv = document.getElementById('2fa-setup-area');
-    const btnEnable = document.getElementById('btn-enable-2fa');
+    const btnEnable = document.getElementById('btn-enable-2fa') as HTMLButtonElement;
     const qrContainer = document.getElementById('qr-container');
     const qrImage = document.getElementById('qr-image') as HTMLImageElement;
     const input2fa = document.getElementById('2fa-input') as HTMLInputElement;
     const btnVerify = document.getElementById('btn-verify-2fa');
+    const btnDisable = document.getElementById('btn-disable-2fa');
 
     try {
         // 1. Kullanıcı Verilerini Çek
@@ -172,6 +178,28 @@ export const Profile = {
             
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message)); 
+        }
+    });
+
+    // D) 2FA Kapatma
+    btnDisable?.addEventListener('click', async () => {
+        const confirm = await Modal.confirm(lang.t('common_warning'), lang.t('prof_2fa_disable_confirm'));
+        if (confirm) {
+            try {
+                await turnOff2FAReq();
+                await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_disabled_msg'));
+                
+                // UI Güncelle
+                statusOnDiv?.classList.add('hidden');
+                setupAreaDiv?.classList.remove('hidden');
+                // Formu sıfırla (eğer QR açıksa)
+                qrContainer?.classList.add('hidden');
+                btnEnable?.classList.remove('hidden');
+                input2fa.value = ''; // Kodu temizle
+                
+            } catch (err: any) {
+                await Modal.alert(lang.t('common_error'), lang.t(err.message));
+            }
         }
     });
 

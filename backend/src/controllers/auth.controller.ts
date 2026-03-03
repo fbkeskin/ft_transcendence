@@ -178,3 +178,16 @@ export const turnOn2FA = async (req: FastifyRequest<{ Body: { code: string } }>,
       return reply.send({ message: '2FA_ENABLED_SUCCESS' });
     } catch (error) { return reply.status(400).send({ message: 'INVALID_CODE_FORMAT' }); }
 };
+
+export const disable2FA = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const userPayload = req.user as UserPayload;
+        await prisma.user.update({
+            where: { id: userPayload.id },
+            data: { isTwoFactorEnabled: false, twoFactorSecret: null }
+        });
+        return reply.send({ message: '2FA_DISABLED_SUCCESS' });
+    } catch (error) {
+        return reply.status(500).send({ message: 'DISABLE_2FA_ERROR' });
+    }
+};
