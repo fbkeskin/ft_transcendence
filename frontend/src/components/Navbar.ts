@@ -1,6 +1,7 @@
 // frontend/src/components/Navbar.ts
 import { lang } from '../services/language.service';
 import { navigate } from '../router';
+import { socketService } from '../services/socket.service';
 
 export const Navbar = {
     render: () => {
@@ -70,6 +71,9 @@ export const Navbar = {
       const logoutBtn = document.getElementById('nav-logout');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
+          // --- ÖNEMLİ: Çıkış yaparken socket bağlantısını kes ---
+          socketService.disconnect();
+          // -----------------------------------------------------
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           navigate('/login');
@@ -81,7 +85,6 @@ export const Navbar = {
         langSelect.addEventListener('change', (e: Event) => {
             const target = e.target as HTMLSelectElement;
             lang.setLanguage(target.value);
-            // Sayfayı yenilemek yerine aynı adrese tekrar navigate yapıyoruz
             navigate(window.location.pathname);
         });
       }
