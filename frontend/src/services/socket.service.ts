@@ -16,7 +16,10 @@ class SocketService {
   public currentOpponentName: string = "Rakip";
   public currentOpponentId: number = 0;
   
-  // DAVET LİSTESİ
+  // GLOBAL DAVET HAFIZASI
+  public sentInvitesLocal = new Set<number>();
+  
+  // DAVET LİSTESİ (Gelenler)
   private pendingInvites: { senderId: number, senderName: string, timestamp: number }[] = [];
 
   private onlineUsers: Map<number, string> = new Map();

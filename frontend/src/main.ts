@@ -31,26 +31,50 @@ socketService.onIncomingInvite(async (data) => {
     }
 });
 
+import { sentRequestsLocal } from './services/friend.service';
+
+// ... (other imports)
+
 socketService.onInviteRejected((data) => {
+    // Hafızayı temizle (Hangi sayfada olursak olalım)
+    socketService.sentInvitesLocal.delete(data.rejecterId || data.senderId); // İptal eden/edilen
+    
     Modal.closeAll();
     Modal.alert(
-        lang.t('dash_invite_rejected_title'), 
-        `${escapeHTML(data.rejecterName)} ${lang.t('dash_invite_rejected_desc')}`
+        lang.t('common_info'),
+        `<strong>${escapeHTML(data.rejecterName)}</strong> ${lang.t('dash_invite_rejected')}`
     );
 });
 
 // YENİ: Arkadaşlık Kabul Bildirimi
 socketService.subscribeToEvent('friend_accepted', (data: any) => {
+    // GLOBAL TEMİZLİK
+    sentRequestsLocal.delete(data.accepterId);
+
     const msg = data.isMutual 
         ? lang.t('FRIEND_ACCEPTED_MUTUAL') 
-        : lang.t('friend_accepted_standard'); 
+        : `<strong>${escapeHTML(data.accepterName)}</strong> ${lang.t('friend_accepted_standard')}`; 
     
-    Modal.alert(lang.t('common_info'), `<strong>${escapeHTML(data.accepterName)}</strong> ${msg}`);
+    Modal.alert(lang.t('common_info'), msg);
 });
 
 // YENİ: Arkadaşlık Red Bildirimi
 socketService.subscribeToEvent('friend_rejected', (data: any) => {
+    // GLOBAL TEMİZLİK
+    sentRequestsLocal.delete(data.rejecterId);
+
     Modal.alert(lang.t('common_info'), `<strong>${escapeHTML(data.rejecterName)}</strong> ${lang.t('friend_rejected_standard')}`);
+});
+
+// YENİ: İstek İptal Bildirimi
+socketService.subscribeToEvent('friend_request_cancelled', (data: any) => {
+    sentRequestsLocal.delete(data.senderId);
+});
+
+// OYUN BAŞLADIĞINDA TÜM HAFIZAYI SIFIRLA
+socketService.onGameStart(() => {
+    socketService.sentInvitesLocal.clear();
+    sentRequestsLocal.clear();
 });
 
 // YENİ: Maç Hazırlık Handshake

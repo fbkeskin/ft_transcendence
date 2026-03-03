@@ -1,16 +1,15 @@
 // frontend/src/pages/Dashboard.ts
 import { getProfileReq, uploadAvatarReq } from '../services/auth.service';
 import { getTournamentHistoryReq } from '../services/tournament.service';
-import { getFriendsReq, getPendingReq, sendFriendReq, acceptFriendReq, removeFriendReq } from '../services/friend.service';
+import { getFriendsReq, getPendingReq, sendFriendReq, acceptFriendReq, removeFriendReq, sentRequestsLocal } from '../services/friend.service';
 import { navigate } from '../router';
 import { lang } from '../services/language.service';
 import { Modal } from '../utils/Modal';
 import { socketService } from '../services/socket.service';
 import { escapeHTML } from '../utils/escape.ts';
 
-// MODÜL SEVİYESİNDE TANIM (Dil değişse bile bu hafıza silinmez)
-const sentInvitesLocal = new Set<number>();
-const sentRequestsLocal = new Set<number>();
+// GLOBAL HAFIZALARI SERVİSLERDEN ALIYORUZ
+const sentInvitesLocal = socketService.sentInvitesLocal;
 
 export const Dashboard = {
   render: () => `
@@ -253,6 +252,13 @@ export const Dashboard = {
             const listContainer = document.getElementById('online-users-list');
             if (!listContainer) return;
             const onlineList = socketService.getOnlineUsers().filter(u => u.id !== user.id);
+            
+            // --- OTOMATİK TEMİZLİK: Çevrimdışı olanları hafızadan sil ---
+            const onlineIds = new Set(onlineList.map(u => u.id));
+            sentRequestsLocal.forEach(id => { if (!onlineIds.has(id)) sentRequestsLocal.delete(id); });
+            sentInvitesLocal.forEach(id => { if (!onlineIds.has(id)) sentInvitesLocal.delete(id); });
+            // ----------------------------------------------------------
+
             if (onlineList.length === 0) { listContainer.innerHTML = `<p class="text-gray-500 text-xs text-center py-2">${lang.t('dash_no_user')}</p>`; return; }
             listContainer.innerHTML = onlineList.map(u => {
                 const isFriend = friends.some(f => f.id === u.id);
@@ -304,6 +310,8 @@ export const Dashboard = {
         pageUnsubscribes.push(socketService.onInviteRejected(() => { 
             sentInvitesLocal.clear(); 
             renderLobby(); 
+            // Modal uyarısını main.ts (global) hallediyor, 
+            // Burada sadece arayüzü güncelliyoruz ki buton açılsın.
         }));
 
         pageUnsubscribes.push(socketService.onMatchReadyCheck(() => {
@@ -330,11 +338,20 @@ export const Dashboard = {
             const id = Number(target.getAttribute('data-id')); 
             socketService.respondToInvite(id, true); 
             socketService.removeInvite(id); 
+            // Kabul ettiysek hafızayı temizle ki butonumuz kilitli kalmasın (eğer karşılıklı davet vardıysa)
+            sentInvitesLocal.delete(id);
+            renderLobby();
         }
         if (target.classList.contains('reject-invite-btn')) { 
             const id = Number(target.getAttribute('data-id')); 
             socketService.respondToInvite(id, false); 
             socketService.removeInvite(id); 
+            // --- DÜZELTME: Karşılıklı davet senaryosu ---
+            // Birinden gelen daveti reddediyorsak, bizim ona attığımız daveti de iptal edelim.
+            if (sentInvitesLocal.has(id)) {
+                sentInvitesLocal.delete(id);
+                renderLobby();
+            }
         }
         if (target.classList.contains('add-friend-btn')) {
             const id = Number(target.getAttribute('data-id')); 
