@@ -61,7 +61,7 @@ export const Dashboard = {
                     </button>
                     <button id="tab-invites" class="flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition relative">
                         ${lang.t('dash_tab_invites') || 'İSTEKLER'}
-                        <span id="invite-req-badge" class="hidden absolute top-0 right-2 w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                        <span id="invite-req-badge" class="hidden absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                     </button>
                 </div>
 
@@ -166,6 +166,9 @@ export const Dashboard = {
             if (socketService.getPendingInvites().length > 0) inviteBadge.classList.remove('hidden');
             else inviteBadge.classList.add('hidden');
         };
+
+        // Sayfa ilk açıldığında kontrol et
+        updateBadges();
 
         tabLobby.addEventListener('click', () => {
             tabLobby.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-green-500 transition";
@@ -326,6 +329,11 @@ export const Dashboard = {
         pageUnsubscribes.push(socketService.onGameStart(() => {
             sentInvitesLocal.clear();
             renderLobby();
+        }));
+
+        pageUnsubscribes.push(socketService.onIncomingInvite(() => { 
+            renderInvites(); 
+            updateBadges(); 
         }));
 
         pageUnsubscribes.push(socketService.onInviteError((data) => { 
