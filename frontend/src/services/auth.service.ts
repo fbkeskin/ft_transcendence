@@ -91,7 +91,7 @@ export const uploadAvatarReq = async (file: File) => {
     const formData = new FormData();
     formData.append('avatar', file); 
   
-    const response = await fetch(`${API_URL}/auth/avatar`, {
+    const response = await fetch(`${window.location.origin}/auth/avatar`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}` 
