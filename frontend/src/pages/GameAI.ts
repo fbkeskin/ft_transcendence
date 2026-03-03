@@ -23,6 +23,12 @@ export const GameAI = {
       <!-- OYUN ALANI -->
       <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-indigo-900 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
 
+      <!-- MOBİL KONTROLLER -->
+      <div class="flex md:hidden gap-10 mt-6 w-full justify-center px-4">
+        <button id="touch-up" class="w-24 h-24 bg-blue-900/30 rounded-full flex items-center justify-center text-4xl border-2 border-blue-500 active:bg-blue-600 active:scale-90 transition-all select-none touch-none">🔼</button>
+        <button id="touch-down" class="w-24 h-24 bg-blue-900/30 rounded-full flex items-center justify-center text-4xl border-2 border-blue-500 active:bg-blue-600 active:scale-90 transition-all select-none touch-none">🔽</button>
+      </div>
+
       <!-- BİLGİLER -->
       <div class="mt-4 w-full max-w-[960px] grid grid-cols-3 px-10 text-slate-500 text-sm font-mono select-none items-start">
         
@@ -31,7 +37,10 @@ export const GameAI = {
              <p class="text-xs">${lang.t('game_ai_status')}: <span class="text-slate-300">${lang.t('game_ai_thinking')}</span></p>
         </div>
 
-        <div class="text-center pt-2 opacity-50">${lang.t('game_exit_esc')}</div>
+        <div class="text-center pt-2">
+             <button id="mobile-exit" class="md:hidden bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-[10px] uppercase font-bold transition-all active:scale-95 mb-1">${lang.t('game_exit_btn')}</button>
+             <p class="opacity-50 text-[10px] md:text-sm">${lang.t('game_exit_esc')}</p>
+        </div>
 
         <div class="text-right">
              <p class="text-xl text-blue-400 font-bold mb-1" id="player-name">${lang.t('game_loading')}</p>
@@ -56,30 +65,23 @@ export const GameAI = {
     const canvas = document.getElementById('pong-canvas') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d')!;
 
-    // Profil Çek
     let currentUsername = "SEN";
     try {
         const user = await getProfileReq();
         currentUsername = user.username;
         document.getElementById('player-name')!.innerText = `🔵 ${currentUsername}`;
-        
-        // Başlığı güncelle: "AI vs Kullanıcı"
         const titleEl = document.getElementById('game-title');
-        if (titleEl) {
-            titleEl.innerText = `AI VS ${currentUsername}`;
-        }
+        if (titleEl) titleEl.innerText = `AI VS ${currentUsername}`;
     } catch(e) { navigate('/login'); return; }
 
     const WIN_SCORE = 3; 
     const PADDLE_HEIGHT = 100; const PADDLE_WIDTH = 15; const BALL_SIZE = 14; 
     
     let gameRunning = true;
-    let score1 = 0; // AI (SOL)
-    let score2 = 0; // SEN (SAĞ)
-
+    let score1 = 0; let score2 = 0; 
     let aiKeys = { w: false, s: false };
     let aiInterval: any = null;
-    let animationFrameId: number; // STABILITY FIX
+    let animationFrameId: number; 
 
     const player1 = { x: 10, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#ef4444' }; // AI
     const player2 = { x: canvas.width - 10 - PADDLE_WIDTH, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#3b82f6' }; // SEN
@@ -88,34 +90,25 @@ export const GameAI = {
 
     function gameLoop() {
         if (!gameRunning) return;
-
-        // PAUSE KONTROLÜ
         if (document.querySelector('.fixed.inset-0')) {
-            draw();
-            animationFrameId = requestAnimationFrame(gameLoop);
+            draw(); animationFrameId = requestAnimationFrame(gameLoop);
             return;
         }
-
-        update(); 
-        draw(); 
-        animationFrameId = requestAnimationFrame(gameLoop); // STABILITY FIX
+        update(); draw(); 
+        animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function startAILogic() {
         aiInterval = setInterval(() => {
-            if (!gameRunning) return;
-            // PAUSE KONTROLÜ (AI için de)
-            if (document.querySelector('.fixed.inset-0')) return;
-
-            if (ball.speedX < 0) { // Top sola (AI'ya) geliyorsa
+            if (!gameRunning || document.querySelector('.fixed.inset-0')) return;
+            if (ball.speedX < 0) {
                 const distanceToPaddle = ball.x - player1.x;
                 const timeToReach = distanceToPaddle / Math.abs(ball.speedX);
                 let futureY = ball.y + (ball.speedY * timeToReach);
-
                 const boardHeight = canvas.height;
                 while (futureY < 0 || futureY > boardHeight) {
                     if (futureY < 0) futureY = -futureY; 
-                    else if (futureY > boardHeight) futureY = 2 * boardHeight - futureY; 
+                    else futureY = 2 * boardHeight - futureY; 
                 }
                 decideMovement(futureY);
             } else { decideMovement(canvas.height / 2); }
@@ -132,52 +125,38 @@ export const GameAI = {
 
     function update() {
         const paddleSpeed = 9;
-        // AI Hareketi
         if (aiKeys.w && player1.y > 0) player1.y -= paddleSpeed; 
         if (aiKeys.s && player1.y < canvas.height - PADDLE_HEIGHT) player1.y += paddleSpeed;
-
-        // SENİN Hareketin
-        if (keys['ArrowUp'] && player2.y > 0) player2.y -= paddleSpeed;
-        if (keys['ArrowDown'] && player2.y < canvas.height - PADDLE_HEIGHT) player2.y += paddleSpeed;
+        if ((keys['ArrowUp'] || keys['TouchUp']) && player2.y > 0) player2.y -= paddleSpeed;
+        if ((keys['ArrowDown'] || keys['TouchDown']) && player2.y < canvas.height - PADDLE_HEIGHT) player2.y += paddleSpeed;
 
         ball.x += ball.speedX; ball.y += ball.speedY;
-
         if (ball.y <= 0) { ball.y = 0; ball.speedY = -ball.speedY; }
         else if (ball.y + BALL_SIZE >= canvas.height) { ball.y = canvas.height - BALL_SIZE; ball.speedY = -ball.speedY; }
 
         if (checkCollision(ball, player1)) { ball.speedX = Math.abs(ball.speedX); ball.x = player1.x + PADDLE_WIDTH; increaseSpeed(); }
         if (checkCollision(ball, player2)) { ball.speedX = -Math.abs(ball.speedX); ball.x = player2.x - BALL_SIZE; increaseSpeed(); }
 
-        if (ball.x > canvas.width) { score1++; updateScore(); resetBall(); } // AI Attı
-        else if (ball.x + BALL_SIZE < 0) { score2++; updateScore(); resetBall(); } // SEN Attın
+        if (ball.x > canvas.width) { score1++; updateScore(); resetBall(); }
+        else if (ball.x + BALL_SIZE < 0) { score2++; updateScore(); resetBall(); }
 
         if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
             endGame(score1 >= WIN_SCORE ? lang.t('game_ai_name') : currentUsername);
         }
     }
 
-    // --- AI İÇİN DÜZELTİLEN ENDGAME (STABILITY FIX) ---
     async function endGame(winnerName: string) {
-        gameRunning = false;
-        clearInterval(aiInterval);
-        cancelAnimationFrame(animationFrameId); // STABILITY FIX
-        
+        gameRunning = false; clearInterval(aiInterval); cancelAnimationFrame(animationFrameId);
         const winnerText = document.getElementById('winner-text')!;
         winnerText.innerHTML = `🎉 <span class="text-yellow-400">${escapeHTML(winnerName)}</span> ${lang.t('game_winner')} 🎉`;
         document.getElementById('game-over-modal')?.classList.remove('hidden');
-
-        try {
-            // DİKKAT: score2 = SEN, score1 = AI
-            await saveGameReq(score2, score1, "[AI_PLAYER]");
-            console.log(lang.t('game_ai_saved'));
-        } catch (err) { console.error(err); }
+        try { await saveGameReq(score2, score1, "[AI_PLAYER]"); } catch (err) {}
     }
 
-    // Helperlar
     function checkCollision(b: any, p: any) { return (b.x < p.x + PADDLE_WIDTH && b.x + b.width > p.x && b.y < p.y + PADDLE_HEIGHT && b.y + b.height > p.y); }
     function increaseSpeed() { if (Math.abs(ball.speedX) < 16) { ball.speedX *= 1.05; ball.speedY *= 1.05; } }
     function draw() {
-        if(!canvas.getContext) return; // STABILITY FIX
+        if(!canvas.getContext) return;
         ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
@@ -195,18 +174,12 @@ export const GameAI = {
         document.getElementById('score-right')!.innerText = score2.toString();
     }
     
-    // --- STABILITY FIX: EVENT HANDLERS ---
     const handleKeyDown = (e: KeyboardEvent) => { 
         if(["ArrowUp", "ArrowDown", " ", "Escape"].indexOf(e.key) > -1) e.preventDefault();
-        
         if(e.key === 'Escape') { 
-            gameRunning = false;
-            cancelAnimationFrame(animationFrameId);
-            clearInterval(aiInterval);
-            navigate('/dashboard'); 
-            return;
+            gameRunning = false; cancelAnimationFrame(animationFrameId); clearInterval(aiInterval);
+            navigate('/dashboard'); return;
         }
-        
         keys[e.key] = true; 
     };
     const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
@@ -214,54 +187,37 @@ export const GameAI = {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    // --- STABILITY FIX: RESTART & EXIT ---
+    // --- MOBİL DOKUNMATİK ---
+    const btnUp = document.getElementById('touch-up');
+    const btnDown = document.getElementById('touch-down');
+    if (btnUp && btnDown) {
+        btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); keys['TouchUp'] = true; }, { passive: false });
+        btnUp.addEventListener('touchend', (e) => { e.preventDefault(); keys['TouchUp'] = false; }, { passive: false });
+        btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); keys['TouchDown'] = true; }, { passive: false });
+        btnDown.addEventListener('touchend', (e) => { e.preventDefault(); keys['TouchDown'] = false; }, { passive: false });
+    }
+
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
-
-    // YENİ: Socket durumunu meşgul yap
-    import('../services/socket.service').then(({ socketService }) => {
-        socketService.updateStatus('BUSY');
-    });
+    import('../services/socket.service').then(({ socketService }) => { socketService.updateStatus('BUSY'); });
 
     const handleRestart = () => {
-        gameRunning = false;
-        cancelAnimationFrame(animationFrameId);
-        clearInterval(aiInterval);
-        
+        gameRunning = false; cancelAnimationFrame(animationFrameId); clearInterval(aiInterval);
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
-        
         gameRunning = true; resetBall(); startAILogic(); gameLoop();
     };
-
-    const handleExit = () => {
-        gameRunning = false;
-        cancelAnimationFrame(animationFrameId);
-        clearInterval(aiInterval);
-        navigate('/dashboard');
-    };
-
     restartBtn?.addEventListener('click', handleRestart);
-    exitBtn?.addEventListener('click', handleExit);
+    exitBtn?.addEventListener('click', () => navigate('/dashboard'));
+    document.getElementById('mobile-exit')?.addEventListener('click', () => navigate('/dashboard'));
 
-    startAILogic(); 
-    gameLoop();
+    startAILogic(); gameLoop();
 
-    // --- STABILITY FIX: CLEANUP ---
     return () => {
-        gameRunning = false;
-        cancelAnimationFrame(animationFrameId);
-        clearInterval(aiInterval);
-
-        // YENİ: Durumu tekrar müsait yap
-        import('../services/socket.service').then(({ socketService }) => {
-            socketService.updateStatus('AVAILABLE');
-        });
-
+        gameRunning = false; cancelAnimationFrame(animationFrameId); clearInterval(aiInterval);
+        import('../services/socket.service').then(({ socketService }) => { socketService.updateStatus('AVAILABLE'); });
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
-        restartBtn?.removeEventListener('click', handleRestart);
-        exitBtn?.removeEventListener('click', handleExit);
     };
   }
 };

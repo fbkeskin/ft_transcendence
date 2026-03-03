@@ -31,7 +31,10 @@ export const GameOnline = {
              <p class="text-xs">${lang.t('game_control')}: <span class="text-slate-300">${lang.t('game_keys_arrow')}</span></p>
         </div>
 
-        <div class="text-center pt-2 opacity-50">ONLINE MATCH</div>
+        <div class="text-center pt-2">
+             <button id="mobile-exit" class="md:hidden bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-[10px] uppercase font-bold transition-all active:scale-95 mb-1">${lang.t('game_exit_btn')}</button>
+             <p class="opacity-50 text-[10px] md:text-sm">ONLINE MATCH</p>
+        </div>
 
         <div class="text-right">
              <p class="text-xl text-blue-400 font-bold mb-1" id="p2-name">...</p>
@@ -211,6 +214,7 @@ export const GameOnline = {
     }
 
     document.getElementById('exit-btn')?.addEventListener('click', () => { navigate('/dashboard'); });
+    document.getElementById('mobile-exit')?.addEventListener('click', () => { navigate('/dashboard'); });
 
     gameLoop();
 
