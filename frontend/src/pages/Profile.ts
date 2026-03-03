@@ -44,15 +44,15 @@ export const Profile = {
                 <h3 class="text-xl font-bold text-white mb-2">${lang.t('prof_2fa_title')}</h3>
                 <p class="text-slate-400 text-sm mb-4">${lang.t('prof_2fa_desc')}</p>
 
-                <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex flex-col gap-3">
+                <div id="2fa-status-on" class="hidden p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-400 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
-                        <span class="text-2xl">🛡️</span>
+                        <span class="text-2xl animate-pulse">🛡️</span>
                         <div>
-                            <p class="font-bold">${lang.t('prof_2fa_active')}</p>
-                            <p class="text-xs opacity-80">${lang.t('prof_2fa_active_desc')}</p>
+                            <p class="font-bold text-emerald-300">${lang.t('prof_2fa_active')}</p>
+                            <p class="text-[10px] opacity-80 uppercase tracking-tight">${lang.t('prof_2fa_active_desc')}</p>
                         </div>
                     </div>
-                    <button id="btn-disable-2fa" class="mt-2 text-xs text-red-400 hover:text-red-300 transition underline w-fit">
+                    <button id="btn-disable-2fa" class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-md transition-all duration-300 whitespace-nowrap">
                         ${lang.t('prof_2fa_disable_btn')}
                     </button>
                 </div>
