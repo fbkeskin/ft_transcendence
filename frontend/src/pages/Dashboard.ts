@@ -44,7 +44,17 @@ export const Dashboard = {
                     </div>
 
                     <h2 id="user-name" class="text-2xl font-bold mb-1">...</h2>
-                    <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full mb-6">${lang.t('dash_level')} 0</span>
+                    <div class="flex items-center gap-2 mb-6 group relative">
+                        <span id="user-level" class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full italic font-medium tracking-tight border border-indigo-700/50 shadow-inner">${lang.t('dash_level')} 0</span>
+                        <div class="w-4 h-4 bg-slate-700 text-slate-400 rounded-full flex items-center justify-center text-[10px] font-bold cursor-help hover:bg-indigo-600 hover:text-white transition shadow-sm border border-slate-600">i</div>
+                        
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 p-2 bg-slate-900 text-white text-[10px] rounded border border-indigo-500 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">
+                            <div class="font-bold text-indigo-400 mb-1 tracking-tighter uppercase">LEVEL UP ⚡</div>
+                            ${lang.t('dash_level_info')}
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-3 gap-2 w-full text-center">
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex flex-col justify-center"><span class="block text-lg font-bold text-green-400" id="user-wins">0</span><span class="text-[10px] text-gray-400 uppercase tracking-tighter">${lang.t('dash_wins')}</span></div>
                         <div class="bg-slate-900 p-2 rounded-lg border border-slate-700 flex flex-col justify-center"><span class="block text-lg font-bold text-red-400" id="user-losses">0</span><span class="text-[10px] text-gray-400 uppercase tracking-tighter">${lang.t('dash_losses')}</span></div>
