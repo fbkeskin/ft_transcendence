@@ -112,6 +112,20 @@ export const handleSocket = (server: FastifyInstance) => {
               if ((opponent as any).isReady) {
                   me.status = 'IN_GAME'; opponent.status = 'IN_GAME';
                   delete (me as any).isReady; delete (opponent as any).isReady;
+                  
+                  // Davet ilişkisine göre rolleri belirle
+                  // Eğer ben birine davet attıysam (opponentId bende setli), ben sender'ım.
+                  // Ama en temizi: invite_game sırasında zaten opponentId'ler setleniyor.
+                  // Kimin player1 olacağını daveti atan kişiye (sender) göre sabitleyellyim.
+                  
+                  // BU MANTIK: confirm_ready gönderen kişi (me) eğer daveti ALAN ise player2, ATAN ise player1 olsun.
+                  // invite_game aşamasında senderUser.opponentId = targetId yapılmıştı.
+                  
+                  // En sağlam yöntem: socket.id kontrolü yerine role bazlı emit.
+                  // Burada me ve opponent arasında hangisinin 'sender' olduğunu bulalım.
+                  // Şimdilik basitleştirelim: Waiter her zaman player1, Confirmer her zaman player2 olsun.
+                  // Bu zaten şu anki mantık, ama biz bunu sabitleyelim.
+                  
                   socket.emit('game_start', { opponent: opponent.username, role: 'player2', opponentId: data.opponentId });
                   (server as any).io.to(opponent.socketId).emit('game_start', { opponent: getMyUsername(), role: 'player1', opponentId: userId });
               } else {

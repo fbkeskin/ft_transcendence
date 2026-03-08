@@ -14,17 +14,20 @@ export const GameAI = {
         <div id="score-right">0</div>
       </div>
       <canvas id="pong-canvas" width="960" height="540" class="bg-black border-4 border-indigo-900 shadow-2xl rounded-lg cursor-none max-w-[95%] max-h-[60vh] object-contain"></canvas>
-      <div class="flex md:hidden gap-10 mt-6 w-full justify-center px-4">
+      
+      <!-- MOBİL KONTROLLER -->
+      <div id="touch-controls" class="hidden gap-10 mt-6 w-full justify-center px-4">
         <button id="touch-up" class="w-24 h-24 bg-blue-900/30 rounded-full flex items-center justify-center text-4xl border-2 border-blue-500 active:bg-blue-600 active:scale-90 transition-all select-none touch-none">🔼</button>
         <button id="touch-down" class="w-24 h-24 bg-blue-900/30 rounded-full flex items-center justify-center text-4xl border-2 border-blue-500 active:bg-blue-600 active:scale-90 transition-all select-none touch-none">🔽</button>
       </div>
+
       <div class="mt-4 w-full max-w-[960px] grid grid-cols-3 px-10 text-slate-500 text-sm font-mono select-none items-start">
         <div class="text-left">
              <p class="text-xl text-red-400 font-bold mb-1">🤖 ${lang.t('game_ai_name')}</p>
              <p class="text-xs">${lang.t('game_ai_status')}: <span class="text-slate-300">${lang.t('game_ai_thinking')}</span></p>
         </div>
         <div class="text-center pt-2">
-             <button id="mobile-exit" class="md:hidden bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-[10px] uppercase font-bold transition-all active:scale-95 mb-1">${lang.t('game_exit_btn')}</button>
+             <button id="mobile-exit" class="hidden bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1 rounded text-[10px] uppercase font-bold transition-all active:scale-95 mb-1">${lang.t('game_exit_btn')}</button>
              <p class="opacity-50 text-[10px] md:text-sm">${lang.t('game_exit_esc')}</p>
         </div>
         <div class="text-right">
@@ -55,6 +58,16 @@ export const GameAI = {
         const titleEl = document.getElementById('game-title');
         if (titleEl) titleEl.innerText = `AI VS ${currentUsername}`;
     } catch(e) { navigate('/login'); return; }
+
+    // RESPONSIVE: Dokunmatik cihazlarda her zaman göster
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const touchBox = document.getElementById('touch-controls');
+    const mobileExitBtn = document.getElementById('mobile-exit');
+    if (isTouch) {
+        touchBox?.classList.remove('hidden');
+        touchBox?.classList.add('flex');
+        mobileExitBtn?.classList.remove('hidden');
+    }
 
     const WIN_SCORE = 3; 
     const PADDLE_HEIGHT = 100; const PADDLE_WIDTH = 15; const BALL_SIZE = 14; 
@@ -98,13 +111,12 @@ export const GameAI = {
         let delta = timestamp - lastTime;
         lastTime = timestamp;
 
-        if (delta > 100) delta = tickRate; // Sekme takılmalarını önle
+        if (delta > 100) delta = tickRate;
         
         accumulator += delta;
         while (accumulator >= tickRate) {
-            update(); // SABİT ADIMLI GÜNCELLEME (Ghosting'i önleyen yer burası)
+            update();
             accumulator -= tickRate;
-            
             aiTimer += tickRate;
             if (aiTimer >= 1000) { updateAILogic(); aiTimer = 0; }
         }
@@ -114,7 +126,6 @@ export const GameAI = {
     }
 
     function update() {
-        // AI Hareketi
         const p1Center = player1.y + PADDLE_HEIGHT / 2;
         const p1Speed = 8;
         if (Math.abs(p1Center - aiDecisionY) > p1Speed) {
@@ -122,12 +133,13 @@ export const GameAI = {
             else if (p1Center < aiDecisionY && player1.y < canvas.height - PADDLE_HEIGHT) player1.y += p1Speed;
         }
 
-        // Oyuncu Hareketi
         const p2Speed = 9;
-        if ((keys['ArrowUp'] || keys['TouchUp']) && player2.y > 0) player2.y -= p2Speed;
-        if ((keys['ArrowDown'] || keys['TouchDown']) && player2.y < canvas.height - PADDLE_HEIGHT) player2.y += p2Speed;
+        const moveUp = keys['ArrowUp'] || keys['TouchUp'];
+        const moveDown = keys['ArrowDown'] || keys['TouchDown'];
 
-        // Top Hareketi
+        if (moveUp && player2.y > 0) player2.y -= p2Speed;
+        if (moveDown && player2.y < canvas.height - PADDLE_HEIGHT) player2.y += p2Speed;
+
         ball.x += ball.speedX; ball.y += ball.speedY;
         if (ball.y <= 0 || ball.y + BALL_SIZE >= canvas.height) {
             ball.y = ball.y <= 0 ? 0 : canvas.height - BALL_SIZE;
@@ -171,17 +183,12 @@ export const GameAI = {
     function checkCollision(b: any, p: any) { return (b.x < p.x + PADDLE_WIDTH && b.x + b.width > p.x && b.y < p.y + PADDLE_HEIGHT && b.y + b.height > p.y); }
     
     function draw() {
-        // Canvas Temizliği
         ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         ctx.strokeStyle = '#374151'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]);
         ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
         ctx.setLineDash([]);
-
         ctx.fillStyle = player1.color; ctx.fillRect(player1.x, player1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
         ctx.fillStyle = player2.color; ctx.fillRect(player2.x, player2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-        
-        // YUVARLAK TOP (Eski Sorunsuz Çizim Yöntemi)
         ctx.fillStyle = ball.color;
         ctx.beginPath();
         ctx.arc(Math.floor(ball.x + BALL_SIZE/2), Math.floor(ball.y + BALL_SIZE/2), BALL_SIZE/2, 0, Math.PI * 2);
@@ -197,6 +204,16 @@ export const GameAI = {
     const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
     window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
 
+    // MOBİL DOKUNMATİK DİNLEYİCİLERİ
+    const btnUp = document.getElementById('touch-up'); 
+    const btnDown = document.getElementById('touch-down');
+    if (btnUp && btnDown) {
+        btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); keys['TouchUp'] = true; }, { passive: false });
+        btnUp.addEventListener('touchend', (e) => { e.preventDefault(); keys['TouchUp'] = false; }, { passive: false });
+        btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); keys['TouchDown'] = true; }, { passive: false });
+        btnDown.addEventListener('touchend', (e) => { e.preventDefault(); keys['TouchDown'] = false; }, { passive: false });
+    }
+
     document.getElementById('restart-btn')?.addEventListener('click', () => {
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
@@ -204,7 +221,7 @@ export const GameAI = {
         requestAnimationFrame(gameLoop);
     });
     document.getElementById('exit-btn')?.addEventListener('click', () => navigate('/dashboard'));
-    document.getElementById('mobile-exit')?.addEventListener('click', () => navigate('/dashboard'));
+    mobileExitBtn?.addEventListener('click', () => navigate('/dashboard'));
 
     updateAILogic(); 
     requestAnimationFrame(gameLoop);
