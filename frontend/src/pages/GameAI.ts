@@ -211,7 +211,10 @@ export const GameAI = {
     const handleRestart = () => {
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
-        resetBall(); gameRunning = true; gameLoop();
+        resetBall(); gameRunning = true; 
+        clearInterval(aiInterval);
+        startAILogic();
+        gameLoop();
     };
     document.getElementById('restart-btn')?.addEventListener('click', handleRestart);
     document.getElementById('exit-btn')?.addEventListener('click', () => navigate('/dashboard'));
