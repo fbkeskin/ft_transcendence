@@ -88,23 +88,42 @@ export const GameAI = {
         aiInterval = setInterval(() => {
             if (!gameRunning || document.querySelector('.fixed.inset-0')) return;
             
-            if (ball.speedX < 0) { // Top AI'ya geliyorsa tahmin yap
-                const distanceX = ball.x - player1.x;
-                const timeToReach = distanceX / Math.abs(ball.speedX);
-                let predictedY = ball.y + (ball.speedY * timeToReach);
+            const distanceX = ball.x - player1.x;
+            const tableWidth = canvas.width;
 
-                // Duvar sekmelerini hesapla
-                while (predictedY < 0 || predictedY > canvas.height) {
+            if (ball.speedX < 0) { // Top AI'ya geliyorsa
+                if (distanceX > tableWidth * 0.7) {
+                    // 1. TAKİP AŞAMASI: Top çok uzak, AI sadece topun Y eksenini kabaca izliyor
+                    aiDecisionY = ball.y + (Math.random() - 0.5) * 150;
+                } 
+                else if (distanceX > tableWidth * 0.3) {
+                    // 2. TAHMİN AŞAMASI: Top yaklaşıyor, 1 bant sekmeyi hesapla
+                    let timeToReach = distanceX / Math.abs(ball.speedX);
+                    let predictedY = ball.y + (ball.speedY * timeToReach);
+                    
+                    // Sadece 1 sekme hesapla (İnsan limiti)
                     if (predictedY < 0) predictedY = -predictedY;
-                    else predictedY = 2 * canvas.height - predictedY;
+                    else if (predictedY > canvas.height) predictedY = 2 * canvas.height - predictedY;
+                    
+                    aiDecisionY = predictedY + (Math.random() - 0.5) * 80;
                 }
-
-                // AI BECERİSİ: Hız arttıkça hata payı artar (±80 piksele kadar)
-                const errorScale = (Math.abs(ball.speedX) / START_SPEED) * 40;
-                aiDecisionY = predictedY + (Math.random() - 0.5) * errorScale;
+                else {
+                    // 3. VURUŞ AŞAMASI: Top çok yakın, net hesapla ama raketin rastgele bir yerini kullan
+                    let timeToReach = distanceX / Math.abs(ball.speedX);
+                    let finalY = ball.y + (ball.speedY * timeToReach);
+                    
+                    while (finalY < 0 || finalY > canvas.height) {
+                        if (finalY < 0) finalY = -finalY;
+                        else finalY = 2 * canvas.height - finalY;
+                    }
+                    
+                    // Raketin tam ortasını değil, farklı yerlerini hedefle (Vuruş açısı için)
+                    const paddleOffset = (Math.random() - 0.5) * PADDLE_HEIGHT * 0.9;
+                    aiDecisionY = finalY - paddleOffset;
+                }
             } else { 
-                // Top uzaklaşıyorsa merkeze dön (İnsan refleksi)
-                aiDecisionY = canvas.height / 2; 
+                // Top uzaklaşıyorsa: Gevşe ve "bekleme" pozisyonuna geç
+                aiDecisionY = canvas.height / 2 + (Math.random() - 0.5) * 200; 
             }
         }, 1000);
     }
