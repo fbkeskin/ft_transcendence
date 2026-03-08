@@ -532,6 +532,18 @@ function renderTournamentHistory(tournaments: any[], user: any) {
     else tournaments.forEach((t: any, index: number) => {
         const isChampion = t.winner === user.username;
         let statusBadge = isChampion ? `<span class="bg-yellow-500/10 text-yellow-400 px-2 py-1 rounded text-xs font-bold border border-yellow-500/20">${lang.t('dash_tour_status_win')}</span>` : `<span class="bg-slate-700 text-gray-400 px-2 py-1 rounded text-xs border border-slate-600">${lang.t('dash_tour_status_join')}</span>`;
-        tournamentBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 text-xs text-gray-400 max-w-[150px] truncate">${escapeHTML(t.player1)}, ${escapeHTML(t.player2)}...</td><td class="px-4 py-3 text-center font-bold text-indigo-300">${escapeHTML(t.winner)}</td><td class="px-4 py-3 text-center">${statusBadge}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(t.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
+        
+        const allPlayers = [t.player1, t.player2, t.player3, t.player4].map(p => escapeHTML(p)).join(', ');
+        
+        tournamentBody.innerHTML += `
+            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td>
+                <td class="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate" title="${allPlayers}">
+                    ${allPlayers}
+                </td>
+                <td class="px-4 py-3 text-center font-bold text-indigo-300">${escapeHTML(t.winner)}</td>
+                <td class="px-4 py-3 text-center">${statusBadge}</td>
+                <td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(t.createdAt).toLocaleDateString(lang.getCurrentLang())}</td>
+            </tr>`;
     });
 }
