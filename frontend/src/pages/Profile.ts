@@ -151,7 +151,7 @@ export const Profile = {
             if (saved) {
                 const { qrUrl, secret, timestamp, uid } = JSON.parse(saved);
                 const now = Date.now();
-                const isExpired = (now - timestamp) > 5 * 60 * 1000; // 5 Dakika
+                const isExpired = (now - timestamp) > 2 * 60 * 1000; // 2 Dakika
                 
                 // Sadece aynı kullanıcıya aitse ve süresi geçmediyse göster
                 if (!isExpired && uid === user.id) {
