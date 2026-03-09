@@ -140,14 +140,8 @@ export const Dashboard = {
                 ]);
                 friends = fData;
                 pendingRequests = pData;
+                updateBadges(); // Veriler yenilenince rozetleri de yenile
                 
-                // Badge Güncelleme
-                const badge = document.getElementById('friend-req-badge');
-                if (badge) {
-                    if (pendingRequests.length > 0) badge.classList.remove('hidden');
-                    else badge.classList.add('hidden');
-                }
-
                 renderTournamentStats(tData, user);
                 renderMatchHistory(user);
                 renderTournamentHistory(tData, user);
@@ -175,7 +169,13 @@ export const Dashboard = {
         if (pendingRequests.length > 0) badge.classList.remove('hidden');
 
         const updateBadges = () => {
-            if (socketService.getPendingInvites().length > 0) inviteBadge.classList.remove('hidden');
+            if (!badge || !inviteBadge) return;
+            // Arkadaşlık isteği varsa ve "Arkadaşlar" sekmesinde değilsek göster
+            if (pendingRequests.length > 0 && activeTab !== 'friends') badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+
+            // Oyun daveti varsa ve "İstekler" sekmesinde değilsek göster
+            if (socketService.getPendingInvites().length > 0 && activeTab !== 'invites') inviteBadge.classList.remove('hidden');
             else inviteBadge.classList.add('hidden');
         };
 
@@ -184,25 +184,26 @@ export const Dashboard = {
 
         tabLobby.addEventListener('click', () => {
             activeTab = 'lobby';
-            tabLobby.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-green-500 transition";
+            tabLobby.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-green-500 transition relative";
             tabFriends.className = tabInvites.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition relative";
             viewLobby.classList.remove('hidden'); viewFriends.classList.add('hidden'); viewInvites.classList.add('hidden');
+            updateBadges(); 
         });
 
         tabFriends.addEventListener('click', () => {
             activeTab = 'friends';
             tabFriends.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-pink-500 transition relative";
-            tabLobby.className = tabInvites.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition";
+            tabLobby.className = tabInvites.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition relative";
             viewFriends.classList.remove('hidden'); viewLobby.classList.add('hidden'); viewInvites.classList.add('hidden');
-            badge.classList.add('hidden'); 
+            updateBadges(); 
         });
 
         tabInvites.addEventListener('click', () => {
             activeTab = 'invites';
             tabInvites.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition relative";
-            tabLobby.className = tabFriends.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition";
+            tabLobby.className = tabFriends.className = "flex-1 py-2 text-xs font-bold text-gray-400 border-b-2 border-transparent hover:text-white transition relative";
             viewInvites.classList.remove('hidden'); viewLobby.classList.add('hidden'); viewFriends.classList.add('hidden');
-            inviteBadge.classList.add('hidden');
+            updateBadges(); 
         });
 
         // --- SAYFA YÜKLENDİĞİNDE KALDIĞI SEKMEDEN DEVAM ET ---
@@ -315,26 +316,32 @@ export const Dashboard = {
     const pageUnsubscribes: (() => void)[] = [socketUnsubscribe];
 
     if (socketService.subscribeToEvent) {
-        pageUnsubscribes.push(socketService.subscribeToEvent('friend_request', async () => { badge.classList.remove('hidden'); await refreshData(); }));
+        pageUnsubscribes.push(socketService.subscribeToEvent('friend_request', async () => { 
+            await refreshData(); 
+            updateBadges(); // Veri yenilendikten sonra rozetleri zorla güncelle
+        }));
         pageUnsubscribes.push(socketService.subscribeToEvent('friend_accepted', async (data: any) => { 
             sentRequestsLocal.delete(data.accepterId); 
             await refreshData(); 
+            updateBadges();
         }));
         pageUnsubscribes.push(socketService.subscribeToEvent('friend_list_update', async () => {
             await refreshData();
+            updateBadges();
         }));
         pageUnsubscribes.push(socketService.subscribeToEvent('friend_request_cancelled', async (data: any) => {
             sentRequestsLocal.delete(data.senderId);
             await refreshData();
+            updateBadges();
         }));
-        
+
         pageUnsubscribes.push(socketService.subscribeToEvent('friend_rejected', async (data: any) => {
             if (data.rejecterId) {
                 sentRequestsLocal.delete(data.rejecterId);
                 await refreshData();
+                updateBadges();
             }
-        }));
-        
+        }));        
         pageUnsubscribes.push(socketService.onInviteRejected(() => { 
             sentInvitesLocal.clear(); 
             renderLobby(); 
