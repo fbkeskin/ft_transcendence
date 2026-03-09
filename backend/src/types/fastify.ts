@@ -5,7 +5,6 @@ import '@fastify/multipart'; // BU SATIR ÖNEMLİ!
 declare module 'fastify' {
   interface FastifyRequest {
     jwt: any;
-    // user nesnesini de buraya ekleyelim ki request.user hata vermesin
     user: {
       id: number;
       email: string;

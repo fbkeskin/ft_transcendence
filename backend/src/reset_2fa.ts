@@ -4,8 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Veritabanındaki TÜM kullanıcıların 2FA'sını kapatır.
-  // Böylece hangisi kilitli diye aramana gerek kalmaz.
+ 
   try {
     await prisma.user.updateMany({
         data: {

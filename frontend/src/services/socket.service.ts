@@ -19,7 +19,6 @@ class SocketService {
   public sentInvitesLocal = new Set<number>();
   private pendingInvites: { senderId: number, senderName: string, timestamp: number }[] = [];
 
-  // GLOBAL HAFIZA: ID -> Tüm Kullanıcı Verisi
   private onlineUsers: Map<number, OnlineUser> = new Map();
   
   private listeners: (() => void)[] = [];

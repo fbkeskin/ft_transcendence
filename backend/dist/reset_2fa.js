@@ -4,8 +4,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 async function main() {
-    // Veritabanındaki TÜM kullanıcıların 2FA'sını kapatır.
-    // Böylece hangisi kilitli diye aramana gerek kalmaz.
     try {
         await prisma.user.updateMany({
             data: {

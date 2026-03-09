@@ -1,17 +1,4 @@
-/*
-  Warnings:
 
-  - You are about to drop the column `name` on the `Tournament` table. All the data in the column will be lost.
-  - You are about to drop the column `status` on the `Tournament` table. All the data in the column will be lost.
-  - You are about to drop the column `winnerId` on the `Tournament` table. All the data in the column will be lost.
-  - Added the required column `player1` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `player2` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `player3` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `player4` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `userId` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `winner` to the `Tournament` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- RedefineTables
 PRAGMA foreign_keys=OFF;
 CREATE TABLE "new_Tournament" (

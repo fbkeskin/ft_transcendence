@@ -101,7 +101,7 @@ export const Tournament = {
 
             // Kaydet ve Yönlendir
             localStorage.setItem('active_tournament', JSON.stringify(tournamentData));
-            navigate('/tournament/bracket'); // İşte burası senin attığın dosyaya yönlendiriyor
+            navigate('/tournament/bracket');
         });
     }
 

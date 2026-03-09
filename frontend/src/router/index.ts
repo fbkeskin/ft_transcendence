@@ -7,11 +7,10 @@ import { Home } from '../pages/Home';
 import { Navbar } from '../components/Navbar';
 import { Game } from '../pages/Game';
 import { GameAI } from '../pages/GameAI';
-import { GameOnline } from '../pages/GameOnline'; // <--- YENİ EKLENDİ
+import { GameOnline } from '../pages/GameOnline';
 import { TournamentBracket } from '../pages/TournamentBracket'; // Import
-import { Tournament } from '../pages/Tournament';          // <--- BU IMPORT EKLENDİ
+import { Tournament } from '../pages/Tournament';
 
-// Rota Tanımı: Artık sadece string değil, { render, init } objesi dönebilir
 const routes: Record<string, any> = {
   '/': Home,
   '/login': Login,
@@ -20,9 +19,9 @@ const routes: Record<string, any> = {
   '/profile': Profile,
   '/game/local': Game,
   '/game/ai': GameAI,
-  '/game/online': GameOnline, // <--- YENİ ROTAMIZ EKLENDİ
-  '/tournament/bracket': TournamentBracket, // <--- YENİ ROTA
-  '/tournament/new': Tournament,           // <--- BU SATIR EKSİKTİ, EKLENDİ!
+  '/game/online': GameOnline,
+  '/tournament/bracket': TournamentBracket, 
+  '/tournament/new': Tournament,       
   
   '/404': {
     render: () => `<h1>404</h1>`,
@@ -47,9 +46,6 @@ const render = async () => {
     // 1. AUTH GUARD: Giriş yapmamış kullanıcıyı korumalı rotalardan at
     if (protectedRoutes.some(pr => path.startsWith(pr)) && !token) {
         window.history.pushState({}, "", "/login");
-        // Recursive olmasın diye direkt devam etmeyip render'ı tekrar tetikleyebiliriz
-        // ama render() içinde olduğumuz için manuel render() çağırmak yerine 
-        // path'i güncelleyip devam etmek daha temiz.
         return render(); 
     }
 
@@ -97,7 +93,7 @@ export const initRouter = () => {
     document.addEventListener('click', e => {
       const target = e.target as HTMLElement;
       
-      // DEĞİŞİKLİK: .closest kullanarak kapsayıcı linki buluyoruz
+      // .closest kullanarak kapsayıcı linki buluyoruzz
       const link = target.matches('[data-link]') ? target : target.closest('[data-link]');
       
       if (link) {

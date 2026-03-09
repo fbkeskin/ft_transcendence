@@ -1,5 +1,4 @@
 // frontend/src/services/auth.service.ts
-// DİKKAT: Bu dosya FRONTEND klasöründe olmalı!
 
 const API_URL = ''; // Nginx Reverse Proxy nedeniyle boş bırakıldı
 

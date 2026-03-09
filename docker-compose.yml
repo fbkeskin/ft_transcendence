@@ -3,19 +3,13 @@ version: '3'
 services:
   backend:
     container_name: ft_backend_dev
-    # 1. Build Context: Dockerfile nerede?
-    # Eskiden: . (yanımdaydı)
-    # Şimdi: ./for_backend (alt klasörde)
     build: ./backend
     
     ports:
       - "3000:3000"
-      - "5555:5555"  # <--- BURAYI EKLE (Prisma Studio Portu)
+      - "5555:5555" 
     
     volumes:
-      # 2. Kod Eşleme (Mapping):
-      # Eskiden: .:/usr/src/app
-      # Şimdi: ./for_backend:/usr/src/app (Ana dizindeki for_backend klasörünü container içine at)
       - ./backend:/usr/src/app
       
       # Node modules ve Prisma ayarları
@@ -37,9 +31,6 @@ services:
     volumes:
       - ./frontend:/app             # Hot Reload için (Kod değişince tarayıcı yenilenir)
       - /app/node_modules           # Container'ın kendi modüllerini koru
-    # Frontend'in Backend'e ulaşabilmesi için bir ayar yapmamıza gerek yok
-    # çünkü tarayıcı (istemci) üzerinden konuşacaklar.
-  # --- EKLENEN YENİ SERVİS ---
   nginx:
     container_name: ft_nginx_dev
     build: ./nginx

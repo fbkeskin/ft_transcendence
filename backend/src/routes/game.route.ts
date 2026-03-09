@@ -14,7 +14,6 @@ export async function gameRoutes(server: FastifyInstance) {
                 properties: {
                     score1: { type: 'number' },
                     score2: { type: 'number' },
-                    // DÜZELTME: opponentId hem sayı (ID) hem string (GuestName) olabilir.
                     opponentId: { 
                         anyOf: [
                             { type: 'number' }, 

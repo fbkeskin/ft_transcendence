@@ -215,7 +215,7 @@ export const GameOnline = {
     const handleKeyUp = (e: KeyboardEvent) => keys[e.key] = false;
     window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
 
-    // MOBİL DOKUNMATİK DİNLEYİCİLERİ (Tekrar Eklendi)
+    // MOBİL DOKUNMATİK DİNLEYİCİLERİ
     const btnUp = document.getElementById('touch-up'); 
     const btnDown = document.getElementById('touch-down');
     

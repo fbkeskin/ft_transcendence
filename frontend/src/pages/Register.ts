@@ -94,7 +94,7 @@ export const Register = {
         return true;
     };
 
-    // --- INPUT EVENTLERI (YAZARKEN HATAYI TEMİZLE) ---
+    // --- INPUT EVENTLERI ---
     usernameInput.addEventListener('input', () => hideFieldError('username'));
     emailInput.addEventListener('input', () => hideFieldError('email'));
     passwordInput.addEventListener('input', () => hideFieldError('password'));

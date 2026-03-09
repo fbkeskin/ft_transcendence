@@ -39,9 +39,8 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
         let winnerId: number | null = null;
         
         if (s1 > s2) {
-            winnerId = player1Id; // Ben kazandım
+            winnerId = player1Id; 
         } else if (s2 > s1) {
-            // Rakip kazandı. Eğer rakip gerçek kullanıcıysa onun ID'si, değilse NULL
             winnerId = player2Id ? player2Id : null;
         }
 
@@ -57,8 +56,6 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
             }
         });
 
-        // --- 2. İSTATİSTİKLERİ GÜNCELLE (FONKSİYON) ---
-        // Kod tekrarını önlemek için updateStats fonksiyonunu kullanacağız
         
         // Player 1 (Ben) Güncellemesi
         await updatePlayerStats(player1Id, s1 > s2);
@@ -76,10 +73,8 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
     }
 };
 
-// --- YARDIMCI FONKSİYON: İSTATİSTİK GÜNCELLEME ---
 async function updatePlayerStats(userId: number, isWinner: boolean) {
     if (isWinner) {
-        // Kazandıysa: Galibiyet artır, level kontrol et
         const user = await prisma.user.update({
             where: { id: userId },
             data: { wins: { increment: 1 } }

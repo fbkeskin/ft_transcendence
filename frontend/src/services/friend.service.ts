@@ -3,7 +3,6 @@ import { fetchWrapper } from '../utils/fetchWrapper';
 
 const API_URL = '/friends';
 
-// GLOBAL HAFIZA: Sayfa değişse de hangi arkadaşlık isteklerinin yolda olduğunu unutmaz.
 export const sentRequestsLocal = new Set<number>();
 
 export const sendFriendReq = (receiverId: number) => fetchWrapper.post(`${API_URL}/add`, { receiverId });

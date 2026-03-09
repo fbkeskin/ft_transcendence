@@ -9,6 +9,6 @@ export const getAvatarUrl = (avatarPath: string | null | undefined) => {
       return avatarPath;
     }
   
-    // DÜZELTME: Nginx uyumlu olması için localhost:3000 kaldırıldı
+    //  Nginx uyumlu olması için localhost:3000 kaldırldı
     return `/uploads/${avatarPath}`;
 };

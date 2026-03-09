@@ -1,7 +1,7 @@
 // frontend/src/services/tournament.service.ts
 import { fetchWrapper } from '../utils/fetchWrapper';
 
-// DÜZELTME: Nginx uyumlu olması için localhost kısmı silindi
+// Nginx uyumlu olması için localhost kısmı silindi
 const API_URL = '/tournament';
 
 export const saveTournamentReq = async (players: string[], winner: string) => {

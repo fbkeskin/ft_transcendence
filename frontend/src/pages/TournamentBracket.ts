@@ -79,7 +79,7 @@ export const TournamentBracket = {
 
     if (startBtn) {
         startBtn.addEventListener('click', () => {
-            // Oyuna yönlendir (Fakat turnuva modu olduğunu belirtmeliyiz)
+            // Oyuna yönlendir
             // URL parametresi ile turnuva modu olduğunu iletiyoruz
             navigate('/game/local?tournament=true');
         });

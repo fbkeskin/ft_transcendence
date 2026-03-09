@@ -2,7 +2,7 @@
 import { lang } from '../services/language.service';
 
 export class Modal {
-    // Mevcut Alert (Tek butonlu)
+    // Alert (Tek butonlu)
     static alert(title: string, message: string): Promise<void> {
       return new Promise((resolve) => {
         const modal = document.createElement('div');

@@ -5,7 +5,6 @@ import { getSocketId, onlineUsers } from '../socket/store';
 
 interface UserPayload { id: number; username: string; } 
 
-// YARDIMCI: Her zaman güncel ismi getir (Socket hafızası veya Veritabanı)
 const getLatestUsername = async (userId: number, fallback: string) => {
     const onlineUser = onlineUsers.get(userId);
     if (onlineUser) return onlineUser.username;

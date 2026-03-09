@@ -9,7 +9,7 @@ interface UserPayload {
 export const createTournament = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
         const user = req.user as UserPayload;
-        const { players, winner } = req.body as any; // players: ["Ali", "Veli", ...]
+        const { players, winner } = req.body as any; 
 
         // 1. Turnuvayı Kaydet
         const tournament = await prisma.tournament.create({
@@ -24,10 +24,6 @@ export const createTournament = async (req: FastifyRequest, reply: FastifyReply)
         });
 
         console.log(`🏆 Turnuva Kaydedildi! Düzenleyen: ID ${user.id}, Şampiyon: ${winner}`);
-
-        // 2. BONUS: Eğer Şampiyon ismi, düzenleyen kişinin ismiyle aynıysa
-        // Kullanıcıya bir "Turnuva Zaferi" puanı veya başarımı eklenebilir.
-        // Şimdilik sadece kaydedip bırakıyoruz.
 
         return reply.code(201).send(tournament);
 

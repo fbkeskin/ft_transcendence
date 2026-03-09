@@ -1,11 +1,10 @@
-# Renk Kodları (Terminal çıktısı güzel görünsün diye)
 GREEN = \033[0;32m
 RED = \033[0;31m
 BLUE = \033[0;34m
 YELLOW = \033[0;33m
 RESET = \033[0m
 
-# Proje İsmi (Docker Compose servisi için genel isim)
+# Proje İsmi
 NAME = ft_transcendence
 
 # Varsayılan hedef

@@ -10,7 +10,6 @@ export interface OnlineUser {
   // Global Online Kullanıcı Listesi
   export const onlineUsers = new Map<number, OnlineUser>();
   
-  // Yardımcı: İsim güncellendiğinde Socket hafızasını da tazele
 export const updateOnlineUsername = (userId: number, newUsername: string) => {
     const user = onlineUsers.get(userId);
     if (user) {
@@ -18,7 +17,7 @@ export const updateOnlineUsername = (userId: number, newUsername: string) => {
     }
 };
 
-// Yardımcı: ID ver, Socket ID al
+//ID ver, Socket ID al
   export const getSocketId = (userId: number): string | undefined => {
 	  return onlineUsers.get(userId)?.socketId;
   };

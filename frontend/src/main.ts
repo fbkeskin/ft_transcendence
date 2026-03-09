@@ -2,7 +2,6 @@
 import './style.css';
 import { initRouter } from './router';
 import { getProfileReq } from './services/auth.service';
-// DÜZELTME: Artık Service dosyasını kullanıyoruz
 import { socketService } from './services/socket.service'; 
 
 import { navigate } from './router';
@@ -10,30 +9,22 @@ import { Modal } from './utils/Modal';
 import { lang } from './services/language.service';
 import { escapeHTML } from './utils/escape';
 
-// Router Başlat
 initRouter();
 
 // --- GLOBAL SOCKET LISTENERS ---
-// Bu dinleyiciler tüm sayfalarda (Dashboard, Game, Profile vb.) aktif olacak.
 socketService.onIncomingInvite(async (data) => {
     const currentPath = window.location.pathname;
     
-    // Eğer kullanıcı bir maçtaysa, ekranı bölme! Sadece küçük bir bilgi ver (veya verme, listede görünecek)
     if (currentPath === '/game/local' || currentPath === '/game/ai' || currentPath === '/game/online') {
         console.log("Yeni davet geldi ama maçtasın:", data.senderName);
-        // İstersen burada ekranın köşesinde 2 saniye görünüp kaybolan bir toast yapabiliriz.
-        // Ama şimdilik sadece konsola basıyorum ve kullanıcı Dashboard'a dönünce listeyi görecek.
+        
     } else {
-        // Dashboard veya başka bir sayfadaysa, bir Modal ile haber verebiliriz (ama zorunlu değil)
-        // İstek listesine düştüğü için artık confirm() açmaya gerek yok.
-        // Sadece bilgi verelim:
-        // Modal.alert(lang.t('dash_invite_received_title'), `<strong>${escapeHTML(data.senderName)}</strong> ${lang.t('dash_invite_received_desc')}`);
+    
     }
 });
 
 import { sentRequestsLocal } from './services/friend.service';
 
-// ... (other imports)
 
 socketService.onInviteRejected((data) => {
     // Hafızayı temizle (Hangi sayfada olursak olalım)
@@ -46,7 +37,7 @@ socketService.onInviteRejected((data) => {
     );
 });
 
-// YENİ: Arkadaşlık Kabul Bildirimi
+// Arkadaşlık Kabul Bildirimi
 socketService.subscribeToEvent('friend_accepted', (data: any) => {
     // GLOBAL TEMİZLİK
     sentRequestsLocal.delete(data.accepterId);
@@ -58,7 +49,7 @@ socketService.subscribeToEvent('friend_accepted', (data: any) => {
     Modal.alert(lang.t('common_info'), msg);
 });
 
-// YENİ: Arkadaşlık Red Bildirimi
+// Arkadaşlık Red Bildirimi
 socketService.subscribeToEvent('friend_rejected', (data: any) => {
     // GLOBAL TEMİZLİK
     sentRequestsLocal.delete(data.rejecterId);
@@ -66,7 +57,7 @@ socketService.subscribeToEvent('friend_rejected', (data: any) => {
     Modal.alert(lang.t('common_info'), `<strong>${escapeHTML(data.rejecterName)}</strong> ${lang.t('friend_rejected_standard')}`);
 });
 
-// YENİ: İstek İptal Bildirimi
+//İstek İptal Bildirimi
 socketService.subscribeToEvent('friend_request_cancelled', (data: any) => {
     sentRequestsLocal.delete(data.senderId);
 });
@@ -129,12 +120,9 @@ if (token) {
         .then(user => {
             localStorage.setItem('user', JSON.stringify(user));
             
-            // --- GÜNCEL KULLANIM ---
             console.log(`Hoşgeldin ${user.username}, Socket bağlanıyor...`);
-            socketService.connect(); // Artık Class methodunu çağırıyoruz
-            // -----------------------
+            socketService.connect();
             
-            // Navbar'ı güncel kullanıcı bilgisiyle tekrar çizmek isteyebiliriz
             const navContainer = document.getElementById('navbar');
             if (navContainer) {
               import('./components/Navbar').then(({ Navbar }) => {

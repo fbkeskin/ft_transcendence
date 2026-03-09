@@ -20,7 +20,6 @@ class LanguageService
     {
         this.currentLang = lang;
         localStorage.setItem('lang', lang);
-        // Artık reload yapmıyoruz!
     }
    }
    

@@ -1,7 +1,6 @@
 # frontend/Dockerfile
 
-# Alpine yerine tam sürüm (Debian/Ubuntu tabanlı) kullanıyoruz
-# Bu, senin bilgisayarınla (Ubuntu) daha uyumlu çalışır.
+# Alpine yerine tam sürüm (Debian/Ubuntu tabanlı)
 FROM node:20
 
 WORKDIR /app

@@ -7,7 +7,6 @@ exports.loginUser = exports.registerUser = void 0;
 // src/services/auth.service.ts
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-// Veritabanı Bağlantı Havuzu (Connection Pool) oluşturulur.
 const prisma = new client_1.PrismaClient();
 const registerUser = async (email, username, passwordPlain) => {
     const passwordHash = await bcryptjs_1.default.hash(passwordPlain, 10); // salt=10 for rainbıw attack

@@ -21,15 +21,11 @@ const fastify_socket_io_1 = __importDefault(require("fastify-socket.io"));
 // -------------------------
 const auth_route_1 = require("./routes/auth.route");
 const game_route_1 = require("./routes/game.route");
-// --- DÜZELTME BURADA: LOGGER'I AÇIYORUZ ---
 const server = (0, fastify_1.default)({
     logger: true
 });
-// ------------------------------------------
-// 1. Eklentiler
 server.register(cors_1.default, {
-    // DİKKAT 1: Nginx ve farklı IP'ler için origin'i dinamik (true) yaptık.
-    // Bu sayede tarayıcı hangi IP'den gelirse gelsin CORS hatası vermeyecek.
+    // Nginx ve farklı IP'ler için origin'i dinamik (true) yaptık.Bu sayede tarayıcı hangi IP'den gelirse gelsin CORS hatası vermeyecek.
     origin: true,
     credentials: true
 });
@@ -50,7 +46,7 @@ server.register(swagger_ui_1.fastifySwaggerUi, { routePrefix: '/docs' });
 // 2. Socket.io
 server.register(fastify_socket_io_1.default, {
     cors: {
-        // DİKKAT 2: Socket.io CORS ayarını da dinamik yaptık.
+        // Socket.io CORS ayarını da dinamik yaptık.
         origin: true,
         methods: ["GET", "POST"],
         credentials: true
@@ -70,7 +66,7 @@ server.register(auth_route_1.authRoutes, { prefix: '/auth' });
 server.register(game_route_1.gameRoutes, { prefix: '/game' });
 server.register(tournament_route_1.tournamentRoutes, { prefix: '/tournament' });
 server.register(friend_route_1.friendRoutes, { prefix: '/friends' });
-// --- YENİ: ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
+// --- ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
 server.get('/', (req, reply) => {
     return reply.redirect('/docs');
 });
@@ -82,7 +78,7 @@ server.ready(err => {
 });
 const start = async () => {
     try {
-        // 0.0.0.0 Docker için çok önemli (Bu zaten doğruydu, dokunmadık)
+        // 0.0.0.0 Docker için çok önemli 
         await server.listen({ port: 3000, host: '0.0.0.0' });
         console.log('Sunucu 3000 portunda çalışıyor 🚀');
     }

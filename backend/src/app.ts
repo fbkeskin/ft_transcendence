@@ -27,16 +27,11 @@ declare module "fastify" {
   }
 }
 
-// --- DÜZELTME BURADA: LOGGER'I AÇIYORUZ ---
 const server = fastify({ 
   logger: true 
 });
-// ------------------------------------------
 
-// 1. Eklentiler
-server.register(cors, { 
-  // DİKKAT 1: Nginx ve farklı IP'ler için origin'i dinamik (true) yaptık.
-  // Bu sayede tarayıcı hangi IP'den gelirse gelsin CORS hatası vermeyecek.
+server.register(cors, {
   origin: true, 
   credentials: true 
 });
@@ -61,17 +56,14 @@ server.register(fastifySwagger, {
 });
 server.register(fastifySwaggerUi, { routePrefix: '/docs' });
 
-// 2. Socket.io
 server.register(socketioServer, {
   cors: {
-    // DİKKAT 2: Socket.io CORS ayarını da dinamik yaptık.
     origin: true,
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
-// 3. Authenticate Decorator
 server.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
@@ -80,18 +72,18 @@ server.decorate("authenticate", async (request: FastifyRequest, reply: FastifyRe
   }
 });
 
-// 4. Rotalar
+// Rotalar
 server.register(authRoutes, { prefix: '/auth' });
 server.register(gameRoutes, { prefix: '/game' });
 server.register(tournamentRoutes, { prefix: '/tournament' });
 server.register(friendRoutes, { prefix: '/friends' });
 
-// --- YENİ: ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
+// --- ANA SAYFAYI SWAGGER'A YÖNLENDİR ---
 server.get('/', (req, reply) => {
     return reply.redirect('/docs');
 });
 
-// 5. Socket Logic
+// Socket Logic
 server.ready(err => {
     if (err) throw err;
     handleSocket(server);
@@ -99,7 +91,6 @@ server.ready(err => {
 
 const start = async () => {
   try {
-    // 0.0.0.0 Docker için çok önemli (Bu zaten doğruydu, dokunmadık)
     await server.listen({ port: 3000, host: '0.0.0.0' });
     console.log('Sunucu 3000 portunda çalışıyor 🚀');
   } catch (err) {

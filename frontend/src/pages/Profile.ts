@@ -210,7 +210,7 @@ export const Profile = {
         });
     });
 
-    // C) "Onayla" (Hafızayı Temizleme Eklendi)
+    // C) "Onayla"
     btnVerify?.addEventListener('click', async () => {
         const code = input2fa.value;
         if (!code) return Modal.alert(lang.t('common_warning'), lang.t('prof_code_missing'));

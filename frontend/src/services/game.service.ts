@@ -2,7 +2,6 @@
 
 const API_URL = '/game';
 
-// DÜZELTME: opponentId hem sayı (Online) hem string (AI/Local) olabilir
 export const saveGameReq = async (score1: number, score2: number, opponentId: number | string) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error("Giriş yapmalısınız!");
@@ -13,7 +12,6 @@ export const saveGameReq = async (score1: number, score2: number, opponentId: nu
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        // Body içinde artık opponentName değil, genel kullanım için opponentId gönderiyoruz
         body: JSON.stringify({ score1, score2, opponentId })
     });
 

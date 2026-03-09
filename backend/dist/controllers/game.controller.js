@@ -27,7 +27,7 @@ const saveGame = async (req, reply) => {
         // --- KAZANAN BELİRLEME ---
         let winnerId = null;
         if (s1 > s2) {
-            winnerId = player1Id; // Ben kazandım
+            winnerId = player1Id; 
         }
         else if (s2 > s1) {
             // Rakip kazandı. Eğer rakip gerçek kullanıcıysa onun ID'si, değilse NULL
@@ -44,11 +44,7 @@ const saveGame = async (req, reply) => {
                 winnerId: winnerId
             }
         });
-        // --- 2. İSTATİSTİKLERİ GÜNCELLE (FONKSİYON) ---
-        // Kod tekrarını önlemek için updateStats fonksiyonunu kullanacağız
-        // Player 1 (Ben) Güncellemesi
         await updatePlayerStats(player1Id, s1 > s2);
-        // Player 2 (Rakip) Güncellemesi (Eğer gerçek kullanıcıysa)
         if (player2Id) {
             await updatePlayerStats(player2Id, s2 > s1);
         }

@@ -27,14 +27,11 @@ function request(method: string) {
     }
 }
 
-// Helper: Token'ı otomatik ekle
 function authHeader(url: string): any {
     // Kullanıcı giriş yapmış mı kontrol et
     const token = localStorage.getItem('token');
     const isLoggedIn = !!token;
     
-    // Eğer dışarıya (başka bir API'ye) istek atmıyorsak token'ı ekle
-    // (Şimdilik tüm isteklere ekliyoruz çünkü hepsi bizim backend'e gidiyor)
     if (isLoggedIn) {
         return { Authorization: `Bearer ${token}` };
     } else {
@@ -42,7 +39,6 @@ function authHeader(url: string): any {
     }
 }
 
-// Helper: Yanıtı işle (Hata varsa fırlat)
 async function handleResponse(response: Response) {
     const text = await response.text();
     const data = text && JSON.parse(text);
@@ -50,9 +46,7 @@ async function handleResponse(response: Response) {
     if (!response.ok) {
         // Eğer 401 (Yetkisiz) veya 403 (Yasak) hatası alırsak çıkış yap
         if ([401, 403].includes(response.status)) {
-            // Otomatik logout (isteğe bağlı)
-            // localStorage.removeItem('token');
-            // window.location.href = '/login';
+           
         }
 
         const error = (data && data.message) || response.statusText;
