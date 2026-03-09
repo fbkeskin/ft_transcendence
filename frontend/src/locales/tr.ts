@@ -199,6 +199,7 @@ export const tr = {
   USERNAME_TAKEN: "Bu kullanıcı adı zaten başka biri tarafından alınmış.",
   USERNAME_COOLDOWN: "Kullanıcı adını günde sadece 1 kez değiştirebilirsin.",
   UPDATE_PROFILE_ERROR: "Profil güncellenirken bir hata oluştu.",
+  OAUTH_USER_CANNOT_CHANGE_USERNAME: "42 ile giriş yapan kullanıcılar isim değiştiremez.",
   prof_2fa_manual_key: "Manuel Giriş Kodu",
   prof_qr_error: "QR kod oluşturulamadı.",
   prof_code_missing: "Lütfen kodu girin.",

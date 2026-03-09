@@ -130,8 +130,12 @@ export const Profile = {
             ? finalUrl 
             : `${finalUrl}?t=${new Date().getTime()}`;
 
-        if (user.avatar && user.avatar.startsWith('http')) {
+        const isOAuthUser = user.avatar && user.avatar.startsWith('http');
+        if (isOAuthUser) {
             avatarLabel?.classList.add('hidden');
+            nameInput.disabled = true;
+            nameInput.classList.add('bg-slate-900/50', 'text-slate-500', 'cursor-not-allowed');
+            btnUpdateProfile?.classList.add('hidden');
         }
 
         if (user.isTwoFactorEnabled) {

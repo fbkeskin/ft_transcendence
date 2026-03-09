@@ -185,6 +185,14 @@ export const disable2FA = async (req: FastifyRequest, reply: FastifyReply) => {
 export const updateProfile = async (req: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply) => {
     try {
         const userPayload = req.user as UserPayload;
+        const user = await prisma.user.findUnique({ where: { id: userPayload.id } });
+        if (!user) return reply.status(404).send({ message: 'USER_NOT_FOUND' });
+
+        // OAuth Kullanıcıları (42) için kullanıcı adı değişikliğini engelle
+        if (user.password === '') {
+            return reply.status(403).send({ message: 'OAUTH_USER_CANNOT_CHANGE_USERNAME' });
+        }
+
         const { username } = req.body;
 
         if (!username || username.length < 3 || username.length > 12) {
