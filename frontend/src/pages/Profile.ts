@@ -137,19 +137,27 @@ export const Profile = {
         if (user.isTwoFactorEnabled) {
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
-            sessionStorage.removeItem('pending_2fa'); // Etkinse temizle
+            sessionStorage.removeItem('pending_2fa'); 
         } else {
             statusOnDiv?.classList.add('hidden');
             setupAreaDiv?.classList.remove('hidden');
             
-            // --- PERSISTENCE: Yarım kalmış kurulumu geri yükle ---
+            // --- PERSISTENCE WITH SECURITY ---
             const saved = sessionStorage.getItem('pending_2fa');
             if (saved) {
-                const { qrUrl, secret } = JSON.parse(saved);
-                qrImage.src = qrUrl;
-                if (secretText) secretText.innerText = secret;
-                qrContainer?.classList.remove('hidden');
-                btnEnable.classList.add('hidden');
+                const { qrUrl, secret, timestamp, uid } = JSON.parse(saved);
+                const now = Date.now();
+                const isExpired = (now - timestamp) > 5 * 60 * 1000; // 5 Dakika
+                
+                // Sadece aynı kullanıcıya aitse ve süresi geçmediyse göster
+                if (!isExpired && uid === user.id) {
+                    qrImage.src = qrUrl;
+                    if (secretText) secretText.innerText = secret;
+                    qrContainer?.classList.remove('hidden');
+                    btnEnable.classList.add('hidden');
+                } else {
+                    sessionStorage.removeItem('pending_2fa'); // Güvenlik için sil
+                }
             }
         }
 
@@ -166,19 +174,22 @@ export const Profile = {
         }
     });
 
-    // B) "2FA Kurulumunu Başlat" (Hafızaya Kaydetme Eklendi)
+    // B) "2FA Kurulumunu Başlat"
     btnEnable?.addEventListener('click', async () => {
         try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
             const res = await generate2FAReq(); 
             qrImage.src = res.qrCodeUrl;
             if (secretText) secretText.innerText = res.secret;
             qrContainer?.classList.remove('hidden');
             btnEnable.classList.add('hidden'); 
             
-            // HAFIZAYA KAYDET (Sekme uyursa veya yenilenirse kaybolmasın)
+            // HAFIZAYA KAYDET (Güvenlik Katmanlı)
             sessionStorage.setItem('pending_2fa', JSON.stringify({
                 qrUrl: res.qrCodeUrl,
-                secret: res.secret
+                secret: res.secret,
+                uid: user.id,
+                timestamp: Date.now()
             }));
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message || 'prof_qr_error'));

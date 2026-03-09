@@ -74,9 +74,8 @@ export const Navbar = {
       const logoutBtn = document.getElementById('nav-logout');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-          // --- ÖNEMLİ: Çıkış yaparken socket bağlantısını kes ---
           socketService.disconnect();
-          // -----------------------------------------------------
+          sessionStorage.removeItem('pending_2fa');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           navigate('/login');
