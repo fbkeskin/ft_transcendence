@@ -149,7 +149,7 @@ export const generate2FA = async (req: FastifyRequest, reply: FastifyReply) => {
       await prisma.user.update({ where: { id: user.id }, data: { twoFactorSecret: secret } });
       const otpauth = `otpauth://totp/FT_TRANSCENDENCE:${user.email}?secret=${secret}&issuer=FT_TRANSCENDENCE&algorithm=SHA1&digits=6&period=30`;
       const imageUrl = await qrcode.toDataURL(otpauth);
-      return reply.send({ qrCodeUrl: imageUrl });
+      return reply.send({ qrCodeUrl: imageUrl, secret: secret });
     } catch (error) { return reply.status(500).send({ message: 'QR_GENERATE_ERROR' }); }
 };
   

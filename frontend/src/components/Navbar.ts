@@ -37,11 +37,11 @@ export const Navbar = {
   
             <div class="flex items-center gap-2 md:gap-6"> 
                 ${isLoggedIn ? `
-                  <div class="hidden sm:flex items-baseline space-x-4">
-                    <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
-                    <a href="/profile" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-xs md:sm font-medium transition-all" data-link>${lang.t('nav_profile')}</a>
+                  <div class="flex items-center space-x-2 md:space-x-4">
+                    <a href="/dashboard" class="text-gray-300 hover:text-white px-2 py-1 rounded-md text-[10px] md:text-sm font-medium transition-all" data-link>${lang.t('nav_game')}</a>
+                    <a href="/profile" class="text-gray-300 hover:text-white px-2 py-1 rounded-md text-[10px] md:text-sm font-medium transition-all" data-link>${lang.t('nav_profile')}</a>
                   </div>
-                  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-3 md:px-6 py-1.5 md:py-2 rounded-md text-[10px] md:text-sm font-bold transition-all">
+                  <button id="nav-logout" class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 px-2 md:px-6 py-1 md:py-2 rounded-md text-[10px] md:text-sm font-bold transition-all">
                     ${lang.t('nav_logout')}
                   </button>
                 ` : `

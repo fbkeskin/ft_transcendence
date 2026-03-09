@@ -198,6 +198,7 @@ export const en = {
   USERNAME_TAKEN: "This username is already taken by another user.",
   USERNAME_COOLDOWN: "You can only change your username once per day.",
   UPDATE_PROFILE_ERROR: "An error occurred while updating the profile.",
+  prof_2fa_manual_key: "Manual Setup Key",
   prof_qr_error: "Failed to generate QR code.",
   prof_code_missing: "Please enter the code.",
   prof_2fa_success: "2FA successfully enabled! 🛡️",

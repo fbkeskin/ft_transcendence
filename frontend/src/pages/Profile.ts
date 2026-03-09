@@ -73,6 +73,15 @@ export const Profile = {
                             <img id="qr-image" class="w-40 h-40" />
                         </div>
 
+                        <!-- MANUEL GİRİŞ KODU -->
+                        <div class="mb-6 p-3 bg-slate-800 rounded border border-indigo-500/30 text-center">
+                            <p class="text-[10px] text-indigo-400 uppercase font-bold mb-1">${lang.t('prof_2fa_manual_key')}</p>
+                            <div class="flex items-center justify-center gap-2">
+                                <code id="2fa-secret-text" class="text-white font-mono text-sm tracking-widest bg-black/30 px-2 py-1 rounded">XXXX-XXXX</code>
+                                <button id="btn-copy-secret" class="bg-slate-700 hover:bg-indigo-600 text-white p-1.5 rounded transition shadow-sm">📋</button>
+                            </div>
+                        </div>
+
                         <p class="text-xs text-slate-400 mb-2">${lang.t('prof_2fa_step2')}</p>
                         <div class="flex gap-2">
                             <input type="text" id="2fa-input" placeholder="123456" maxlength="6" 
@@ -104,11 +113,14 @@ export const Profile = {
     const btnEnable = document.getElementById('btn-enable-2fa') as HTMLButtonElement;
     const qrContainer = document.getElementById('qr-container');
     const qrImage = document.getElementById('qr-image') as HTMLImageElement;
+    const secretText = document.getElementById('2fa-secret-text');
     const input2fa = document.getElementById('2fa-input') as HTMLInputElement;
     const btnVerify = document.getElementById('btn-verify-2fa');
     const btnDisable = document.getElementById('btn-disable-2fa');
     const btnUpdateProfile = document.getElementById('btn-update-profile');
+    const btnCopySecret = document.getElementById('btn-copy-secret');
 
+    // 1. MEVCUT DURUMU ÇEK
     try {
         const user = await getProfileReq();
         nameInput.value = user.username;
@@ -125,15 +137,23 @@ export const Profile = {
         if (user.isTwoFactorEnabled) {
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
+            sessionStorage.removeItem('pending_2fa'); // Etkinse temizle
         } else {
             statusOnDiv?.classList.add('hidden');
             setupAreaDiv?.classList.remove('hidden');
+            
+            // --- PERSISTENCE: Yarım kalmış kurulumu geri yükle ---
+            const saved = sessionStorage.getItem('pending_2fa');
+            if (saved) {
+                const { qrUrl, secret } = JSON.parse(saved);
+                qrImage.src = qrUrl;
+                if (secretText) secretText.innerText = secret;
+                qrContainer?.classList.remove('hidden');
+                btnEnable.classList.add('hidden');
+            }
         }
 
-    } catch (e) {
-        navigate('/login');
-        return;
-    }
+    } catch (e) { navigate('/login'); return; }
 
     // A) Avatar Yükleme
     fileInput?.addEventListener('change', async () => {
@@ -146,19 +166,36 @@ export const Profile = {
         }
     });
 
-    // B) "2FA Kurulumunu Başlat" Butonu
+    // B) "2FA Kurulumunu Başlat" (Hafızaya Kaydetme Eklendi)
     btnEnable?.addEventListener('click', async () => {
         try {
             const res = await generate2FAReq(); 
             qrImage.src = res.qrCodeUrl;
+            if (secretText) secretText.innerText = res.secret;
             qrContainer?.classList.remove('hidden');
             btnEnable.classList.add('hidden'); 
+            
+            // HAFIZAYA KAYDET (Sekme uyursa veya yenilenirse kaybolmasın)
+            sessionStorage.setItem('pending_2fa', JSON.stringify({
+                qrUrl: res.qrCodeUrl,
+                secret: res.secret
+            }));
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message || 'prof_qr_error'));
         }
     });
 
-    // C) "Onayla" Butonu (Kodu girince)
+    // Kopyalama Mantığı
+    btnCopySecret?.addEventListener('click', () => {
+        const text = secretText?.innerText || '';
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btnCopySecret.innerHTML;
+            btnCopySecret.innerText = '✅';
+            setTimeout(() => { btnCopySecret.innerHTML = original; }, 2000);
+        });
+    });
+
+    // C) "Onayla" (Hafızayı Temizleme Eklendi)
     btnVerify?.addEventListener('click', async () => {
         const code = input2fa.value;
         if (!code) return Modal.alert(lang.t('common_warning'), lang.t('prof_code_missing'));
@@ -167,6 +204,7 @@ export const Profile = {
             await Modal.alert(lang.t('common_success'), lang.t('prof_2fa_success'));
             statusOnDiv?.classList.remove('hidden');
             setupAreaDiv?.classList.add('hidden');
+            sessionStorage.removeItem('pending_2fa'); // İşlem bitti, temizle
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message)); 
         }
@@ -184,27 +222,22 @@ export const Profile = {
                 qrContainer?.classList.add('hidden');
                 btnEnable?.classList.remove('hidden');
                 input2fa.value = '';
+                sessionStorage.removeItem('pending_2fa');
             } catch (err: any) {
                 await Modal.alert(lang.t('common_error'), lang.t(err.message));
             }
         }
     });
 
-    // E) Profil Bilgisi Güncelleme (Username)
+    // E) Profil Bilgisi Güncelleme
     btnUpdateProfile?.addEventListener('click', async () => {
         const newName = nameInput.value.trim();
         if (!newName) return;
-        
         try {
             await updateProfileReq(newName);
-            
-            // LocalStorage'daki user bilgisini tazeleyelim
             const updatedUser = await getProfileReq();
             localStorage.setItem('user', JSON.stringify(updatedUser));
-
-            // NAVIGATE ile sayfayı refresh ederek Navbar'ı da güncelliyoruz
             navigate('/profile'); 
-
             await Modal.alert(lang.t('common_success'), lang.t('PROFILE_UPDATED_SUCCESS'));
         } catch (err: any) {
             await Modal.alert(lang.t('common_error'), lang.t(err.message));
