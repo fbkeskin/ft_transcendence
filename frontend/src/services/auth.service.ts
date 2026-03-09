@@ -88,21 +88,39 @@ export const uploadAvatarReq = async (file: File) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Oturum yok');
   
-    const formData = new FormData();
-    formData.append('avatar', file); 
-  
-    const response = await fetch(`${window.location.origin}/auth/avatar`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}` 
-      },
-      body: formData
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const url = `${window.location.origin}/auth/avatar`;
+        
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Authorization', `Bearer ${token.trim()}`);
+        
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(JSON.parse(xhr.responseText));
+                } catch (e) {
+                    reject(new Error('Geçersiz sunucu yanıtı'));
+                }
+            } else {
+                try {
+                    const err = JSON.parse(xhr.responseText);
+                    reject(new Error(err.message || 'Yükleme başarısız'));
+                } catch (e) {
+                    reject(new Error('Yükleme başarısız'));
+                }
+            }
+        };
+        
+        xhr.onerror = () => reject(new Error('Ağ hatası oluştu'));
+        
+        const formData = new FormData();
+        // iPhone fix: Dosya ismini temizle ve güvenli hale getir
+        const safeName = file.name ? file.name.replace(/[^\x00-\x7F]/g, "") : `avatar_${Date.now()}.jpg`;
+        formData.append('avatar', file, safeName);
+        
+        xhr.send(formData);
     });
-  
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Yükleme başarısız');
-    
-    return data; 
 };
 
 // 5. 2FA FONKSİYONLARI

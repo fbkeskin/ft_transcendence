@@ -43,7 +43,11 @@ server.register(cors, {
 
 server.register(fastifyJwt, { secret: 'supersecret' });
 server.register(fastifyCookie);
-server.register(fastifyMultipart);
+server.register(fastifyMultipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  }
+});
 server.register(fastifyStatic, {
   root: path.join(__dirname, '../uploads'),
   prefix: '/uploads/',
