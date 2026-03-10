@@ -103,7 +103,7 @@ export const GameOnline = {
     socketService.onGameEnded((data) => { showEndScreen(data.winner); });
     socketService.onOpponentLeft(async () => {
         gameRunning = false; cancelAnimationFrame(animationFrameId);
-        await Modal.alert(lang.t('game_online_forfeit_title'), "Rakip oyundan ayrıldı.");
+        await Modal.alert(lang.t('game_online_forfeit_title'), lang.t('game_online_forfeit_desc'));
         navigate('/dashboard');
     });
 

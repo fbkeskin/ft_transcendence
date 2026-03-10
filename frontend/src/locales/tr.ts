@@ -152,6 +152,7 @@ export const tr = {
 
   // Game Online
   game_online_forfeit_title: "🏆 HÜKMEN GALİBİYET!",
+  game_online_forfeit_desc: "Rakip oyundan ayrıldı.",
   game_online_interrupt_warn: "Mevcut oyunun iptal edilecek ve bu maça geçilecek.",
   nav_lang_disabled: "Oyun sırasında dil değiştirilemez.",
   game_ready_confirm_desc: "Maça girmeye hazır mısın? Onay verdiğinde rakibin beklenir.",

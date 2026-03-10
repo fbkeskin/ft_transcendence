@@ -151,6 +151,7 @@ export const en = {
 
   // Game Online
   game_online_forfeit_title: "🏆 WIN BY FORFEIT!",
+  game_online_forfeit_desc: "Opponent has left the game.",
   game_online_interrupt_warn: "Your current game will be cancelled and you will switch to this match.",
   nav_lang_disabled: "Language cannot be changed during game.",
   game_ready_confirm_desc: "Are you ready to start the match? Your opponent will be waited for after your confirmation.",
