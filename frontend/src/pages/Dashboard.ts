@@ -484,10 +484,15 @@ function renderProfile(user: any, friends: any[], pending: any[]) {
     }
     // ----------------------------------------------------------------------
 
-    document.getElementById('user-name')!.innerText = user.username;
-    document.getElementById('user-wins')!.innerText = user.wins.toString();
-    document.getElementById('user-losses')!.innerText = user.losses.toString();
-    document.getElementById('user-level')!.innerText = `${lang.t('dash_level')} ${user.level}`;
+    const nameEl = document.getElementById('user-name');
+    const winsEl = document.getElementById('user-wins');
+    const lossesEl = document.getElementById('user-losses');
+    const levelEl = document.getElementById('user-level');
+
+    if (nameEl) nameEl.innerText = user.username;
+    if (winsEl) winsEl.innerText = user.wins.toString();
+    if (lossesEl) lossesEl.innerText = user.losses.toString();
+    if (levelEl) levelEl.innerText = `${lang.t('dash_level')} ${user.level}`;
     
     const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
     fileInput?.addEventListener('change', async () => {
@@ -500,9 +505,15 @@ function renderProfile(user: any, friends: any[], pending: any[]) {
         }
     });
 }
-function renderTournamentStats(tournaments: any[], user: any) { const cupCount = tournaments.filter((t: any) => t.winner === user.username).length; document.getElementById('user-cups')!.innerText = cupCount.toString(); }
+function renderTournamentStats(tournaments: any[], user: any) { 
+    const cupCount = tournaments.filter((t: any) => t.winner === user.username).length; 
+    const cupEl = document.getElementById('user-cups');
+    if (cupEl) cupEl.innerText = cupCount.toString(); 
+}
 function renderMatchHistory(user: any) {
-    const matchBody = document.getElementById('match-history-body')!; matchBody.innerHTML = ''; 
+    const matchBody = document.getElementById('match-history-body');
+    if (!matchBody) return;
+    matchBody.innerHTML = ''; 
     const allGames = [...(user.gamesAsPlayer1 || []), ...(user.gamesAsPlayer2 || [])];
     allGames.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     if (allGames.length === 0) matchBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">${lang.t('dash_no_match')}</td></tr>`;
