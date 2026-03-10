@@ -32,12 +32,19 @@ class SocketService {
   }
 
   connect() {
-    if (this.socket && this.socket.connected) return;
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    if (this.socket) this.socket.disconnect();
+    // Eğer zaten bağlıysa veya bağlanmaya çalışıyorsa (connecting) hiçbir şey yapma
+    if (this.socket) {
+        if (this.socket.connected) return;
+        // Eğer socket objesi varsa ama bağlı değilse, sadece connect() diyerek canlandır
+        this.socket.auth = { token };
+        this.socket.connect();
+        return;
+    }
 
+    // İlk kez oluşturuluyorsa
     this.socket = io('/', {
       auth: { token },
       transports: ['websocket'],
