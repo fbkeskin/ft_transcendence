@@ -216,6 +216,8 @@ export const en = {
   game_exit_btn: "Exit",
   game_winner: "WINS!",
   game_saved: "Game saved successfully ✅",
+  game_ready: "READY?",
+  game_go: "GO!",
   
   // Local Game
   game_local_title: "PLAYER vs PLAYER",

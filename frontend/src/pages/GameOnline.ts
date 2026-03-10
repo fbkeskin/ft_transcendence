@@ -3,7 +3,6 @@ import { navigate } from '../router';
 import { saveGameReq } from '../services/game.service';
 import { lang } from '../services/language.service';
 import { socketService } from '../services/socket.service';
-import { getProfileReq } from '../services/auth.service';
 import { escapeHTML } from '../utils/escape';
 import { Modal } from '../utils/Modal';
 
@@ -80,6 +79,12 @@ export const GameOnline = {
 
     let gameRunning = true;
     let score1 = 0; let score2 = 0; 
+    let countdownValue = 3;
+
+    const countdownInterval = setInterval(() => {
+        countdownValue--;
+        if (countdownValue < 0) clearInterval(countdownInterval);
+    }, 1000);
     
     const player1 = { x: 10, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#ef4444' };
     const player2 = { x: canvas.width - 10 - PADDLE_WIDTH, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#3b82f6' };
@@ -120,6 +125,7 @@ export const GameOnline = {
     }
 
     function updatePhysics() {
+        if (countdownValue > 0) return;
         const paddleSpeed = 9;
         const moveUp = keys['ArrowUp'] || keys['TouchUp'];
         const moveDown = keys['ArrowDown'] || keys['TouchDown'];
@@ -177,6 +183,22 @@ export const GameOnline = {
         } else {
             drawPaddle(player1, false); drawPaddle(player2, false); drawBall(false);
         }
+
+        // 3-2-1 geri sayım overlay
+        if (countdownValue >= 0) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 96px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const text = countdownValue === 0
+                ? lang.t('game_go')
+                : countdownValue === 3 ? lang.t('game_ready') : String(countdownValue);
+            // Renk: sayı sırasına göre indigo → yeil-lime → beyaz
+            ctx.fillStyle = countdownValue === 0 ? '#a3e635' : countdownValue <= 1 ? '#fbbf24' : '#ffffff';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
     }
 
     function drawPaddle(p: any, flip: boolean) {
@@ -233,6 +255,7 @@ export const GameOnline = {
 
     return () => {
         gameRunning = false;
+        clearInterval(countdownInterval);
         cancelAnimationFrame(animationFrameId);
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);

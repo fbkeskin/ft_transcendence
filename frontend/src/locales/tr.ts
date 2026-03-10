@@ -217,6 +217,8 @@ export const tr = {
   game_exit_btn: "Çıkış",
   game_winner: "KAZANDI!",
   game_saved: "Oyun Kaydedildi ✅",
+  game_ready: "HAZIR?",
+  game_go: "BAŞLA!",
   
   // Game Local
   game_local_title: "OYUNCU vs OYUNCU",

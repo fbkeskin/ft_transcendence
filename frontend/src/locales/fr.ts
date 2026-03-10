@@ -216,6 +216,8 @@ export const fr = {
   game_exit_btn: "Quitter",
   game_winner: "A GAGNÉ !",
   game_saved: "Partie enregistrée ✅",
+  game_ready: "PRÊT ?",
+  game_go: "PARTEZ !",
   
   // Local Game
   game_local_title: "JOUEUR contre JOUEUR",
