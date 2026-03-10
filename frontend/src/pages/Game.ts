@@ -117,6 +117,12 @@ export const Game = {
     
     let gameRunning = true;
     let score1 = 0; let score2 = 0; 
+    let countdownValue = 3;
+
+    const countdownInterval = setInterval(() => {
+        countdownValue--;
+        if (countdownValue < 0) clearInterval(countdownInterval);
+    }, 1000);
 
     const player1 = { x: 10, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#ef4444' };
     const player2 = { x: canvas.width - 10 - PADDLE_WIDTH, y: canvas.height/2 - PADDLE_HEIGHT/2, color: '#3b82f6' };
@@ -136,6 +142,7 @@ export const Game = {
     }
 
     function update() {
+        if (countdownValue > 0) return;
         const paddleSpeed = 9;
         if ((keys['w'] || keys['P1Up']) && player1.y > 0) player1.y -= paddleSpeed;
         if ((keys['s'] || keys['P1Down']) && player1.y < canvas.height - PADDLE_HEIGHT) player1.y += paddleSpeed;
@@ -200,6 +207,20 @@ export const Game = {
         ctx.fillStyle = player1.color; ctx.fillRect(player1.x, player1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
         ctx.fillStyle = player2.color; ctx.fillRect(player2.x, player2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
         ctx.fillStyle = ball.color; ctx.beginPath(); ctx.arc(ball.x+BALL_SIZE/2, ball.y+BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI*2); ctx.fill();
+
+        // 3-2-1 geri sayım overlay
+        if (countdownValue >= 0) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 96px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const text = countdownValue === 0
+                ? lang.t('game_go')
+                : countdownValue === 3 ? lang.t('game_ready') : String(countdownValue);
+            ctx.fillStyle = countdownValue === 0 ? '#a3e635' : countdownValue <= 1 ? '#fbbf24' : '#ffffff';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
     }
     function resetBall() {
         ball.x = canvas.width/2 - BALL_SIZE/2; ball.y = canvas.height/2 - BALL_SIZE/2;
@@ -263,6 +284,7 @@ export const Game = {
     gameLoop();
     return () => {
         gameRunning = false; cancelAnimationFrame(animationFrameId);
+        clearInterval(countdownInterval);
         import('../services/socket.service').then(({ socketService }) => { socketService.updateStatus('AVAILABLE'); });
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);

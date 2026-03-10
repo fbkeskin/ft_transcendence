@@ -75,6 +75,13 @@ export const GameAI = {
     
     let gameRunning = true;
     let score1 = 0; let score2 = 0; 
+    let countdownValue = 3;
+
+    const countdownInterval = setInterval(() => {
+        countdownValue--;
+        if (countdownValue < 0) clearInterval(countdownInterval);
+    }, 1000);
+
     let aiDecisionY = canvas.height / 2;
     let aiTimer = 0; 
     let lastTime = 0;
@@ -126,6 +133,7 @@ export const GameAI = {
     }
 
     function update() {
+        if (countdownValue > 0) return;
         const p1Center = player1.y + PADDLE_HEIGHT / 2;
         const p1Speed = 8;
         if (Math.abs(p1Center - aiDecisionY) > p1Speed) {
@@ -194,6 +202,20 @@ export const GameAI = {
         ctx.arc(Math.floor(ball.x + BALL_SIZE/2), Math.floor(ball.y + BALL_SIZE/2), BALL_SIZE/2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
+
+        // 3-2-1 geri sayım overlay
+        if (countdownValue >= 0) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 96px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const text = countdownValue === 0
+                ? lang.t('game_go')
+                : countdownValue === 3 ? lang.t('game_ready') : String(countdownValue);
+            ctx.fillStyle = countdownValue === 0 ? '#a3e635' : countdownValue <= 1 ? '#fbbf24' : '#ffffff';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
     }
 
     const handleKeyDown = (e: KeyboardEvent) => { 
@@ -218,6 +240,8 @@ export const GameAI = {
         score1 = 0; score2 = 0; updateScore();
         document.getElementById('game-over-modal')?.classList.add('hidden');
         resetBall(); gameRunning = true; aiTimer = 0; lastTime = 0; accumulator = 0;
+        countdownValue = 3;
+        const cdInt = setInterval(() => { countdownValue--; if (countdownValue < 0) clearInterval(cdInt); }, 1000);
         requestAnimationFrame(gameLoop);
     });
     document.getElementById('exit-btn')?.addEventListener('click', () => navigate('/dashboard'));
@@ -228,6 +252,7 @@ export const GameAI = {
 
     return () => {
         gameRunning = false; cancelAnimationFrame(animationFrameId);
+        clearInterval(countdownInterval);
         window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp);
     };
   }
