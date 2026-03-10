@@ -1,6 +1,6 @@
 // backend/src/controllers/game.controller.ts
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { prisma } from '../db'; // Veritabanı bağlantısı
+import { prisma } from '../db'; 
 
 interface UserPayload {
   id: number;
@@ -9,10 +9,8 @@ interface UserPayload {
 }
 
 export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
-    // Frontend'den gelen 'opponentId'yi alıyoruz
     const { score1, score2, opponentId } = req.body as any;
     
-    // JWT'den gelen aktif kullanıcı (Player 1)
     const userPayload = req.user as UserPayload;
     const player1Id = userPayload.id;
 
@@ -24,14 +22,11 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
         let player2Id: number | null = null;
         let guestName: string | null = null;
 
-        // opponentId sayıya çevrilebiliyor mu?
         const parsedId = Number(opponentId);
 
         if (!isNaN(parsedId) && parsedId > 0) {
-            // RAKİP GERÇEK BİR KULLANICI (Online Maç)
             player2Id = parsedId;
         } else {
-            // RAKİP AI veya MİSAFİR (Local Maç)
             guestName = String(opponentId);
         }
 
@@ -48,19 +43,16 @@ export const saveGame = async (req: FastifyRequest, reply: FastifyReply) => {
         const newGame = await prisma.game.create({
             data: {
                 player1Id: player1Id,
-                player2Id: player2Id, // Varsa ID, yoksa Null
+                player2Id: player2Id, 
                 score1: s1,
                 score2: s2,
-                guestName: guestName, // Varsa İsim, yoksa Null
+                guestName: guestName, 
                 winnerId: winnerId
             }
         });
-
         
-        // Player 1 (Ben) Güncellemesi
         await updatePlayerStats(player1Id, s1 > s2);
 
-        // Player 2 (Rakip) Güncellemesi (Eğer gerçek kullanıcıysa)
         if (player2Id) {
             await updatePlayerStats(player2Id, s2 > s1);
         }
@@ -80,7 +72,6 @@ async function updatePlayerStats(userId: number, isWinner: boolean) {
             data: { wins: { increment: 1 } }
         });
 
-        // Level mantığı: Her 5 galibiyette 1 level
         const newLevel = Math.floor(user.wins / 5);
         if (newLevel > user.level) {
             await prisma.user.update({
@@ -89,7 +80,6 @@ async function updatePlayerStats(userId: number, isWinner: boolean) {
             });
         }
     } else {
-        // Kaybettiyse: Mağlubiyet artır
         await prisma.user.update({
             where: { id: userId },
             data: { losses: { increment: 1 } }

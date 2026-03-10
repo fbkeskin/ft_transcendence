@@ -218,7 +218,6 @@ export const updateProfile = async (req: FastifyRequest<{ Body: { username: stri
         updateOnlineUsername(userPayload.id, username);
         const io = (req.server as any).io;
         if (io) {
-            // 1. Tüm lobiyi (online listesini) yeni isimle tekrar yayınla
             const list = Array.from(onlineUsers.entries()).map(([id, u]: [number, any]) => ({ 
                 id, 
                 username: u.username, 
@@ -226,7 +225,6 @@ export const updateProfile = async (req: FastifyRequest<{ Body: { username: stri
             }));
             io.emit('online_users_list', list);
             
-            // 2. Arkadaş listelerini yenilemeleri için sinyal gönder
             io.emit('user_list_updated');
         }
         // ------------------------------

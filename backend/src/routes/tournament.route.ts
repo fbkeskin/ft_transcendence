@@ -8,5 +8,5 @@ export async function tournamentRoutes(server: FastifyInstance) {
     });
 
     server.post('/create', createTournament); 
-    server.get('/history', getUserTournaments); // Profilde göstermek için
+    server.get('/history', getUserTournaments);
 }

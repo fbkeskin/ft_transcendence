@@ -4,12 +4,11 @@ import { saveGame } from '../controllers/game.controller';
 
 export async function gameRoutes(server: FastifyInstance) {
     server.post('/save', {
-        onRequest: [server.authenticate], // Sadece giriş yapmış kullanıcılar
+        onRequest: [server.authenticate],
         schema: {
             tags: ['Game'],
             body: {
                 type: 'object',
-                // opponentId zorunlu alan
                 required: ['score1', 'score2', 'opponentId'],
                 properties: {
                     score1: { type: 'number' },

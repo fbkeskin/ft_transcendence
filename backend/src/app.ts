@@ -36,7 +36,7 @@ server.register(cors, {
   credentials: true 
 });
 
-server.register(fastifyJwt, { secret: 'supersecret' });
+server.register(fastifyJwt, { secret: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET .env dosyasında tanımlı değil!'); })() });
 server.register(fastifyCookie);
 server.register(fastifyMultipart, {
   limits: {
