@@ -131,6 +131,19 @@ export const Dashboard = {
         let pendingRequests: any[] = [];
         // sentRequestsLocal ve sentInvitesLocal artık yukarıda tanımlı (modül seviyesinde)
 
+        const updateBadges = () => {
+            const badge = document.getElementById('friend-req-badge');
+            const inviteBadge = document.getElementById('invite-req-badge');
+            if (!badge || !inviteBadge) return;
+            // Arkadaşlık isteği varsa ve "Arkadaşlar" sekmesinde değilsek göster
+            if (pendingRequests.length > 0 && activeTab !== 'friends') badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+
+            // Oyun daveti varsa ve "İstekler" sekmesinde değilsek göster
+            if (socketService.getPendingInvites().length > 0 && activeTab !== 'invites') inviteBadge.classList.remove('hidden');
+            else inviteBadge.classList.add('hidden');
+        };
+
         const refreshData = async () => {
             try {
                 const [tData, fData, pData] = await Promise.all([
@@ -163,21 +176,6 @@ export const Dashboard = {
         const viewLobby = document.getElementById('view-lobby')!;
         const viewFriends = document.getElementById('view-friends')!;
         const viewInvites = document.getElementById('view-invites')!;
-        const badge = document.getElementById('friend-req-badge')!;
-        const inviteBadge = document.getElementById('invite-req-badge')!;
-
-        if (pendingRequests.length > 0) badge.classList.remove('hidden');
-
-        const updateBadges = () => {
-            if (!badge || !inviteBadge) return;
-            // Arkadaşlık isteği varsa ve "Arkadaşlar" sekmesinde değilsek göster
-            if (pendingRequests.length > 0 && activeTab !== 'friends') badge.classList.remove('hidden');
-            else badge.classList.add('hidden');
-
-            // Oyun daveti varsa ve "İstekler" sekmesinde değilsek göster
-            if (socketService.getPendingInvites().length > 0 && activeTab !== 'invites') inviteBadge.classList.remove('hidden');
-            else inviteBadge.classList.add('hidden');
-        };
 
         // Sayfa ilk açıldığında kontrol et
         updateBadges();
