@@ -531,29 +531,35 @@ function renderMatchHistory(user: any) {
         let resultBadges = (myScore > enemyScore) ? `<span class="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/20">${lang.t('dash_win')}</span>` : `<span class="bg-red-500/10 text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-500/20">${lang.t('dash_loss')}</span>`;
         matchBody.innerHTML += `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition"><td class="px-4 py-3 text-center text-gray-600 font-mono text-xs">${index + 1}</td><td class="px-4 py-3 font-medium text-slate-200">${escapeHTML(opponentName)}</td><td class="px-4 py-3 font-mono text-indigo-300 font-bold tracking-widest">${myScore} - ${enemyScore}</td><td class="px-4 py-3">${resultBadges}</td><td class="px-4 py-3 text-right text-gray-500 text-xs">${new Date(game.createdAt).toLocaleDateString(lang.getCurrentLang())}</td></tr>`;
     });
-    const tabMatches = document.getElementById('tab-hist-matches')!; const tabTournaments = document.getElementById('tab-hist-tournaments')!;
-    const tableMatches = document.getElementById('table-matches')!; const tableTournaments = document.getElementById('table-tournaments')!;
+    const tabMatches = document.getElementById('tab-hist-matches'); 
+    const tabTournaments = document.getElementById('tab-hist-tournaments');
+    const tableMatches = document.getElementById('table-matches'); 
+    const tableTournaments = document.getElementById('table-tournaments');
     
-    tabMatches.addEventListener('click', () => { 
-        activeHistoryTab = 'matches';
-        tabMatches.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-indigo-500 bg-slate-800 transition"; 
-        tabTournaments.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
-        tableMatches.classList.remove('hidden'); tableTournaments.classList.add('hidden'); 
-    });
-    
-    tabTournaments.addEventListener('click', () => { 
-        activeHistoryTab = 'tournaments';
-        tabTournaments.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-orange-500 bg-slate-800 transition"; 
-        tabMatches.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
-        tableTournaments.classList.remove('hidden'); tableMatches.classList.add('hidden'); 
-    });
+    if (tabMatches && tabTournaments && tableMatches && tableTournaments) {
+        tabMatches.addEventListener('click', () => { 
+            activeHistoryTab = 'matches';
+            tabMatches.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-indigo-500 bg-slate-800 transition"; 
+            tabTournaments.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
+            tableMatches.classList.remove('hidden'); tableTournaments.classList.add('hidden'); 
+        });
+        
+        tabTournaments.addEventListener('click', () => { 
+            activeHistoryTab = 'tournaments';
+            tabTournaments.className = "flex-1 py-4 text-sm font-bold text-white border-b-2 border-orange-500 bg-slate-800 transition"; 
+            tabMatches.className = "flex-1 py-4 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-white hover:bg-slate-700 transition"; 
+            tableTournaments.classList.remove('hidden'); tableMatches.classList.add('hidden'); 
+        });
 
-    // --- KALDIĞI SEKMEDEN DEVAM ET (GEÇMİŞ TABLOLARI) ---
-    if (activeHistoryTab === 'tournaments') tabTournaments.click();
-    else tabMatches.click();
+        // --- KALDIĞI SEKMEDEN DEVAM ET (GEÇMİŞ TABLOLARI) ---
+        if (activeHistoryTab === 'tournaments') tabTournaments.click();
+        else tabMatches.click();
+    }
 }
 function renderTournamentHistory(tournaments: any[], user: any) {
-    const tournamentBody = document.getElementById('tournament-history-body')!; tournamentBody.innerHTML = '';
+    const tournamentBody = document.getElementById('tournament-history-body');
+    if (!tournamentBody) return;
+    tournamentBody.innerHTML = '';
     if (tournaments.length === 0) tournamentBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">${lang.t('dash_tour_no_data')}</td></tr>`;
     else tournaments.forEach((t: any, index: number) => {
         const isChampion = t.winner === user.username;
